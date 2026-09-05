@@ -172,6 +172,11 @@
       color: white;
     }
 
+    .btn-warning {
+      background: linear-gradient(135deg, var(--accent), #d97706);
+      color: white;
+    }
+
     #app-screen {
       display: none;
       flex-direction: column;
@@ -405,7 +410,7 @@
     }
 
     .modal.show { display: flex; }
-    .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 500px; }
+    .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 550px; max-height: 90vh; overflow-y: auto; }
 
     .profile-avatar-container {
       text-align: center;
@@ -448,6 +453,33 @@
     .action-icon-btn.edit { color: var(--primary); }
     .action-icon-btn.delete { color: var(--danger); }
     .action-icon-btn:hover { background: #f1f5f9; }
+
+    /* HIGH-QUALITY PDF PRINT LAYOUT STYLING */
+    @media print {
+      body { background: white !important; color: black !important; }
+      #auth-screen, #app-screen > *:not(.container), .navbar, .app-nav, .modal-header, .no-print, .modal-content > div:not(#printable-report) {
+        display: none !important;
+      }
+      .modal { position: absolute !important; inset: 0 !important; background: white !important; padding: 0 !important; display: block !important; }
+      .modal-content { max-width: 100% !important; border-radius: 0 !important; box-shadow: none !important; padding: 0 !important; }
+      #printable-report {
+        border: none !important;
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .pdf-letterhead {
+        border-bottom: 3px double #000 !important;
+        padding-bottom: 15px !important;
+        margin-bottom: 20px !important;
+      }
+      .pdf-signature-block {
+        display: flex !important;
+        justify-content: space-between !important;
+        margin-top: 50px !important;
+        padding-top: 15px !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -543,6 +575,7 @@
           <button class="three-dots-btn" onclick="toggleDropdown()">⋮</button>
           <div class="dropdown-menu" id="dropdown-menu">
             <div class="dropdown-item" onclick="openProfileModal()"><i class="fa-solid fa-user"></i> My Profile</div>
+            <div class="dropdown-item" onclick="openReportModal()"><i class="fa-solid fa-file-pdf"></i> Financial Reports</div>
             <div class="dropdown-item" onclick="switchNavTab('settings')"><i class="fa-solid fa-gear"></i> Settings</div>
             <div class="dropdown-item" onclick="openPasswordModal()"><i class="fa-solid fa-key"></i> Change Password</div>
             <hr style="border:0; border-top:1px solid #e2e8f0;">
@@ -558,6 +591,7 @@
       <button class="nav-tab" onclick="switchNavTab('events')" id="tab-btn-events"><i class="fa-solid fa-calendar-days"></i> Events</button>
       <button class="nav-tab" onclick="switchNavTab('notices')" id="tab-btn-notices"><i class="fa-solid fa-bullhorn"></i> Notices</button>
       <button class="nav-tab" onclick="switchNavTab('financial')" id="tab-btn-financial"><i class="fa-solid fa-indian-rupee-sign"></i> Financials</button>
+      <button class="nav-tab" onclick="openReportModal()" id="tab-btn-reports"><i class="fa-solid fa-file-invoice-dollar"></i> Reports</button>
       <button class="nav-tab" onclick="switchNavTab('photos')" id="tab-btn-photos"><i class="fa-solid fa-images"></i> Photos</button>
     </div>
 
@@ -584,13 +618,14 @@
       <div id="section-dashboard">
         <div class="section-header">
           <h2>Society Overview Dashboard</h2>
+          <button class="btn btn-primary" style="width:auto; padding:6px 14px; font-size:13px;" onclick="openReportModal()"><i class="fa-solid fa-chart-pie"></i> Generate PDF Report</button>
         </div>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:20px;">
           <div class="glass-card" style="padding:20px; background:white;">
             <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
               <i class="fa-solid fa-building" style="font-size:24px; color:var(--primary);"></i>
               <div>
-                <h4 style="font-size:16px; font-weight:700;">Madhuli Yuva Group</h4>
+                <h4 style="font-size:16px; font-weight:700;">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h4>
                 <p style="font-size:12px; color:var(--text-muted);">Sarang Apartment, Pramukh Park Society</p>
               </div>
             </div>
@@ -645,6 +680,7 @@
           <div style="display:flex; gap:8px;">
             <button class="btn btn-success" style="width:auto; padding:8px 16px;" onclick="openAddTransactionModal('income')"><i class="fa-solid fa-plus"></i> + Income</button>
             <button class="btn btn-danger" style="width:auto; padding:8px 16px;" onclick="openAddTransactionModal('expense')"><i class="fa-solid fa-minus"></i> + Expense</button>
+            <button class="btn btn-primary" style="width:auto; padding:8px 16px; background:#475569;" onclick="openReportModal()"><i class="fa-solid fa-file-pdf"></i> PDF Reports</button>
           </div>
         </div>
         <div class="glass-card" style="padding:20px; background:white; overflow-x:auto;">
@@ -690,6 +726,82 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- FINANCIAL REPORT MODAL WITH PROFESSIONAL PDF PRINT LETTERHEAD -->
+  <div class="modal" id="modal-report">
+    <div class="modal-content" style="max-width:700px;">
+      <div class="section-header no-print">
+        <h3><i class="fa-solid fa-file-pdf" style="color:var(--primary);"></i> Official Financial Statement PDF</h3>
+        <button onclick="closeModal('modal-report')" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      
+      <!-- PRINTABLE PDF REPORT BODY -->
+      <div id="printable-report" style="background:#ffffff; padding:24px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:20px;">
+        
+        <!-- OFFICIAL PDF LETTERHEAD HEADER -->
+        <div class="pdf-letterhead" style="text-align:center; border-bottom:2px dashed #94a3b8; padding-bottom:14px; margin-bottom:18px;">
+          <h1 style="font-size:22px; font-weight:800; color:#0f172a; margin-bottom:4px;">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h1>
+          <p style="font-size:13px; font-weight:700; color:#475569;">Madhuli Yuva Group Official Society Management</p>
+          <p style="font-size:12px; color:#64748b; margin-top:2px;">Sarang Apartment, Pramukh Park Society, Surat</p>
+          <div style="display:flex; justify-content:space-between; margin-top:12px; font-size:12px; font-weight:600; color:#334155; background:#f8fafc; padding:8px 12px; border-radius:6px;">
+            <span>Report Type: <b>Official Audit Ledger Statement</b></span>
+            <span>Date: <b id="report-current-date">05/09/2026</b></span>
+          </div>
+        </div>
+
+        <!-- SUMMARY CARDS FOR PDF -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; text-align:center; margin-bottom:20px;">
+          <div style="background:#f0fdf4; padding:12px; border-radius:8px; border:1px solid #bbf7d0;">
+            <span style="font-size:11px; font-weight:800; color:#166534; text-transform:uppercase;">TOTAL INCOME</span>
+            <h2 style="color:#15803d; font-size:18px; margin-top:4px;" id="report-income">₹0</h2>
+          </div>
+          <div style="background:#fef2f2; padding:12px; border-radius:8px; border:1px solid #fecaca;">
+            <span style="font-size:11px; font-weight:800; color:#991b1b; text-transform:uppercase;">TOTAL EXPENSE</span>
+            <h2 style="color:#b91c1c; font-size:18px; margin-top:4px;" id="report-expense">₹0</h2>
+          </div>
+          <div style="background:#eef2ff; padding:12px; border-radius:8px; border:1px solid #c7d2fe;">
+            <span style="font-size:11px; font-weight:800; color:#3730a3; text-transform:uppercase;">NET BALANCE</span>
+            <h2 style="color:#4338ca; font-size:18px; margin-top:4px;" id="report-balance">₹0</h2>
+          </div>
+        </div>
+
+        <!-- TRANSACTION TABLE -->
+        <h4 style="font-size:14px; font-weight:700; margin-bottom:10px; color:#1e293b;">Statement Ledger Details</h4>
+        <table style="width:100%; border-collapse:collapse; font-size:12px; background:white; border:1px solid #e2e8f0;">
+          <thead>
+            <tr style="background:#f1f5f9; text-align:left; border-bottom:2px solid #cbd5e1;">
+              <th style="padding:10px; border-right:1px solid #e2e8f0;">Date</th>
+              <th style="padding:10px; border-right:1px solid #e2e8f0;">Particulars / Title</th>
+              <th style="padding:10px; border-right:1px solid #e2e8f0;">Category</th>
+              <th style="padding:10px; border-right:1px solid #e2e8f0;">Type</th>
+              <th style="padding:10px; text-align:right;">Amount (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="report-table-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+
+        <!-- SIGNATURE BLOCK FOR PDF OUTPUT -->
+        <div class="pdf-signature-block" style="display:flex; justify-content:space-between; margin-top:40px; padding-top:20px; border-top:1px dashed #cbd5e1; font-size:12px;">
+          <div style="text-align:center;">
+            <p style="font-weight:700; color:#334155;">_______________________</p>
+            <p style="margin-top:4px; font-weight:600;">Prepared by (Treasurer)</p>
+          </div>
+          <div style="text-align:center;">
+            <p style="font-weight:700; color:#334155;">_______________________</p>
+            <p style="margin-top:4px; font-weight:600;">Verified by (President / Aayojak)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- NO-PRINT BUTTONS -->
+      <div class="no-print" style="display:flex; gap:12px;">
+        <button class="btn btn-primary" style="flex:1;" onclick="printReport()"><i class="fa-solid fa-file-pdf"></i> Download PDF / Print</button>
+        <button class="btn btn-success" style="flex:1;" onclick="exportCSV()"><i class="fa-solid fa-file-excel"></i> Export Excel (CSV)</button>
+      </div>
     </div>
   </div>
 
@@ -769,19 +881,19 @@
     </div>
   </div>
 
-  <!-- ADD TRANSACTION MODAL (INCOME / EXPENSE) -->
+  <!-- ADD TRANSACTION MODAL -->
   <div class="modal" id="modal-transaction">
     <div class="modal-content">
       <div class="section-header">
-        <h3 id="modal-tx-title">Add Income Entry</h3>
+        <h3 id="modal-tx-title">Add Income Record</h3>
         <button onclick="closeModal('modal-transaction')" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
       </div>
       <form onsubmit="handleSaveTransaction(event)">
-        <input type="hidden" id="tx-type" value="income">
         <input type="hidden" id="tx-id" value="">
+        <input type="hidden" id="tx-type" value="income">
         <div class="form-group">
           <label>Title / Particulars</label>
-          <input type="text" id="tx-title" class="form-control" placeholder="e.g. Shree Janmashtami Donation" required>
+          <input type="text" id="tx-title" class="form-control" placeholder="e.g. Janmashtami Donation" required>
         </div>
         <div class="form-group">
           <label>Category</label>
@@ -803,7 +915,7 @@
           <label>Date</label>
           <input type="date" id="tx-date" class="form-control" required>
         </div>
-        <button type="submit" class="btn btn-primary" id="tx-submit-btn">Save Entry</button>
+        <button type="submit" class="btn btn-primary">Save Entry</button>
       </form>
     </div>
   </div>
@@ -1003,6 +1115,48 @@
       document.getElementById('modal-transaction').classList.add('show');
     }
 
+    function openReportModal() {
+      const totalIncome = financialList.filter(f => f.type === 'income').reduce((acc, curr) => acc + Number(curr.amount), 0);
+      const totalExpense = financialList.filter(f => f.type === 'expense').reduce((acc, curr) => acc + Number(curr.amount), 0);
+      const balance = totalIncome - totalExpense;
+
+      document.getElementById('report-current-date').innerText = new Date().toLocaleDateString('en-IN');
+      document.getElementById('report-income').innerText = '₹' + totalIncome.toLocaleString('en-IN');
+      document.getElementById('report-expense').innerText = '₹' + totalExpense.toLocaleString('en-IN');
+      document.getElementById('report-balance').innerText = '₹' + balance.toLocaleString('en-IN');
+
+      const tbody = document.getElementById('report-table-body');
+      tbody.innerHTML = financialList.map(f => `
+        <tr style="border-bottom:1px solid #e2e8f0;">
+          <td style="padding:8px; border-right:1px solid #e2e8f0;">${f.date}</td>
+          <td style="padding:8px; border-right:1px solid #e2e8f0; font-weight:600;">${f.title}</td>
+          <td style="padding:8px; border-right:1px solid #e2e8f0;">${f.category}</td>
+          <td style="padding:8px; border-right:1px solid #e2e8f0; text-transform:uppercase; font-weight:700; color:${f.type === 'income' ? 'var(--secondary)' : 'var(--danger)'};">${f.type}</td>
+          <td style="padding:8px; text-align:right; font-weight:700;">₹${Number(f.amount).toLocaleString('en-IN')}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('modal-report').classList.add('show');
+    }
+
+    function printReport() {
+      window.print();
+    }
+
+    function exportCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,Date,Particulars,Category,Type,Amount\n";
+      financialList.forEach(f => {
+        csvContent += `${f.date},"${f.title}",${f.category},${f.type},${f.amount}\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Madhuli_Yuva_Group_Report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
     function openProfileModal() { 
       document.getElementById('edit-name').value = currentUser.name;
       document.getElementById('edit-phone').value = currentUser.phone;
@@ -1065,7 +1219,6 @@
       const date = document.getElementById('tx-date').value;
 
       if(id) {
-        // Edit
         const tx = financialList.find(f => f.id == id);
         if(tx) {
           tx.title = title;
@@ -1074,7 +1227,6 @@
           tx.date = date;
         }
       } else {
-        // Add
         financialList.unshift({
           id: Date.now(),
           title, category, type, amount, date
@@ -1102,55 +1254,4 @@
 
     function deleteTransaction(id) {
       if(confirm('Are you sure you want to delete this financial record?')) {
-        financialList = financialList.filter(f => f.id !== id);
-        updateFinancialCalculations();
-        renderFinancials();
-      }
-    }
-
-    function handlePhotoUpload(e) {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          currentUser.avatar = evt.target.result;
-          document.getElementById('profile-modal-avatar').src = currentUser.avatar;
-          document.getElementById('nav-avatar').src = currentUser.avatar;
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    function handleProfileUpdate(e) {
-      e.preventDefault();
-      currentUser.name = document.getElementById('edit-name').value;
-      currentUser.phone = document.getElementById('edit-phone').value;
-      currentUser.flat = document.getElementById('edit-flat').value;
-      
-      document.getElementById('nav-user-name').innerText = currentUser.name;
-      document.getElementById('nav-user-flat').innerText = 'Flat: ' + currentUser.flat;
-      closeModal('modal-profile');
-      alert('Profile updated successfully!');
-    }
-
-    function handleLogout() {
-      currentUser = null;
-      document.getElementById('app-screen').style.display = 'none';
-      document.getElementById('auth-screen').style.display = 'flex';
-    }
-
-    function changeLanguage(lang) {
-      if(lang === 'gu') {
-        document.getElementById('lang-app-title').innerText = 'સોસાયટી ફંક્શન મેનેજર';
-        document.getElementById('lang-app-subtitle').innerText = 'મધુલી યુવા ગ્રુપ ઓફિશિયલ > સારંગ એપાર્ટમેન્ટ, પ્રમુખ પાર્ક';
-      } else if(lang === 'hi') {
-        document.getElementById('lang-app-title').innerText = 'सोसायटी फंक्शन मैनेजर';
-        document.getElementById('lang-app-subtitle').innerText = 'मधुली युवा ग्रुप ऑफिशियल > सारंग अपार्टमेंट, प्रमुख पार्क';
-      } else {
-        document.getElementById('lang-app-title').innerText = 'Society Function Manager';
-        document.getElementById('lang-app-subtitle').innerText = 'Temporary mobile version > Sarang Apartment, Pramukh Park Society';
-      }
-    }
-  </script>
-</body>
-</html>
+        financialList = financialList
