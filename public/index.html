@@ -167,6 +167,11 @@
       color: white;
     }
 
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger), #dc2626);
+      color: white;
+    }
+
     #app-screen {
       display: none;
       flex-direction: column;
@@ -431,6 +436,18 @@
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
+
+    .action-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .action-icon-btn.edit { color: var(--primary); }
+    .action-icon-btn.delete { color: var(--danger); }
+    .action-icon-btn:hover { background: #f1f5f9; }
   </style>
 </head>
 <body>
@@ -537,7 +554,8 @@
 
     <!-- TABS -->
     <div class="app-nav">
-      <button class="nav-tab active" onclick="switchNavTab('events')" id="tab-btn-events"><i class="fa-solid fa-calendar-days"></i> Events</button>
+      <button class="nav-tab active" onclick="switchNavTab('dashboard')" id="tab-btn-dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
+      <button class="nav-tab" onclick="switchNavTab('events')" id="tab-btn-events"><i class="fa-solid fa-calendar-days"></i> Events</button>
       <button class="nav-tab" onclick="switchNavTab('notices')" id="tab-btn-notices"><i class="fa-solid fa-bullhorn"></i> Notices</button>
       <button class="nav-tab" onclick="switchNavTab('financial')" id="tab-btn-financial"><i class="fa-solid fa-indian-rupee-sign"></i> Financials</button>
       <button class="nav-tab" onclick="switchNavTab('photos')" id="tab-btn-photos"><i class="fa-solid fa-images"></i> Photos</button>
@@ -562,8 +580,44 @@
         </div>
       </div>
 
+      <!-- DASHBOARD OVERVIEW SECTION -->
+      <div id="section-dashboard">
+        <div class="section-header">
+          <h2>Society Overview Dashboard</h2>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:20px;">
+          <div class="glass-card" style="padding:20px; background:white;">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+              <i class="fa-solid fa-building" style="font-size:24px; color:var(--primary);"></i>
+              <div>
+                <h4 style="font-size:16px; font-weight:700;">Madhuli Yuva Group</h4>
+                <p style="font-size:12px; color:var(--text-muted);">Sarang Apartment, Pramukh Park Society</p>
+              </div>
+            </div>
+            <hr style="border:0; border-top:1px solid #e2e8f0; margin:12px 0;">
+            <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600;">
+              <span>Total Flats: <b>48 Flats</b></span>
+              <span>Active Events: <b id="dash-event-count">5</b></span>
+            </div>
+          </div>
+
+          <div class="glass-card" style="padding:20px; background:white;">
+            <h4 style="font-size:15px; font-weight:700; margin-bottom:8px; color:var(--dark);"><i class="fa-solid fa-bullhorn" style="color:var(--accent);"></i> Latest Announcement</h4>
+            <p id="dash-latest-notice" style="font-size:13px; color:var(--text-main);">Loading latest announcement...</p>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <h2>Quick Event Preview</h2>
+          <button class="btn btn-primary" style="width:auto; padding:6px 14px; font-size:13px;" onclick="switchNavTab('events')">View All Events →</button>
+        </div>
+        <div class="event-grid" id="dash-events-preview">
+          <!-- Dynamically filled -->
+        </div>
+      </div>
+
       <!-- EVENTS SECTION -->
-      <div id="section-events">
+      <div id="section-events" style="display:none;">
         <div class="section-header">
           <h2>Upcoming Events & Bank Holidays (2026)</h2>
           <button class="btn btn-primary" style="width:auto; padding:8px 16px;" onclick="openAddEventModal()"><i class="fa-solid fa-plus"></i> + Add Event</button>
@@ -587,21 +641,22 @@
       <!-- FINANCIAL SECTION -->
       <div id="section-financial" style="display:none;">
         <div class="section-header">
-          <h2>Financial Ledger</h2>
+          <h2>Financial Ledger (Income & Expense)</h2>
           <div style="display:flex; gap:8px;">
-            <button class="btn btn-success" style="width:auto; padding:8px 16px;" onclick="openAddTransactionModal('income')">+ Income</button>
-            <button class="btn btn-primary" style="width:auto; padding:8px 16px; background:var(--danger);" onclick="openAddTransactionModal('expense')">+ Expense</button>
+            <button class="btn btn-success" style="width:auto; padding:8px 16px;" onclick="openAddTransactionModal('income')"><i class="fa-solid fa-plus"></i> + Income</button>
+            <button class="btn btn-danger" style="width:auto; padding:8px 16px;" onclick="openAddTransactionModal('expense')"><i class="fa-solid fa-minus"></i> + Expense</button>
           </div>
         </div>
-        <div class="glass-card" style="padding:20px; background:white;">
+        <div class="glass-card" style="padding:20px; background:white; overflow-x:auto;">
           <table style="width:100%; border-collapse:collapse; font-size:14px;">
             <thead>
               <tr style="border-bottom:2px solid #e2e8f0; text-align:left;">
-                <th style="padding:10px;">Date</th>
-                <th style="padding:10px;">Title</th>
-                <th style="padding:10px;">Category</th>
-                <th style="padding:10px;">Type</th>
-                <th style="padding:10px;">Amount</th>
+                <th style="padding:12px;">Date</th>
+                <th style="padding:12px;">Title</th>
+                <th style="padding:12px;">Category</th>
+                <th style="padding:12px;">Type</th>
+                <th style="padding:12px;">Amount</th>
+                <th style="padding:12px; text-align:right;">Actions</th>
               </tr>
             </thead>
             <tbody id="financial-list">
@@ -693,8 +748,69 @@
     </div>
   </div>
 
+  <!-- ADD NOTICE MODAL -->
+  <div class="modal" id="modal-add-notice">
+    <div class="modal-content">
+      <div class="section-header">
+        <h3>Add New Notice</h3>
+        <button onclick="closeModal('modal-add-notice')" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <form onsubmit="handleCreateNotice(event)">
+        <div class="form-group">
+          <label>Notice Title</label>
+          <input type="text" id="notice-title" class="form-control" placeholder="e.g. Navratri Festival Meeting" required>
+        </div>
+        <div class="form-group">
+          <label>Notice Content / Details</label>
+          <textarea id="notice-desc" class="form-control" rows="4" placeholder="Write announcement text here..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Publish Notice</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD TRANSACTION MODAL (INCOME / EXPENSE) -->
+  <div class="modal" id="modal-transaction">
+    <div class="modal-content">
+      <div class="section-header">
+        <h3 id="modal-tx-title">Add Income Entry</h3>
+        <button onclick="closeModal('modal-transaction')" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <form onsubmit="handleSaveTransaction(event)">
+        <input type="hidden" id="tx-type" value="income">
+        <input type="hidden" id="tx-id" value="">
+        <div class="form-group">
+          <label>Title / Particulars</label>
+          <input type="text" id="tx-title" class="form-control" placeholder="e.g. Shree Janmashtami Donation" required>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="tx-category" class="form-control">
+            <option value="Donation">Donation</option>
+            <option value="Sponsorship">Sponsorship</option>
+            <option value="Member Contribution">Member Contribution</option>
+            <option value="Sound & Light">Sound & Light</option>
+            <option value="Stage & Decoration">Stage & Decoration</option>
+            <option value="Food & Catering">Food & Catering</option>
+            <option value="Miscellaneous">Miscellaneous</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Amount (₹)</label>
+          <input type="number" id="tx-amount" class="form-control" placeholder="e.g. 5000" min="1" required>
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="tx-date" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="tx-submit-btn">Save Entry</button>
+      </form>
+    </div>
+  </div>
+
   <script>
     let currentUser = null;
+
     let eventsList = [
       { id: 1, name: 'Shree Krishna Janmashtami 2026', date: '2026-09-04', type: 'Festival Holiday', desc: 'Sarang Apartment Ground Dahi Handi Celebration' },
       { id: 2, name: 'Ganesh Chaturthi Mahotsav', date: '2026-09-14', type: 'Festival', desc: '10 Days Sthapana and Daily Aarti' },
@@ -704,7 +820,13 @@
     ];
 
     let noticesList = [
-      { id: 1, title: 'Madhuli Yuva Group General Meeting', date: '2026-09-06', desc: 'All flat owners are requested to join the meeting regarding Navratri budget.' }
+      { id: 1, title: 'Madhuli Yuva Group General Meeting', date: '2026-09-06', desc: 'All flat owners are requested to join the meeting regarding Navratri festival budget and arrangement.' }
+    ];
+
+    let financialList = [
+      { id: 101, title: 'Janmashtami Collection & Donation', category: 'Donation', type: 'income', amount: 25000, date: '2026-09-04' },
+      { id: 102, title: 'Sound System & DJ Advance', category: 'Sound & Light', type: 'expense', amount: 8500, date: '2026-09-03' },
+      { id: 103, title: 'Flower Decoration & Lighting', category: 'Stage & Decoration', type: 'expense', amount: 5000, date: '2026-09-04' }
     ];
 
     function switchAuthTab(tab) {
@@ -753,8 +875,11 @@
       document.getElementById('nav-user-flat').innerText = 'Flat: ' + currentUser.flat;
       document.getElementById('nav-avatar').src = currentUser.avatar;
 
+      updateFinancialCalculations();
+      renderDashboard();
       renderEvents();
       renderNotices();
+      renderFinancials();
     }
 
     function toggleDropdown() {
@@ -768,13 +893,42 @@
     };
 
     function switchNavTab(tab) {
-      ['events', 'notices', 'financial', 'photos', 'settings'].forEach(t => {
+      ['dashboard', 'events', 'notices', 'financial', 'photos', 'settings'].forEach(t => {
         const sec = document.getElementById('section-' + t);
         if (sec) sec.style.display = (t === tab) ? 'block' : 'none';
         
         const btn = document.getElementById('tab-btn-' + t);
         if (btn) btn.classList.toggle('active', t === tab);
       });
+    }
+
+    function updateFinancialCalculations() {
+      const totalIncome = financialList.filter(f => f.type === 'income').reduce((acc, curr) => acc + Number(curr.amount), 0);
+      const totalExpense = financialList.filter(f => f.type === 'expense').reduce((acc, curr) => acc + Number(curr.amount), 0);
+      const balance = totalIncome - totalExpense;
+
+      document.getElementById('stat-income').innerText = '₹' + totalIncome.toLocaleString('en-IN');
+      document.getElementById('stat-expense').innerText = '₹' + totalExpense.toLocaleString('en-IN');
+      document.getElementById('stat-balance').innerText = '₹' + balance.toLocaleString('en-IN');
+    }
+
+    function renderDashboard() {
+      document.getElementById('dash-event-count').innerText = eventsList.length;
+      if (noticesList.length > 0) {
+        document.getElementById('dash-latest-notice').innerText = noticesList[0].title + ' (' + noticesList[0].date + ')';
+      }
+
+      const previewContainer = document.getElementById('dash-events-preview');
+      previewContainer.innerHTML = eventsList.slice(0, 3).map(ev => `
+        <div class="event-card">
+          <div>
+            <span class="event-badge">${ev.type}</span>
+            <div class="event-title">${ev.name}</div>
+            <div class="event-date"><i class="fa-regular fa-calendar"></i> ${ev.date}</div>
+            <p style="font-size:13px; color:var(--text-muted);">${ev.desc}</p>
+          </div>
+        </div>
+      `).join('');
     }
 
     function renderEvents() {
@@ -787,6 +941,9 @@
             <div class="event-date"><i class="fa-regular fa-calendar"></i> ${ev.date}</div>
             <p style="font-size:13px; color:var(--text-muted);">${ev.desc}</p>
           </div>
+          <div style="margin-top:12px; text-align:right;">
+            <button class="action-icon-btn delete" onclick="deleteEvent(${ev.id})"><i class="fa-solid fa-trash"></i> Delete</button>
+          </div>
         </div>
       `).join('');
     }
@@ -797,17 +954,55 @@
         <div class="notice-card">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <h4 style="font-size:16px; font-weight:700;">${n.title}</h4>
-            <span style="font-size:12px; color:var(--text-muted);">${n.date}</span>
+            <div>
+              <span style="font-size:12px; color:var(--text-muted); margin-right:10px;">${n.date}</span>
+              <button class="action-icon-btn delete" onclick="deleteNotice(${n.id})"><i class="fa-solid fa-trash"></i></button>
+            </div>
           </div>
           <p style="font-size:14px; margin-top:8px; color:var(--text-main);">${n.desc}</p>
-          <a class="whatsapp-btn" href="https://api.whatsapp.com/send?text=${encodeURIComponent('*Notice:* ' + n.title + '\n' + n.desc)}" target="_blank">
+          <a class="whatsapp-btn" href="https://api.whatsapp.com/send?text=${encodeURIComponent('*Madhuli Yuva Group Notice:* ' + n.title + '\n\n' + n.desc)}" target="_blank">
             <i class="fa-brands fa-whatsapp"></i> Share on WhatsApp Group
           </a>
         </div>
       `).join('');
     }
 
+    function renderFinancials() {
+      const container = document.getElementById('financial-list');
+      container.innerHTML = financialList.map(f => `
+        <tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:12px;">${f.date}</td>
+          <td style="padding:12px; font-weight:700;">${f.title}</td>
+          <td style="padding:12px;"><span style="background:#f1f5f9; padding:4px 8px; border-radius:6px; font-size:12px;">${f.category}</span></td>
+          <td style="padding:12px;">
+            <span style="color:${f.type === 'income' ? 'var(--secondary)' : 'var(--danger)'}; font-weight:700; text-transform:uppercase; font-size:12px;">
+              ${f.type}
+            </span>
+          </td>
+          <td style="padding:12px; font-weight:800; color:${f.type === 'income' ? 'var(--secondary)' : 'var(--danger)'}">
+            ${f.type === 'income' ? '+' : '-'}₹${Number(f.amount).toLocaleString('en-IN')}
+          </td>
+          <td style="padding:12px; text-align:right;">
+            <button class="action-icon-btn edit" onclick="editTransaction(${f.id})"><i class="fa-solid fa-pen"></i></button>
+            <button class="action-icon-btn delete" onclick="deleteTransaction(${f.id})"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
     function openAddEventModal() { document.getElementById('modal-add-event').classList.add('show'); }
+    function openAddNoticeModal() { document.getElementById('modal-add-notice').classList.add('show'); }
+    
+    function openAddTransactionModal(type) {
+      document.getElementById('tx-id').value = '';
+      document.getElementById('tx-type').value = type;
+      document.getElementById('tx-title').value = '';
+      document.getElementById('tx-amount').value = '';
+      document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('modal-tx-title').innerText = type === 'income' ? '+ Add Income Record' : '+ Add Expense Record';
+      document.getElementById('modal-transaction').classList.add('show');
+    }
+
     function openProfileModal() { 
       document.getElementById('edit-name').value = currentUser.name;
       document.getElementById('edit-phone').value = currentUser.phone;
@@ -827,7 +1022,90 @@
         desc: document.getElementById('event-desc').value
       });
       renderEvents();
+      renderDashboard();
       closeModal('modal-add-event');
+    }
+
+    function deleteEvent(id) {
+      if(confirm('Are you sure you want to delete this event?')) {
+        eventsList = eventsList.filter(e => e.id !== id);
+        renderEvents();
+        renderDashboard();
+      }
+    }
+
+    function handleCreateNotice(e) {
+      e.preventDefault();
+      noticesList.unshift({
+        id: Date.now(),
+        title: document.getElementById('notice-title').value,
+        date: new Date().toISOString().split('T')[0],
+        desc: document.getElementById('notice-desc').value
+      });
+      renderNotices();
+      renderDashboard();
+      closeModal('modal-add-notice');
+    }
+
+    function deleteNotice(id) {
+      if(confirm('Are you sure you want to delete this notice?')) {
+        noticesList = noticesList.filter(n => n.id !== id);
+        renderNotices();
+        renderDashboard();
+      }
+    }
+
+    function handleSaveTransaction(e) {
+      e.preventDefault();
+      const id = document.getElementById('tx-id').value;
+      const type = document.getElementById('tx-type').value;
+      const title = document.getElementById('tx-title').value;
+      const category = document.getElementById('tx-category').value;
+      const amount = document.getElementById('tx-amount').value;
+      const date = document.getElementById('tx-date').value;
+
+      if(id) {
+        // Edit
+        const tx = financialList.find(f => f.id == id);
+        if(tx) {
+          tx.title = title;
+          tx.category = category;
+          tx.amount = amount;
+          tx.date = date;
+        }
+      } else {
+        // Add
+        financialList.unshift({
+          id: Date.now(),
+          title, category, type, amount, date
+        });
+      }
+
+      updateFinancialCalculations();
+      renderFinancials();
+      closeModal('modal-transaction');
+    }
+
+    function editTransaction(id) {
+      const tx = financialList.find(f => f.id == id);
+      if(tx) {
+        document.getElementById('tx-id').value = tx.id;
+        document.getElementById('tx-type').value = tx.type;
+        document.getElementById('tx-title').value = tx.title;
+        document.getElementById('tx-category').value = tx.category;
+        document.getElementById('tx-amount').value = tx.amount;
+        document.getElementById('tx-date').value = tx.date;
+        document.getElementById('modal-tx-title').innerText = 'Edit Transaction Record';
+        document.getElementById('modal-transaction').classList.add('show');
+      }
+    }
+
+    function deleteTransaction(id) {
+      if(confirm('Are you sure you want to delete this financial record?')) {
+        financialList = financialList.filter(f => f.id !== id);
+        updateFinancialCalculations();
+        renderFinancials();
+      }
     }
 
     function handlePhotoUpload(e) {
@@ -864,7 +1142,7 @@
     function changeLanguage(lang) {
       if(lang === 'gu') {
         document.getElementById('lang-app-title').innerText = 'સોસાયટી ફંક્શન મેનેજર';
-        document.getElementById('lang-app-subtitle').innerText = 'મધુલી યુવા ગ્રુપ ઓફિશિયલ > સારંગ એパートમેન્ટ, પ્રમુખ પાર્ક';
+        document.getElementById('lang-app-subtitle').innerText = 'મધુલી યુવા ગ્રુપ ઓફિશિયલ > સારંગ એપાર્ટમેન્ટ, પ્રમુખ પાર્ક';
       } else if(lang === 'hi') {
         document.getElementById('lang-app-title').innerText = 'सोसायटी फंक्शन मैनेजर';
         document.getElementById('lang-app-subtitle').innerText = 'मधुली युवा ग्रुप ऑफिशियल > सारंग अपार्टमेंट, प्रमुख पार्क';
