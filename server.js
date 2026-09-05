@@ -456,6 +456,188 @@ app.post('/api/logout', (req, res) => {
   res.json({ message: 'Logged out successfully' });
 });
 
+// ==================== SIGNUP ROUTE ====================
+
+app.post('/api/auth/signup', (req, res) => {
+  const { name, email, mobile, password, role, society_id, flat_number, family_members } = req.body;
+
+  // Validate required fields
+  if (!name || !email || !password || !role || !mobile) {
+    return res.status(400).json({ error: 'Name, email, mobile, password and role are required' });
+  }
+
+  // Check if user already exists
+  db.get(`SELECT id FROM users WHERE email = ?`, [email], (err, existingUser) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User with this email already exists' });
+    }
+
+    // Hash password
+    const hashedPassword = bcrypt.hashSync(password, 10);
+
+    // Insert new user
+    db.run(
+      `INSERT INTO users (name, email, mobile, password, role, society_id, flat_number, family_members, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, email, mobile, hashedPassword, role, society_id || null, flat_number || null, family_members || 1, 'active'],
+      function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+
+        const userId = this.lastID;
+
+        // Generate JWT token
+        const token = jwt.sign(
+          { id: userId, email: email, role: role, society_id: society_id },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+
+        res.status(201).json({
+          message: 'User registered successfully',
+          token,
+          user: {
+            id: userId,
+            name,
+            email,
+            mobile,
+            role,
+            society_id,
+            flat_number,
+            status: 'active'
+          }
+        });
+      }
+    );
+  });
+});
+
+// ==================== PROFILE PHOTO UPLOAD ====================
+
+// Configure multer for profile photos
+const profilePhotoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    if (!fs.existsSync('uploads/profiles')) {
+      fs.mkdirSync('uploads/profiles', { recursive: true });
+    }
+    cb(null, 'uploads/profiles');
+  },
+  filename: (req, file, cb) => {
+    const userId = req.user?.id || 'temp';
+    cb(null, `${userId}-${Date.now()}-${file.originalname}`);
+  }
+});
+
+const uploadProfilePhoto = multer({
+  storage: profilePhotoStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPEG, JPG and PNG files are allowed'));
+    }
+  }
+});
+
+// Profile photo upload endpoint
+app.post('/api/profile/photo', authenticateToken, uploadProfilePhoto.single('profilePhoto'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  const profilePhotoUrl = `/uploads/profiles/${req.file.filename}`;
+  const userId = req.user.id;
+
+  // Update user profile photo
+  db.run(
+    `UPDATE users SET profile_photo_url = ? WHERE id = ?`,
+    [profilePhotoUrl, userId],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+
+      res.json({
+        message: 'Profile photo uploaded successfully',
+        profilePhotoUrl,
+        fileName: req.file.filename
+      });
+    }
+  );
+});
+
+// Get user profile
+app.get('/api/profile', authenticateToken, (req, res) => {
+  const userId = req.user.id;
+
+  db.get(
+    `SELECT id, name, email, mobile, role, society_id, flat_number, family_members,
+            profile_photo_url, status, created_at
+     FROM users WHERE id = ?`,
+    [userId],
+    (err, user) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+
+      // Remove password from response
+      delete user.password;
+      res.json(user);
+    }
+  );
+});
+
+// Update user profile
+app.put('/api/profile', authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  const { name, mobile, flat_number, family_members } = req.body;
+
+  db.run(
+    `UPDATE users SET name = ?, mobile = ?, flat_number = ?, family_members = ? WHERE id = ?`,
+    [name, mobile, flat_number, family_members, userId],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+
+      res.json({ message: 'Profile updated successfully' });
+    }
+  );
+});
+
+// ==================== PASSWORD CHANGE ====================
+
+app.post('/api/auth/change-password', authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current password and new password are required' });
+  }
+
+  // Get current password hash
+  db.get(`SELECT password FROM users WHERE id = ?`, [userId], (err, user) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Verify current password
+    if (!bcrypt.compareSync(currentPassword, user.password)) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const newHashedPassword = bcrypt.hashSync(newPassword, 10);
+
+    // Update password
+    db.run(
+      `UPDATE users SET password = ? WHERE id = ?`,
+      [newHashedPassword, userId],
+      function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+
+        res.json({ message: 'Password changed successfully' });
+      }
+    );
+  });
+});
+
 // ==================== SOCIETY ROUTES ====================
 
 app.get('/api/society', authenticateToken, (req, res) => {
@@ -951,6 +1133,149 @@ app.delete('/api/announcements/:id', authenticateToken, authorizeRole(['organize
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: 'Announcement deleted successfully' });
   });
+});
+
+// ==================== NOTICE TEMPLATES ROUTES ====================
+
+app.get('/api/notice-templates', authenticateToken, (req, res) => {
+  const societyId = req.user.society_id;
+
+  db.all(
+    `SELECT * FROM notice_templates WHERE society_id = ? OR society_id IS NULL ORDER BY category, name`,
+    [societyId],
+    (err, templates) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(templates);
+    }
+  );
+});
+
+app.post('/api/notice-templates', authenticateToken, authorizeRole(['organizer']), (req, res) => {
+  const { name, category, template_text, placeholder_fields, society_id } = req.body;
+  const societyId = society_id || req.user.society_id;
+
+  db.run(
+    `INSERT INTO notice_templates (name, category, template_text, placeholder_fields, society_id)
+     VALUES (?, ?, ?, ?, ?)`,
+    [name, category, template_text, placeholder_fields, societyId],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.status(201).json({ id: this.lastID, name, category, template_text });
+    }
+  );
+});
+
+app.put('/api/notice-templates/:id', authenticateToken, authorizeRole(['organizer']), (req, res) => {
+  const { name, category, template_text, placeholder_fields } = req.body;
+
+  db.run(
+    `UPDATE notice_templates SET name=?, category=?, template_text=?, placeholder_fields=? WHERE id=?`,
+    [name, category, template_text, placeholder_fields, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: 'Template updated successfully' });
+    }
+  );
+});
+
+app.delete('/api/notice-templates/:id', authenticateToken, authorizeRole(['organizer']), (req, res) => {
+  db.run(`DELETE FROM notice_templates WHERE id=?`, [req.params.id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: 'Template deleted successfully' });
+  });
+});
+
+// ==================== WHATSAPP SHARE ROUTE ====================
+
+app.post('/api/notices/share-whatsapp', authenticateToken, (req, res) => {
+  const { notice_text, template_name } = req.body;
+
+  // Encode the message for WhatsApp URL
+  const encodedMessage = encodeURIComponent(notice_text);
+  const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+
+  // Also provide direct message link
+  const whatsappDirectUrl = `https://wa.me/?text=${encodedMessage}`;
+
+  res.json({
+    message: 'WhatsApp share link generated',
+    shareUrl: whatsappUrl,
+    directUrl: whatsappDirectUrl,
+    template_name,
+    preview_text: notice_text.substring(0, 100) + '...'
+  });
+});
+
+// ==================== MULTI-LANGUAGE SUPPORT ====================
+
+app.get('/api/translations/:lang', (req, res) => {
+  const { lang } = req.params;
+
+  const translations = {
+    en: {
+      app_name: 'Society Function Manager',
+      society_name: 'Madhuli Yuva Group Society',
+      login: 'Login',
+      signup: 'Sign Up',
+      logout: 'Logout',
+      profile: 'Profile',
+      settings: 'Settings',
+      password: 'Password',
+      name: 'Name',
+      email: 'Email',
+      mobile: 'Mobile',
+      flat_number: 'Flat Number',
+      events: 'Events',
+      notices: 'Notices',
+      photos: 'Photos',
+      financials: 'Financials',
+      welcome: 'Welcome',
+      dashboard: 'Dashboard'
+    },
+    gu: {
+      app_name: 'Society Function Manager',
+      society_name: 'મધુલી યુવા ગ્રુપ',
+      login: 'લોગિન',
+      signup: 'સાઇનઅપ',
+      logout: 'લોગઆઉટ',
+      profile: 'પ્રોફાઇલ',
+      settings: 'સેટિંગ',
+      password: 'પાસવર્ડ',
+      name: 'નામ',
+      email: 'ઈમૈલ',
+      mobile: 'મોબાઈલ',
+      flat_number: 'ફ્લૅટ',
+      events: 'કાર્યક્રમ',
+      notices: 'સમાચાર',
+      photos: 'ફોટો',
+      financials: 'નાણાં',
+      welcome: 'સ્વાગત',
+      dashboard: 'ડૅશબોર્ડ'
+    },
+    hi: {
+      app_name: 'Society Function Manager',
+      society_name: 'मधुली युवा ग्रुप',
+      login: 'लॉगिन',
+      signup: 'साइनअप',
+      logout: 'लॉगआउट',
+      profile: 'प्रोफ़ाइल',
+      settings: 'सेटिंग्स',
+      password: 'पासवर्ड',
+      name: 'नाम',
+      email: 'ईमेल',
+      mobile: 'मोबाइल',
+      flat_number: 'फ्लैट',
+      events: 'कार्यक्रम',
+      notices: 'सूचनाएं',
+      photos: 'फ़ोटो',
+      financials: 'वित्त',
+      welcome: 'स्वागत',
+      dashboard: 'डैशबोर्ड'
+    }
+  };
+
+  const langTranslations = translations[lang] || translations.en;
+  res.json(langTranslations);
 });
 
 // ==================== PHOTOS ROUTES ====================
