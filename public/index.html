@@ -2,212 +2,110 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Madhuli Yuva Group - Society Function Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Society Function Manager > Madhuli Yuva Group Official</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Gujarati:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-light: #e0e7ff;
       --secondary: #10b981;
+      --secondary-hover: #059669;
+      --accent: #f59e0b;
       --danger: #ef4444;
       --dark: #0f172a;
-      --light: #f8fafc;
-      --border: #e2e8f0;
-      --text: #1e293b;
-      --muted: #64748b;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --glass-bg: rgba(255, 255, 255, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.4);
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+      --radius: 16px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
     }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', 'Noto Sans Gujarati', sans-serif; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: var(--light);
-      color: var(--text);
-      line-height: 1.6;
-    }
-
-    .header {
-      background: linear-gradient(135deg, var(--primary), #7c3aed);
-      color: white;
-      padding: 16px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .header-content {
-      max-width: 1200px;
-      margin: 0 auto;
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      color: var(--text-main);
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
     }
 
-    .header-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
     }
 
-    .user-photo {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: white;
+    #auth-screen {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      border: 2px solid white;
-      cursor: pointer;
-    }
-
-    .user-details h3 {
-      font-size: 14px;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .user-details p {
-      font-size: 12px;
-      opacity: 0.9;
-      margin: 0;
-    }
-
-    .menu-btn {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 24px;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .dropdown-menu {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      background: white;
-      color: var(--text);
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      min-width: 200px;
-      z-index: 1000;
-      overflow: hidden;
-      display: none;
-    }
-
-    .dropdown-menu.active { display: block; }
-    .dropdown-menu a, .dropdown-menu button {
-      display: block;
-      width: 100%;
-      padding: 12px 16px;
-      border: none;
-      background: none;
-      text-align: left;
-      cursor: pointer;
-      color: var(--text);
-      font-size: 14px;
-      transition: background 0.2s;
-    }
-
-    .dropdown-menu a:hover, .dropdown-menu button:hover {
-      background: var(--light);
-    }
-
-    .dropdown-menu hr {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 0;
-    }
-
-    .logout-btn {
-      color: var(--danger);
-      font-weight: 600;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
+      min-height: 100vh;
       padding: 20px;
     }
 
-    .auth-container {
-      display: flex;
-      min-height: calc(100vh - 60px);
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .auth-card {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    .auth-box {
       width: 100%;
       max-width: 480px;
-      overflow: hidden;
+      padding: 32px;
     }
 
     .auth-header {
       text-align: center;
-      padding: 40px 24px 20px;
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
-    }
-
-    .logo {
-      font-size: 48px;
-      margin-bottom: 16px;
+      margin-bottom: 24px;
     }
 
     .auth-header h1 {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 4px;
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
     }
 
     .auth-header p {
       font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 8px;
+      color: var(--text-muted);
+      font-weight: 500;
     }
 
-    .auth-subtitle {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .tabs {
+    .tab-buttons {
       display: flex;
-      border-bottom: 2px solid var(--border);
+      background: rgba(226, 232, 240, 0.6);
+      padding: 4px;
+      border-radius: 12px;
+      margin-bottom: 24px;
     }
 
     .tab-btn {
       flex: 1;
-      padding: 16px;
+      padding: 10px;
       border: none;
-      background: none;
-      cursor: pointer;
-      font-size: 14px;
+      background: transparent;
       font-weight: 600;
-      color: var(--muted);
-      transition: all 0.3s;
-      border-bottom: 3px solid transparent;
-      position: relative;
-      bottom: -2px;
+      font-size: 14px;
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
     .tab-btn.active {
+      background: #ffffff;
       color: var(--primary);
-      border-bottom-color: var(--primary);
-    }
-
-    .tab-content {
-      display: none;
-      padding: 24px;
-    }
-
-    .tab-content.active {
-      display: block;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
     .form-group {
@@ -216,965 +114,765 @@
 
     .form-group label {
       display: block;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      margin-bottom: 8px;
-      color: var(--text);
+      margin-bottom: 6px;
+      color: var(--text-main);
     }
 
-    input, select, textarea {
+    .form-control {
       width: 100%;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      padding: 12px 16px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
       font-size: 14px;
-      font-family: inherit;
-      transition: border-color 0.3s;
+      transition: all 0.2s;
+      background: rgba(255,255,255,0.9);
     }
 
-    input:focus, select:focus, textarea:focus {
+    .form-control:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
     }
 
     .btn {
       width: 100%;
-      padding: 12px 16px;
+      padding: 12px 20px;
       border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 15px;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     .btn-primary {
-      background: var(--primary);
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
       color: white;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
 
     .btn-primary:hover {
-      background: #4f46e5;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
     }
 
-    .btn-secondary {
-      background: var(--light);
-      color: var(--text);
+    .btn-success {
+      background: linear-gradient(135deg, var(--secondary), var(--secondary-hover));
+      color: white;
     }
 
-    .checkbox-group {
+    #app-screen {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      background: #f8fafc;
+    }
+
+    .navbar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 24px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 16px;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
-    .checkbox-group input[type="checkbox"] {
-      width: auto;
-      margin: 0;
+    .user-profile-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    .checkbox-group label {
-      margin: 0;
-      font-size: 13px;
-      font-weight: 400;
+    .avatar-img {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary-light);
     }
 
-    .link {
-      color: var(--primary);
+    .user-info h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .user-info p {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .dropdown-container {
+      position: relative;
+    }
+
+    .three-dots-btn {
+      background: #f1f5f9;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+
+    .three-dots-btn:hover { background: #e2e8f0; }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 48px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      border: 1px solid #e2e8f0;
+      width: 200px;
+      z-index: 200;
+      overflow: hidden;
+    }
+
+    .dropdown-menu.show { display: block; }
+
+    .dropdown-item {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text-main);
       text-decoration: none;
       cursor: pointer;
-      font-weight: 600;
+      transition: background 0.2s;
     }
 
-    .link:hover {
-      text-decoration: underline;
-    }
+    .dropdown-item:hover { background: #f8fafc; }
+    .dropdown-item.danger { color: var(--danger); }
 
-    .divider {
-      text-align: center;
-      margin: 20px 0;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .divider::before {
-      content: '';
-      display: inline-block;
-      width: 45%;
-      height: 1px;
-      background: var(--border);
-      vertical-align: middle;
-      margin-right: 10px;
-    }
-
-    .divider::after {
-      content: '';
-      display: inline-block;
-      width: 45%;
-      height: 1px;
-      background: var(--border);
-      vertical-align: middle;
-      margin-left: 10px;
-    }
-
-    .dashboard {
-      display: none;
-    }
-
-    .dashboard.active {
-      display: block;
-    }
-
-    .nav-tabs {
+    .app-nav {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
       display: flex;
+      justify-content: center;
       gap: 8px;
-      margin-bottom: 24px;
-      border-bottom: 2px solid var(--border);
+      padding: 8px 16px;
       overflow-x: auto;
-      padding-bottom: 12px;
     }
 
     .nav-tab {
-      padding: 8px 16px;
+      padding: 10px 18px;
       border: none;
-      background: none;
-      cursor: pointer;
+      background: transparent;
       font-size: 14px;
       font-weight: 600;
-      color: var(--muted);
-      border-bottom: 3px solid transparent;
-      transition: all 0.3s;
+      color: var(--text-muted);
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       white-space: nowrap;
     }
 
     .nav-tab.active {
+      background: var(--primary-light);
       color: var(--primary);
-      border-bottom-color: var(--primary);
     }
 
-    .grid {
+    .container {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px;
+      flex: 1;
+    }
+
+    .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
 
-    .card {
+    .stat-card {
       background: white;
-      border: 1px solid var(--border);
-      border-radius: 12px;
       padding: 20px;
-      transition: all 0.3s;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
 
-    .card:hover {
-      border-color: var(--primary);
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
-    }
+    .stat-card p { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+    .stat-card h2 { font-size: 24px; font-weight: 800; margin-top: 4px; }
 
-    .card h3 {
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .card .value {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--primary);
-    }
-
-    .alert {
-      padding: 12px 16px;
-      border-radius: 8px;
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       margin-bottom: 16px;
-      font-size: 14px;
     }
 
-    .alert-danger {
-      background: #fee2e2;
-      color: #991b1b;
-      border: 1px solid #fecaca;
+    .section-header h2 { font-size: 20px; font-weight: 800; color: var(--dark); }
+
+    .event-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
     }
 
-    .alert-success {
-      background: #dcfce7;
-      color: #166534;
-      border: 1px solid #bbf7d0;
+    .event-card {
+      background: white;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s;
     }
 
-    @media (max-width: 768px) {
-      .auth-card { max-width: 100%; }
-      .header-content { flex-direction: column; gap: 12px; }
-      .grid { grid-template-columns: 1fr; }
+    .event-card:hover { transform: translateY(-2px); }
+
+    .event-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--primary-light);
+      color: var(--primary);
+      margin-bottom: 10px;
     }
 
-    .hidden { display: none !important; }
+    .event-title { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+    .event-date { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+
+    .notice-card {
+      background: white;
+      border-left: 4px solid var(--primary);
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+
+    .whatsapp-btn {
+      background: #25d366;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      text-decoration: none;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal.show { display: flex; }
+    .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 500px; }
+
+    .profile-avatar-container {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .profile-avatar-preview {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--primary);
+    }
+
+    .upload-badge {
+      position: absolute;
+      bottom: 0;
+      left: 55%;
+      background: var(--primary);
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
   </style>
 </head>
 <body>
 
-<!-- Header (visible only when logged in) -->
-<div id="header" class="header hidden">
-  <div class="header-content">
-    <div class="header-info">
-      <div class="user-photo" id="userPhoto">👤</div>
-      <div class="user-details">
-        <h3 id="userName">User Name</h3>
-        <p id="userFlat">Flat: -</p>
-      </div>
-    </div>
-    <div style="position: relative;">
-      <button class="menu-btn" onclick="toggleMenu()">⋮</button>
-      <div id="dropdown" class="dropdown-menu">
-        <a href="#profile" onclick="switchTab('profile')">📋 Profile</a>
-        <a href="#settings" onclick="switchTab('settings')">⚙️ Settings</a>
-        <a href="#password" onclick="switchTab('password')">🔒 Change Password</a>
-        <hr>
-        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Authentication Page -->
-<div id="authPage" class="auth-container">
-  <div class="auth-card">
-    <div class="auth-header">
-      <div class="logo">🏘️</div>
-      <h1>Society Function Manager</h1>
-      <p>Madhuli Yuva Group Official</p>
-      <p class="auth-subtitle">Sarang Apartment, Pramukh Park Society</p>
-    </div>
-
-    <div class="tabs">
-      <button class="tab-btn active" onclick="switchAuthTab('login')">Login</button>
-      <button class="tab-btn" onclick="switchAuthTab('signup')">Sign Up</button>
-    </div>
-
-    <!-- Login Tab -->
-    <div id="loginTab" class="tab-content active">
-      <div id="loginError" class="alert alert-danger hidden"></div>
-
-      <div class="form-group">
-        <label>Login as</label>
-        <select id="loginRole">
-          <option value="organizer">(organizer)</option>
-          <option value="user">Flat Owner</option>
-        </select>
+  <!-- AUTH SCREEN -->
+  <div id="auth-screen">
+    <div class="glass-card auth-box">
+      <div class="auth-header">
+        <h1 id="lang-app-title">Society Function Manager</h1>
+        <p style="font-weight:700; color:var(--primary); font-size:14px; margin-bottom:4px;">Madhuli Yuva Group Official</p>
+        <p id="lang-app-subtitle">Temporary mobile version > Sarang Apartment, Pramukh Park Society</p>
       </div>
 
-      <div class="form-group">
-        <label>Email / Mobile</label>
-        <input type="text" id="loginEmail" placeholder="Enter email or mobile">
+      <div class="tab-buttons">
+        <button class="tab-btn active" id="tab-login-btn" onclick="switchAuthTab('login')">Login</button>
+        <button class="tab-btn" id="tab-signup-btn" onclick="switchAuthTab('signup')">Sign Up</button>
       </div>
 
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="loginPassword" placeholder="Enter password">
-      </div>
-
-      <button class="btn btn-primary" onclick="handleLogin()">Login</button>
-
-      <div class="divider">OR</div>
-      <p style="text-align: center; font-size: 13px; color: var(--muted);">
-        Don't have an account? <span class="link" onclick="switchAuthTab('signup')">Sign up here</span>
-      </p>
-    </div>
-
-    <!-- Signup Tab -->
-    <div id="signupTab" class="tab-content">
-      <div id="signupError" class="alert alert-danger hidden"></div>
-      <div id="signupSuccess" class="alert alert-success hidden"></div>
-
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="signupName" placeholder="Enter your full name">
-      </div>
-
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="signupEmail" placeholder="Enter your email">
-      </div>
-
-      <div class="form-group">
-        <label>WhatsApp Mobile Number</label>
-        <input type="tel" id="signupMobile" placeholder="Enter 10-digit mobile number">
-      </div>
-
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="signupPassword" placeholder="Create a strong password">
-        <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">Min 8 characters with uppercase, lowercase, and number</p>
-      </div>
-
-      <div class="form-group">
-        <label>Confirm Password</label>
-        <input type="password" id="signupConfirm" placeholder="Confirm password">
-      </div>
-
-      <div class="form-group">
-        <label>Role</label>
-        <select id="signupRole">
-          <option value="user">Flat Owner</option>
-          <option value="organizer">Organizer</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Flat Number (Optional)</label>
-        <input type="text" id="signupFlat" placeholder="e.g., A-101">
-      </div>
-
-      <div class="checkbox-group">
-        <input type="checkbox" id="agreeTerms">
-        <label for="agreeTerms">I agree to Terms & Conditions</label>
-      </div>
-
-      <button class="btn btn-primary" onclick="handleSignup()">Create Account</button>
-    </div>
-  </div>
-</div>
-
-<!-- Dashboard Page -->
-<div id="dashboard" class="dashboard">
-  <div class="container">
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="switchDashboardTab('overview')">📊 Dashboard</button>
-      <button class="nav-tab" onclick="switchDashboardTab('events')">🎉 Events</button>
-      <button class="nav-tab" onclick="switchDashboardTab('notices')">📢 Notices</button>
-      <button class="nav-tab" onclick="switchDashboardTab('photos')">📸 Photos</button>
-      <button class="nav-tab" id="financialTab" onclick="switchDashboardTab('financial')" style="display: none;">💰 Financial</button>
-    </div>
-
-    <!-- Overview Tab -->
-    <div id="overviewTab" class="tab-content active">
-      <div class="grid" id="statsGrid"></div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
-        <div class="card">
-          <h3>📅 Upcoming Events</h3>
-          <div id="upcomingEvents" style="font-size: 14px; color: var(--muted);">No events scheduled</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Events Tab -->
-    <div id="eventsTab" class="tab-content">
-      <div id="eventsList"></div>
-    </div>
-
-    <!-- Notices Tab -->
-    <div id="noticesTab" class="tab-content">
-      <div id="noticesList"></div>
-    </div>
-
-    <!-- Photos Tab -->
-    <div id="photosTab" class="tab-content">
-      <div id="photosList"></div>
-    </div>
-
-    <!-- Financial Tab (Organizer Only) -->
-    <div id="financialTab2" class="tab-content">
-      <div class="grid">
-        <div class="card">
-          <h3>Total Income</h3>
-          <div class="value" id="totalIncome">₹0</div>
-        </div>
-        <div class="card">
-          <h3>Total Expense</h3>
-          <div class="value" id="totalExpense" style="color: var(--danger);">₹0</div>
-        </div>
-        <div class="card">
-          <h3>Balance</h3>
-          <div class="value" id="totalBalance" style="color: var(--secondary);">₹0</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Profile/Settings Tabs -->
-    <div id="profileTab" class="tab-content">
-      <div class="card" style="max-width: 600px;">
-        <h3 style="margin-top: 0;">👤 Profile Information</h3>
-
-        <!-- Profile Photo Section -->
-        <div style="text-align: center; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border);">
-          <div id="profilePhotoPreview" style="width: 120px; height: 120px; border-radius: 50%; background: var(--light); display: flex; align-items: center; justify-content: center; font-size: 48px; margin: 0 auto 12px; border: 3px solid var(--primary); cursor: pointer;" onclick="document.getElementById('profilePhotoInput').click()">
-            👤
-          </div>
-          <input type="file" id="profilePhotoInput" accept="image/jpeg,image/jpg,image/png" style="display: none;" onchange="handlePhotoSelect(event)">
-          <p style="font-size: 12px; color: var(--muted);">Click to upload profile photo</p>
-          <button class="btn btn-sm" onclick="document.getElementById('profilePhotoInput').click()" style="margin-top: 8px;">📸 Change Photo</button>
-          <button class="btn btn-sm" style="background: var(--danger); color: white; margin-left: 8px;" onclick="removeProfilePhoto()">❌ Remove</button>
-        </div>
-
+      <!-- LOGIN FORM -->
+      <form id="login-form" onsubmit="handleLogin(event)">
         <div class="form-group">
-          <label>Name</label>
-          <input type="text" id="profileName">
+          <label>Email Address</label>
+          <input type="email" id="login-email" class="form-control" placeholder="enter your email" required>
         </div>
         <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="profileEmail" readonly>
+          <label>Password</label>
+          <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
         </div>
         <div class="form-group">
-          <label>Mobile</label>
-          <input type="tel" id="profileMobile">
+          <label>Role</label>
+          <select id="login-role" class="form-control">
+            <option value="organizer">(organizer)</option>
+            <option value="user" selected>Flat Owner / Member</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Login to Dashboard</button>
+      </form>
+
+      <!-- SIGNUP FORM -->
+      <form id="signup-form" style="display:none;" onsubmit="handleSignup(event)">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="signup-name" class="form-control" placeholder="e.g. Ramesh Patel" required>
+        </div>
+        <div class="form-group">
+          <label>WhatsApp Registered Mobile No.</label>
+          <input type="tel" id="signup-phone" class="form-control" placeholder="+91 9876543210" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="signup-email" class="form-control" placeholder="name@example.com" required>
         </div>
         <div class="form-group">
           <label>Flat Number</label>
-          <input type="text" id="profileFlat">
+          <input type="text" id="signup-flat" class="form-control" placeholder="e.g. A-101" required>
         </div>
         <div class="form-group">
-          <label>Family Members</label>
-          <input type="number" id="profileFamily" min="1" max="20">
+          <label>Password</label>
+          <input type="password" id="signup-password" class="form-control" placeholder="Min 6 characters" required>
         </div>
-
-        <button class="btn btn-primary" onclick="updateProfile()">💾 Save Changes</button>
-        <div id="profileMessage" style="margin-top: 12px; font-size: 14px;"></div>
-      </div>
-    </div>
-
-    <div id="settingsTab" class="tab-content">
-      <div class="card" style="max-width: 500px;">
-        <h3 style="margin-top: 0;">Settings</h3>
         <div class="form-group">
-          <label>Language</label>
-          <select id="language" onchange="changeLanguage(this.value)">
-            <option value="en">English</option>
-            <option value="gu">Gujarati</option>
-            <option value="hi">Hindi</option>
+          <label>Account Role</label>
+          <select id="signup-role" class="form-control">
+            <option value="user">Flat Owner / Member</option>
+            <option value="organizer">(organizer)</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Theme</label>
-          <select>
-            <option>Light (Default)</option>
-            <option>Dark</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div id="passwordTab" class="tab-content">
-      <div class="card" style="max-width: 500px;">
-        <h3 style="margin-top: 0;">Change Password</h3>
-        <div id="passwordError" class="alert alert-danger hidden"></div>
-        <div id="passwordSuccess" class="alert alert-success hidden"></div>
-        <div class="form-group">
-          <label>Current Password</label>
-          <input type="password" id="currentPassword">
-        </div>
-        <div class="form-group">
-          <label>New Password</label>
-          <input type="password" id="newPassword" placeholder="Min 8 characters">
-        </div>
-        <div class="form-group">
-          <label>Confirm New Password</label>
-          <input type="password" id="confirmPassword">
-        </div>
-        <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
-      </div>
+        <button type="submit" class="btn btn-success" style="margin-top: 10px;">Create Account</button>
+      </form>
     </div>
   </div>
-</div>
 
-<script>
-  const API_URL = '/api';
-  let currentUser = null;
-  let currentRole = null;
-  const translations = {
-    en: {
-      dashboard: 'Dashboard',
-      events: 'Events',
-      notices: 'Notices',
-      photos: 'Photos',
-      financial: 'Financial'
-    },
-    gu: {
-      dashboard: 'ડેશબોર્ડ',
-      events: 'ઇવેન્ટ્સ',
-      notices: 'સૂચનાઓ',
-      photos: 'ફોટો',
-      financial: 'આર્થિક'
-    },
-    hi: {
-      dashboard: 'डैशबोर्ड',
-      events: 'ईवेंट्स',
-      notices: 'सूचनाएं',
-      photos: 'फोटो',
-      financial: 'वित्तीय'
-    }
-  };
-
-  let currentLanguage = 'en';
-
-  function switchAuthTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById(tab + 'Tab').classList.add('active');
-  }
-
-  function handleLogin() {
-    const role = document.getElementById('loginRole').value;
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const errorDiv = document.getElementById('loginError');
-
-    if (!email || !password) {
-      errorDiv.textContent = 'Please fill in all fields';
-      errorDiv.classList.remove('hidden');
-      return;
-    }
-
-    fetch(`${API_URL}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, role })
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) {
-        errorDiv.textContent = data.error;
-        errorDiv.classList.remove('hidden');
-      } else {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        currentUser = data.user;
-        currentRole = role;
-        showDashboard();
-      }
-    })
-    .catch(err => {
-      errorDiv.textContent = 'Connection error: ' + err.message;
-      errorDiv.classList.remove('hidden');
-    });
-  }
-
-  function handleSignup() {
-    const name = document.getElementById('signupName').value;
-    const email = document.getElementById('signupEmail').value;
-    const mobile = document.getElementById('signupMobile').value;
-    const password = document.getElementById('signupPassword').value;
-    const confirm = document.getElementById('signupConfirm').value;
-    const role = document.getElementById('signupRole').value;
-    const flat_number = document.getElementById('signupFlat').value;
-    const agree = document.getElementById('agreeTerms').checked;
-    const errorDiv = document.getElementById('signupError');
-    const successDiv = document.getElementById('signupSuccess');
-
-    if (!name || !email || !mobile || !password || !confirm) {
-      errorDiv.textContent = 'Please fill in all fields';
-      errorDiv.classList.remove('hidden');
-      successDiv.classList.add('hidden');
-      return;
-    }
-
-    if (password !== confirm) {
-      errorDiv.textContent = 'Passwords do not match';
-      errorDiv.classList.remove('hidden');
-      successDiv.classList.add('hidden');
-      return;
-    }
-
-    if (!agree) {
-      errorDiv.textContent = 'Please agree to terms & conditions';
-      errorDiv.classList.remove('hidden');
-      successDiv.classList.add('hidden');
-      return;
-    }
-
-    fetch(`${API_URL}/auth/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, mobile, password, role, flat_number })
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) {
-        errorDiv.textContent = data.error;
-        errorDiv.classList.remove('hidden');
-        successDiv.classList.add('hidden');
-      } else {
-        successDiv.textContent = 'Account created successfully! Please login.';
-        successDiv.classList.remove('hidden');
-        errorDiv.classList.add('hidden');
-        setTimeout(() => switchAuthTab('login'), 2000);
-      }
-    })
-    .catch(err => {
-      errorDiv.textContent = 'Error: ' + err.message;
-      errorDiv.classList.remove('hidden');
-      successDiv.classList.add('hidden');
-    });
-  }
-
-  function showDashboard() {
-    document.getElementById('authPage').classList.add('hidden');
-    document.getElementById('header').classList.remove('hidden');
-    document.getElementById('dashboard').classList.add('active');
-    updateDashboard();
-  }
-
-  function updateDashboard() {
-    if (!currentUser) return;
-
-    document.getElementById('userName').textContent = currentUser.name;
-    document.getElementById('userFlat').textContent = 'Flat: ' + (currentUser.flat_number || '-');
-
-    if (currentRole === 'organizer') {
-      document.getElementById('financialTab').style.display = 'block';
-      document.getElementById('financialTab2').style.display = 'block';
-    }
-
-    loadStats();
-    loadEvents();
-    loadNotices();
-  }
-
-  function loadStats() {
-    const token = localStorage.getItem('token');
-    fetch(`${API_URL}/dashboard-stats`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(r => r.json())
-    .then(data => {
-      const grid = document.getElementById('statsGrid');
-      grid.innerHTML = `
-        <div class="card">
-          <h3>📍 Total Flats</h3>
-          <div class="value">${data.totalFlats || 0}</div>
+  <!-- MAIN APP SCREEN -->
+  <div id="app-screen">
+    <!-- NAVBAR -->
+    <div class="navbar">
+      <div class="user-profile-header">
+        <img id="nav-avatar" src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" class="avatar-img" alt="Profile">
+        <div class="user-info">
+          <h3 id="nav-user-name">Loading...</h3>
+          <p id="nav-user-flat">Flat: -</p>
         </div>
-        <div class="card">
-          <h3>👥 Flat Owners</h3>
-          <div class="value">${data.totalOwners || 0}</div>
-        </div>
-        <div class="card">
-          <h3>🎉 Events</h3>
-          <div class="value">${data.activePrograms || 0}</div>
-        </div>
-        ${currentRole === 'organizer' ? `
-        <div class="card">
-          <h3>💰 Income</h3>
-          <div class="value">₹${data.totalIncome || 0}</div>
-        </div>
-        <div class="card">
-          <h3>💸 Expense</h3>
-          <div class="value" style="color: var(--danger);">₹${data.totalExpense || 0}</div>
-        </div>
-        <div class="card">
-          <h3>📊 Balance</h3>
-          <div class="value" style="color: var(--secondary);">₹${data.balance || 0}</div>
-        </div>
-        ` : ''}
-      `;
-    });
-  }
+      </div>
 
-  function loadEvents() {
-    const token = localStorage.getItem('token');
-    fetch(`${API_URL}/events`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(r => r.json())
-    .then(data => {
-      const list = document.getElementById('eventsList');
-      if (data.length === 0) {
-        list.innerHTML = '<p style="color: var(--muted);">No events found</p>';
-      } else {
-        list.innerHTML = data.map(e => `
-          <div class="card">
-            <h3 style="margin-top: 0;">${e.name}</h3>
-            <p style="font-size: 13px; color: var(--muted); margin: 8px 0;">📅 ${e.date || 'TBD'} • ⏰ ${e.time || 'TBD'}</p>
-            <p style="font-size: 13px; margin: 0;">${e.description || 'No description'}</p>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <select id="lang-selector" class="form-control" style="width: auto; padding: 6px 10px; font-size:12px; font-weight:700;" onchange="changeLanguage(this.value)">
+          <option value="en">English</option>
+          <option value="gu">ગુજરાતી</option>
+          <option value="hi">हिंदी</option>
+        </select>
+
+        <div class="dropdown-container">
+          <button class="three-dots-btn" onclick="toggleDropdown()">⋮</button>
+          <div class="dropdown-menu" id="dropdown-menu">
+            <div class="dropdown-item" onclick="openProfileModal()"><i class="fa-solid fa-user"></i> My Profile</div>
+            <div class="dropdown-item" onclick="switchNavTab('settings')"><i class="fa-solid fa-gear"></i> Settings</div>
+            <div class="dropdown-item" onclick="openPasswordModal()"><i class="fa-solid fa-key"></i> Change Password</div>
+            <hr style="border:0; border-top:1px solid #e2e8f0;">
+            <div class="dropdown-item danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
           </div>
-        `).join('');
-      }
-    });
-  }
+        </div>
+      </div>
+    </div>
 
-  function loadNotices() {
-    const token = localStorage.getItem('token');
-    fetch(`${API_URL}/announcements`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(r => r.json())
-    .then(data => {
-      const list = document.getElementById('noticesList');
-      if (data.length === 0) {
-        list.innerHTML = '<p style="color: var(--muted);">No notices</p>';
-      } else {
-        list.innerHTML = data.map(n => `
-          <div class="card">
-            <h3 style="margin-top: 0; color: var(--text);">${n.title}</h3>
-            <p style="font-size: 12px; color: var(--muted); margin: 8px 0;">📅 ${n.date || 'Today'}</p>
-            <p style="font-size: 13px; margin: 0;">${n.description}</p>
-            <button class="btn btn-secondary" style="margin-top: 12px; width: auto; padding: 8px 12px; font-size: 12px;" onclick="alert('Share on WhatsApp: ' + '${n.title}')">📱 Share on WhatsApp</button>
+    <!-- TABS -->
+    <div class="app-nav">
+      <button class="nav-tab active" onclick="switchNavTab('events')" id="tab-btn-events"><i class="fa-solid fa-calendar-days"></i> Events</button>
+      <button class="nav-tab" onclick="switchNavTab('notices')" id="tab-btn-notices"><i class="fa-solid fa-bullhorn"></i> Notices</button>
+      <button class="nav-tab" onclick="switchNavTab('financial')" id="tab-btn-financial"><i class="fa-solid fa-indian-rupee-sign"></i> Financials</button>
+      <button class="nav-tab" onclick="switchNavTab('photos')" id="tab-btn-photos"><i class="fa-solid fa-images"></i> Photos</button>
+    </div>
+
+    <!-- CONTENT CONTAINER -->
+    <div class="container">
+      
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <p>Total Income</p>
+          <h2 style="color: var(--secondary);" id="stat-income">₹0</h2>
+        </div>
+        <div class="stat-card">
+          <p>Total Expense</p>
+          <h2 style="color: var(--danger);" id="stat-expense">₹0</h2>
+        </div>
+        <div class="stat-card">
+          <p>Net Balance</p>
+          <h2 style="color: var(--primary);" id="stat-balance">₹0</h2>
+        </div>
+      </div>
+
+      <!-- EVENTS SECTION -->
+      <div id="section-events">
+        <div class="section-header">
+          <h2>Upcoming Events & Bank Holidays (2026)</h2>
+          <button class="btn btn-primary" style="width:auto; padding:8px 16px;" onclick="openAddEventModal()"><i class="fa-solid fa-plus"></i> + Add Event</button>
+        </div>
+        <div class="event-grid" id="events-list">
+          <!-- Dynamically filled -->
+        </div>
+      </div>
+
+      <!-- NOTICES SECTION -->
+      <div id="section-notices" style="display:none;">
+        <div class="section-header">
+          <h2>Notices & Announcements</h2>
+          <button class="btn btn-primary" style="width:auto; padding:8px 16px;" onclick="openAddNoticeModal()"><i class="fa-solid fa-plus"></i> + New Notice</button>
+        </div>
+        <div id="notices-list">
+          <!-- Dynamically filled -->
+        </div>
+      </div>
+
+      <!-- FINANCIAL SECTION -->
+      <div id="section-financial" style="display:none;">
+        <div class="section-header">
+          <h2>Financial Ledger</h2>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-success" style="width:auto; padding:8px 16px;" onclick="openAddTransactionModal('income')">+ Income</button>
+            <button class="btn btn-primary" style="width:auto; padding:8px 16px; background:var(--danger);" onclick="openAddTransactionModal('expense')">+ Expense</button>
           </div>
-        `).join('');
+        </div>
+        <div class="glass-card" style="padding:20px; background:white;">
+          <table style="width:100%; border-collapse:collapse; font-size:14px;">
+            <thead>
+              <tr style="border-bottom:2px solid #e2e8f0; text-align:left;">
+                <th style="padding:10px;">Date</th>
+                <th style="padding:10px;">Title</th>
+                <th style="padding:10px;">Category</th>
+                <th style="padding:10px;">Type</th>
+                <th style="padding:10px;">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="financial-list">
+              <!-- Dynamically filled -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PHOTOS SECTION -->
+      <div id="section-photos" style="display:none;">
+        <div class="section-header">
+          <h2>Event Gallery</h2>
+        </div>
+        <p style="color:var(--text-muted); font-size:14px;">Photos uploaded by society members will appear here.</p>
+      </div>
+
+      <!-- SETTINGS SECTION -->
+      <div id="section-settings" style="display:none;">
+        <div class="section-header">
+          <h2>System Settings</h2>
+        </div>
+        <div class="glass-card" style="padding:24px; background:white;">
+          <h3 style="margin-bottom:12px;">App Language</h3>
+          <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Select your preferred display language for Madhuli Yuva Group portal.</p>
+          <div style="display:flex; gap:12px;">
+            <button class="btn btn-primary" style="width:auto;" onclick="changeLanguage('en')">English</button>
+            <button class="btn btn-primary" style="width:auto;" onclick="changeLanguage('gu')">ગુજરાતી</button>
+            <button class="btn btn-primary" style="width:auto;" onclick="changeLanguage('hi')">हिंदी</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PROFILE MODAL -->
+  <div class="modal" id="modal-profile">
+    <div class="modal-content">
+      <div class="section-header">
+        <h3>Edit Profile</h3>
+        <button onclick="closeModal('modal-profile')" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <form onsubmit="handleProfileUpdate(event)">
+        <div class="profile-avatar-container">
+          <img id="profile-modal-avatar" src="https://ui-avatars.com/api/?name=User" class="profile-avatar-preview">
+          <label class="upload-badge" for="avatar-input"><i class="fa-solid fa-camera"></i></label>
+          <input type="file" id="avatar-input" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="edit-name" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>WhatsApp Phone</label>
+          <input type="tel" id="edit-phone" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Flat Number</label>
+          <input type="text" id="edit-flat" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Profile Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD EVENT MODAL -->
+  <div class="modal" id="modal-add-event">
+    <div class="modal-content">
+      <div class="section-header">
+        <h3>Add New Event</h3>
+        <button onclick="closeModal('modal-add-event')" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
+      </div>
+      <form onsubmit="handleCreateEvent(event)">
+        <div class="form-group">
+          <label>Event Name</label>
+          <input type="text" id="event-name" class="form-control" placeholder="e.g. Navratri Mahotsav 2026" required>
+        </div>
+        <div class="form-group">
+          <label>Event Date</label>
+          <input type="date" id="event-date" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="event-desc" class="form-control" rows="3" placeholder="Event details..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Publish Event</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let eventsList = [
+      { id: 1, name: 'Shree Krishna Janmashtami 2026', date: '2026-09-04', type: 'Festival Holiday', desc: 'Sarang Apartment Ground Dahi Handi Celebration' },
+      { id: 2, name: 'Ganesh Chaturthi Mahotsav', date: '2026-09-14', type: 'Festival', desc: '10 Days Sthapana and Daily Aarti' },
+      { id: 3, name: 'Navratri Garba Mahotsav 2026', date: '2026-10-11', type: 'Grand Event', desc: 'Pramukh Park Society Lawn - 9 Days Garba' },
+      { id: 4, name: 'Diwali & Nutan Varsh Sneha Milan', date: '2026-11-08', type: 'Bank & Society Holiday', desc: 'Sweets Distribution & Lighting' },
+      { id: 5, name: 'Republic Day Flag Hoisting', date: '2026-01-26', type: 'National Holiday', desc: 'Flag hoisting at 8:00 AM' }
+    ];
+
+    let noticesList = [
+      { id: 1, title: 'Madhuli Yuva Group General Meeting', date: '2026-09-06', desc: 'All flat owners are requested to join the meeting regarding Navratri budget.' }
+    ];
+
+    function switchAuthTab(tab) {
+      document.getElementById('tab-login-btn').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-signup-btn').classList.toggle('active', tab === 'signup');
+      document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+      document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const role = document.getElementById('login-role').value;
+      
+      currentUser = {
+        name: email.split('@')[0] || 'Admin Member',
+        email: email,
+        flat: 'A-102',
+        role: role,
+        phone: '+91 9876543210',
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(email)}&background=6366f1&color=fff`
+      };
+
+      showAppScreen();
+    }
+
+    function handleSignup(e) {
+      e.preventDefault();
+      currentUser = {
+        name: document.getElementById('signup-name').value,
+        email: document.getElementById('signup-email').value,
+        phone: document.getElementById('signup-phone').value,
+        flat: document.getElementById('signup-flat').value,
+        role: document.getElementById('signup-role').value,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(document.getElementById('signup-name').value)}&background=10b981&color=fff`
+      };
+      alert('Registration successful! Welcome to Madhuli Yuva Group Portal.');
+      showAppScreen();
+    }
+
+    function showAppScreen() {
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display = 'flex';
+      
+      document.getElementById('nav-user-name').innerText = currentUser.name + (currentUser.role === 'organizer' ? ' (Organizer)' : '');
+      document.getElementById('nav-user-flat').innerText = 'Flat: ' + currentUser.flat;
+      document.getElementById('nav-avatar').src = currentUser.avatar;
+
+      renderEvents();
+      renderNotices();
+    }
+
+    function toggleDropdown() {
+      document.getElementById('dropdown-menu').classList.toggle('show');
+    }
+
+    window.onclick = function(e) {
+      if (!e.target.matches('.three-dots-btn')) {
+        document.getElementById('dropdown-menu').classList.remove('show');
       }
-    });
-  }
-
-  function switchDashboardTab(tab) {
-    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById(tab + 'Tab').classList.add('active');
-
-    // Load profile when switching to profile tab
-    if (tab === 'profile' && currentUser) {
-      loadProfile();
-    }
-  }
-
-  function switchTab(tab) {
-    if (tab === 'profile') switchDashboardTab('profile');
-    if (tab === 'settings') switchDashboardTab('settings');
-    if (tab === 'password') switchDashboardTab('password');
-    toggleMenu();
-  }
-
-  function toggleMenu() {
-    document.getElementById('dropdown').classList.toggle('active');
-  }
-
-  // ==================== PROFILE FUNCTIONS ====================
-
-  function loadProfile() {
-    fetch(`${API_URL}/profile`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then(r => r.json())
-      .then(profile => {
-        if (profile.error) {
-          console.error('Profile load error:', profile.error);
-          return;
-        }
-
-        // Update profile form fields
-        document.getElementById('profileName').value = profile.name || '';
-        document.getElementById('profileEmail').value = profile.email || '';
-        document.getElementById('profileMobile').value = profile.mobile || '';
-        document.getElementById('profileFlat').value = profile.flat_number || '';
-        document.getElementById('profileFamily').value = profile.family_members || 1;
-
-        // Update profile photo preview
-        const profilePhotoPreview = document.getElementById('profilePhotoPreview');
-        if (profile.profile_photo_url) {
-          profilePhotoPreview.innerHTML = '';
-          const img = document.createElement('img');
-          img.src = `${API_URL}${profile.profile_photo_url}`;
-          img.style.width = '100%';
-          img.style.height = '100%';
-          img.style.borderRadius = '50%';
-          img.style.objectFit = 'cover';
-          profilePhotoPreview.appendChild(img);
-        } else {
-          profilePhotoPreview.innerHTML = '👤';
-          profilePhotoPreview.style.fontSize = '48px';
-        }
-      })
-      .catch(err => console.error('Profile load error:', err));
-  }
-
-  function updateProfile() {
-    const name = document.getElementById('profileName').value;
-    const mobile = document.getElementById('profileMobile').value;
-    const flat_number = document.getElementById('profileFlat').value;
-    const family_members = document.getElementById('profileFamily').value;
-
-    fetch(`${API_URL}/profile`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ name, mobile, flat_number, family_members: parseInt(family_members) })
-    })
-      .then(r => r.json())
-      .then(data => {
-        const msg = document.getElementById('profileMessage');
-        if (data.error) {
-          msg.style.color = 'var(--danger)';
-          msg.textContent = 'Error: ' + data.error;
-        } else {
-          msg.style.color = 'var(--secondary)';
-          msg.textContent = '✅ Profile updated successfully';
-
-          // Update currentUser object
-          currentUser.name = name;
-          currentUser.flat_number = flat_number;
-          localStorage.setItem('user', JSON.stringify(currentUser));
-
-          // Update header display
-          updateHeaderDisplay();
-        }
-      })
-      .catch(err => {
-        const msg = document.getElementById('profileMessage');
-        msg.style.color = 'var(--danger)';
-        msg.textContent = 'Error updating profile: ' + err.message;
-      });
-  }
-
-  function handlePhotoSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.match('image/jpeg') && !file.type.match('image/jpg') && !file.type.match('image/png')) {
-      alert('Please select a JPEG or PNG image');
-      return;
-    }
-
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('File size must be less than 5MB');
-      return;
-    }
-
-    // Show preview
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const profilePhotoPreview = document.getElementById('profilePhotoPreview');
-      profilePhotoPreview.innerHTML = '';
-      const img = document.createElement('img');
-      img.src = e.target.result;
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.borderRadius = '50%';
-      img.style.objectFit = 'cover';
-      profilePhotoPreview.appendChild(img);
     };
-    reader.readAsDataURL(file);
 
-    // Upload photo
-    const formData = new FormData();
-    formData.append('profilePhoto', file);
-
-    fetch(`${API_URL}/profile/photo`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
-      body: formData
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data.error) {
-          alert('Upload error: ' + data.error);
-        } else {
-          // Update profile photo in header
-          updateHeaderDisplay();
-        }
-      })
-      .catch(err => alert('Upload failed: ' + err.message));
-  }
-
-  function removeProfilePhoto() {
-    if (!confirm('Remove profile photo?')) return;
-
-    fetch(`${API_URL}/profile`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ profile_photo_url: null })
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data.error) {
-          alert('Error: ' + data.error);
-        } else {
-          const profilePhotoPreview = document.getElementById('profilePhotoPreview');
-          profilePhotoPreview.innerHTML = '👤';
-          profilePhotoPreview.style.fontSize = '48px';
-
-          // Update header display
-          updateHeaderDisplay();
-        }
-      })
-      .catch(err => alert('Error: ' + err.message));
-  }
-
-  function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    currentUser = null;
-    document.getElementById('header').classList.add('hidden');
-    document.getElementById('dashboard').classList.remove('active');
-    document.getElementById('authPage').classList.remove('hidden');
-    document.getElementById('loginError').classList.add('hidden');
-    document.getElementById('loginEmail').value = '';
-    document.getElementById('loginPassword').value = '';
-  }
-
-  function changePassword() {
-    const current = document.getElementById('currentPassword').value;
-    const newPass = document.getElementById('newPassword').value;
-    const confirm = document.getElementById('confirmPassword').value;
-    const errorDiv = document.getElementById('passwordError');
-    const successDiv = document.getElementById('passwordSuccess');
-
-    if (!current || !newPass || !confirm) {
-      errorDiv.textContent = 'Please fill in all fields';
-      errorDiv.classList.remove('hidden');
-      return;
+    function switchNavTab(tab) {
+      ['events', 'notices', 'financial', 'photos', 'settings'].forEach(t => {
+        const sec = document.getElementById('section-' + t);
+        if (sec) sec.style.display = (t === tab) ? 'block' : 'none';
+        
+        const btn = document.getElementById('tab-btn-' + t);
+        if (btn) btn.classList.toggle('active', t === tab);
+      });
     }
 
-    if (newPass !== confirm) {
-      errorDiv.textContent = 'New passwords do not match';
-      errorDiv.classList.remove('hidden');
-      return;
+    function renderEvents() {
+      const container = document.getElementById('events-list');
+      container.innerHTML = eventsList.map(ev => `
+        <div class="event-card">
+          <div>
+            <span class="event-badge">${ev.type}</span>
+            <div class="event-title">${ev.name}</div>
+            <div class="event-date"><i class="fa-regular fa-calendar"></i> ${ev.date}</div>
+            <p style="font-size:13px; color:var(--text-muted);">${ev.desc}</p>
+          </div>
+        </div>
+      `).join('');
     }
 
-    const token = localStorage.getItem('token');
-    fetch(`${API_URL}/users/${currentUser.id}/password`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ oldPassword: current, newPassword: newPass })
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) {
-        errorDiv.textContent = data.error;
-        errorDiv.classList.remove('hidden');
-        successDiv.classList.add('hidden');
-      } else {
-        successDiv.textContent = 'Password changed successfully!';
-        successDiv.classList.remove('hidden');
-        errorDiv.classList.add('hidden');
-        document.getElementById('currentPassword').value = '';
-        document.getElementById('newPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
+    function renderNotices() {
+      const container = document.getElementById('notices-list');
+      container.innerHTML = noticesList.map(n => `
+        <div class="notice-card">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h4 style="font-size:16px; font-weight:700;">${n.title}</h4>
+            <span style="font-size:12px; color:var(--text-muted);">${n.date}</span>
+          </div>
+          <p style="font-size:14px; margin-top:8px; color:var(--text-main);">${n.desc}</p>
+          <a class="whatsapp-btn" href="https://api.whatsapp.com/send?text=${encodeURIComponent('*Notice:* ' + n.title + '\n' + n.desc)}" target="_blank">
+            <i class="fa-brands fa-whatsapp"></i> Share on WhatsApp Group
+          </a>
+        </div>
+      `).join('');
+    }
+
+    function openAddEventModal() { document.getElementById('modal-add-event').classList.add('show'); }
+    function openProfileModal() { 
+      document.getElementById('edit-name').value = currentUser.name;
+      document.getElementById('edit-phone').value = currentUser.phone;
+      document.getElementById('edit-flat').value = currentUser.flat;
+      document.getElementById('profile-modal-avatar').src = currentUser.avatar;
+      document.getElementById('modal-profile').classList.add('show'); 
+    }
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+    function handleCreateEvent(e) {
+      e.preventDefault();
+      eventsList.unshift({
+        id: Date.now(),
+        name: document.getElementById('event-name').value,
+        date: document.getElementById('event-date').value,
+        type: 'Society Program',
+        desc: document.getElementById('event-desc').value
+      });
+      renderEvents();
+      closeModal('modal-add-event');
+    }
+
+    function handlePhotoUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          currentUser.avatar = evt.target.result;
+          document.getElementById('profile-modal-avatar').src = currentUser.avatar;
+          document.getElementById('nav-avatar').src = currentUser.avatar;
+        };
+        reader.readAsDataURL(file);
       }
-    });
-  }
-
-  function changeLanguage(lang) {
-    currentLanguage = lang;
-    localStorage.setItem('language', lang);
-    // Language switching would update UI text here
-  }
-
-  // Check if user is logged in
-  window.addEventListener('load', () => {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    if (token && user) {
-      currentUser = JSON.parse(user);
-      currentRole = currentUser.role;
-      showDashboard();
     }
-  });
-</script>
+
+    function handleProfileUpdate(e) {
+      e.preventDefault();
+      currentUser.name = document.getElementById('edit-name').value;
+      currentUser.phone = document.getElementById('edit-phone').value;
+      currentUser.flat = document.getElementById('edit-flat').value;
+      
+      document.getElementById('nav-user-name').innerText = currentUser.name;
+      document.getElementById('nav-user-flat').innerText = 'Flat: ' + currentUser.flat;
+      closeModal('modal-profile');
+      alert('Profile updated successfully!');
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      document.getElementById('app-screen').style.display = 'none';
+      document.getElementById('auth-screen').style.display = 'flex';
+    }
+
+    function changeLanguage(lang) {
+      if(lang === 'gu') {
+        document.getElementById('lang-app-title').innerText = 'સોસાયટી ફંક્શન મેનેજર';
+        document.getElementById('lang-app-subtitle').innerText = 'મધુલી યુવા ગ્રુપ ઓફિશિયલ > સારંગ એパートમેન્ટ, પ્રમુખ પાર્ક';
+      } else if(lang === 'hi') {
+        document.getElementById('lang-app-title').innerText = 'सोसायटी फंक्शन मैनेजर';
+        document.getElementById('lang-app-subtitle').innerText = 'मधुली युवा ग्रुप ऑफिशियल > सारंग अपार्टमेंट, प्रमुख पार्क';
+      } else {
+        document.getElementById('lang-app-title').innerText = 'Society Function Manager';
+        document.getElementById('lang-app-subtitle').innerText = 'Temporary mobile version > Sarang Apartment, Pramukh Park Society';
+      }
+    }
+  </script>
 </body>
 </html>
