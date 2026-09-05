@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  society-management:
+    build: .
+    container_name: society-management-app
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:-society-management-secret-key-2024}
+      - PORT=5000
+    volumes:
+      - ./uploads:/app/uploads
+      - ./society.db:/app/society.db
+    restart: unless-stopped
+    networks:
+      - society-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    container_name: society-management-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./uploads:/app/uploads:ro
+    depends_on:
+      - society-management
+    networks:
+      - society-network
+    restart: unless-stopped
+
+networks:
+  society-network:
+    driver: bridge
+
+volumes:
+  uploads:
+  database:
