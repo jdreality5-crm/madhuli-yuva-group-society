@@ -10,20 +10,36 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --primary-maroon: #6b0000;
-      --secondary-maroon: #400000;
-      --gold-accent: #d4af37;
-      --text-dark: #1e293b;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-light: #e0e7ff;
+      --secondary: #10b981;
+      --accent: #f59e0b;
+      --danger: #ef4444;
+      --maroon: #800000;
+      --dark: #0f172a;
+      --text-main: #1e293b;
       --text-muted: #64748b;
-      --bg-slate: #f8fafc;
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+      --radius: 16px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', 'Noto Sans Gujarati', sans-serif; }
 
     body {
-      background: linear-gradient(135deg, #2b0404 0%, #4a0909 50%, #1e1b4b 100%);
+      background: var(--bg-gradient);
       min-height: 100vh;
-      color: var(--text-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
     }
 
     #auth-screen {
@@ -34,243 +50,90 @@
       padding: 20px;
     }
 
-    .auth-box {
-      width: 100%;
-      max-width: 460px;
-      background: rgba(255, 255, 255, 0.96);
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    }
+    .auth-box { width: 100%; max-width: 480px; padding: 32px; }
+    .auth-header { text-align: center; margin-bottom: 24px; }
+    .auth-header h1 { font-size: 22px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
 
-    .tab-buttons {
-      display: flex;
-      background: #f1f5f9;
-      padding: 4px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
+    .tab-buttons { display: flex; background: #e2e8f0; padding: 4px; border-radius: 12px; margin-bottom: 24px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; font-weight: 700; cursor: pointer; color: var(--text-muted); border-radius: 8px; }
+    .tab-btn.active { background: #ffffff; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 
-    .tab-btn {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      background: transparent;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text-muted);
-      border-radius: 8px;
-    }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; }
 
-    .tab-btn.active { background: white; color: var(--primary-maroon); box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .btn { width: 100%; padding: 12px 20px; border: none; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; }
+    .btn-success { background: var(--secondary); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
 
-    .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
-    .form-control { width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
-
-    .btn {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 15px;
-      cursor: pointer;
-    }
-    .btn-maroon { background: var(--primary-maroon); color: white; }
-
-    #app-screen { display: none; flex-direction: column; min-height: 100vh; background: #f1f5f9; }
+    #app-screen { display: none; flex-direction: column; min-height: 100vh; background: #f8fafc; }
 
     .navbar {
-      background: white;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
       padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid #e2e8f0;
       position: sticky;
       top: 0;
       z-index: 100;
     }
 
-    .app-nav {
-      background: white;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      padding: 10px;
-      border-bottom: 1px solid #e2e8f0;
-    }
+    .user-profile-header { display: flex; align-items: center; gap: 12px; }
+    .avatar-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-light); }
 
-    .nav-tab {
-      padding: 8px 16px;
-      border: none;
-      background: transparent;
-      font-weight: 700;
-      color: var(--text-muted);
-      cursor: pointer;
-      border-radius: 8px;
-    }
-    .nav-tab.active { background: #fdf2f2; color: var(--primary-maroon); }
+    .dropdown-container { position: relative; }
+    .three-dots-btn { background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 18px; }
+    .dropdown-menu { display: none; position: absolute; right: 0; top: 48px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; width: 200px; z-index: 200; overflow: hidden; }
+    .dropdown-menu.show { display: block; }
+    .dropdown-item { padding: 12px 16px; display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
+    .dropdown-item:hover { background: #f8fafc; }
+    .dropdown-item.danger { color: var(--danger); }
 
-    .container { max-width: 900px; margin: 24px auto; padding: 0 16px; flex: 1; }
+    .app-nav { background: white; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: center; gap: 8px; padding: 8px 16px; overflow-x: auto; }
+    .nav-tab { padding: 10px 18px; border: none; background: transparent; font-size: 14px; font-weight: 600; color: var(--text-muted); border-radius: 10px; cursor: pointer; white-space: nowrap; }
+    .nav-tab.active { background: var(--primary-light); color: var(--primary); }
 
-    /* --- EXACT MATCHING HEADER & FOOTER TEMPLATE CANVAS --- */
-    .template-card {
+    .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; flex: 1; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: white; padding: 20px; border-radius: 14px; border: 1px solid #e2e8f0; }
+
+    .event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .event-card { background: white; border-radius: 14px; border: 1px solid #e2e8f0; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+    .event-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; background: var(--primary-light); color: var(--primary); margin-bottom: 8px; }
+
+    /* EXACT DEMO TEMPLATE FOR NOTICE & PDF REPORT */
+    .official-sample-card {
       background: #ffffff;
       border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       position: relative;
       overflow: hidden;
       margin-bottom: 24px;
       border: 1px solid #e2e8f0;
     }
 
-    .template-header-svg {
-      position: relative;
-      width: 100%;
-      background: #ffffff;
-      padding-top: 15px;
-    }
+    .sample-header-svg { position: relative; width: 100%; background: #ffffff; padding-top: 15px; }
+    .top-curved-banner { position: absolute; top: 0; left: 0; width: 100%; height: 130px; z-index: 1; pointer-events: none; }
 
-    .top-curved-banner {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 130px;
-      z-index: 1;
-      pointer-events: none;
-    }
+    .header-content-wrapper { position: relative; z-index: 2; display: flex; align-items: center; padding: 10px 25px 0 25px; }
+    .gold-circle-logo { width: 95px; height: 95px; border-radius: 50%; background: #ffffff; border: 4px solid #d4af37; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 15px; }
+    .header-titles-box { flex: 1; text-align: center; }
 
-    .header-content-wrapper {
-      position: relative;
-      z-index: 2;
-      display: flex;
-      align-items: center;
-      padding: 10px 25px 0 25px;
-    }
+    .slogan-pill { display: inline-block; background: linear-gradient(90deg, #6b0000, #400000); color: #ffffff; font-size: 11px; font-weight: 700; padding: 4px 18px; border-radius: 20px; margin-top: 6px; }
 
-    .gold-circle-logo {
-      width: 95px;
-      height: 95px;
-      border-radius: 50%;
-      background: #ffffff;
-      border: 4px solid #d4af37;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      margin-right: 15px;
-    }
+    .letterhead-meta-row { display: flex; justify-content: space-between; padding: 15px 35px 5px 35px; font-size: 14px; font-weight: 700; color: #334155; position: relative; z-index: 2; }
+    .template-body-content { padding: 20px 35px 30px 35px; min-height: 180px; position: relative; z-index: 2; }
 
-    .logo-inner-icon {
-      color: #6b0000;
-      font-size: 42px;
-    }
+    .template-footer-svg { position: relative; width: 100%; padding: 10px 35px 15px 35px; display: flex; justify-content: space-between; align-items: flex-end; background: #ffffff; }
+    .bottom-right-curved-banner { position: absolute; bottom: 0; right: 0; width: 220px; height: 70px; z-index: 1; pointer-events: none; }
 
-    .header-titles-box {
-      flex: 1;
-      text-align: center;
-    }
-
-    .motto-top {
-      font-size: 13px;
-      font-weight: 800;
-      color: #000000;
-      margin-bottom: 2px;
-    }
-
-    .main-society-title {
-      font-size: 28px;
-      font-weight: 800;
-      color: #590000;
-      font-family: 'Noto Sans Gujarati', sans-serif;
-      letter-spacing: -0.5px;
-    }
-
-    .slogan-pill {
-      display: inline-block;
-      background: linear-gradient(90deg, #6b0000, #400000);
-      color: #ffffff;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 18px;
-      border-radius: 20px;
-      margin-top: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-
-    .letterhead-meta-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 15px 35px 5px 35px;
-      font-size: 14px;
-      font-weight: 700;
-      color: #334155;
-      position: relative;
-      z-index: 2;
-    }
-
-    .template-body-content {
-      padding: 20px 35px 30px 35px;
-      min-height: 220px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .watermark-hands {
-      position: absolute;
-      bottom: 40px;
-      left: 30px;
-      opacity: 0.06;
-      font-size: 120px;
-      color: #000;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    .template-footer-svg {
-      position: relative;
-      width: 100%;
-      padding: 10px 35px 15px 35px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      background: #ffffff;
-    }
-
-    .footer-copyright-text {
-      font-size: 11px;
-      color: #64748b;
-      font-weight: 600;
-      position: relative;
-      z-index: 2;
-    }
-
-    .bottom-right-curved-banner {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 220px;
-      height: 70px;
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 500;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; align-items: center; justify-content: center; padding: 16px; }
     .modal.show { display: flex; }
-    .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; }
+    .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; }
 
     @media print {
       body { background: white !important; }
@@ -285,9 +148,10 @@
 
   <!-- AUTH SCREEN -->
   <div id="auth-screen">
-    <div class="auth-box">
-      <div style="text-align:center; margin-bottom:20px;">
-        <h1 style="color:var(--primary-maroon); font-size:22px; font-weight:800;">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h1>
+    <div class="glass-card auth-box">
+      <div class="auth-header">
+        <h1>મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h1>
+        <p style="font-weight:700; color:var(--primary); font-size:14px; margin-top:2px;">Society Function Manager</p>
         <p style="font-size:12px; color:var(--text-muted);">Sarang Apartment, Pramukh Park Society</p>
       </div>
 
@@ -297,39 +161,25 @@
       </div>
 
       <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group"><label>Email Address</label><input type="email" id="login-email" class="form-control" placeholder="enter your email" required></div>
+        <div class="form-group"><label>Password</label><input type="password" id="login-password" class="form-control" placeholder="••••••••" required></div>
         <div class="form-group">
-          <label>Email Address</label>
-          <input type="email" id="login-email" class="form-control" placeholder="enter your email" required>
+          <label>Role</label>
+          <select id="login-role" class="form-control">
+            <option value="organizer">(organizer)</option>
+            <option value="user" selected>Flat Owner / Member</option>
+          </select>
         </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn btn-maroon">Login to Portal</button>
+        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Login to Portal</button>
       </form>
 
       <form id="signup-form" style="display:none;" onsubmit="handleSignup(event)">
-        <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" id="signup-name" class="form-control" placeholder="e.g. Ramesh Patel" required>
-        </div>
-        <div class="form-group">
-          <label>WhatsApp Mobile No.</label>
-          <input type="tel" id="signup-phone" class="form-control" placeholder="+91 9876543210" required>
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="signup-email" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label>Flat No.</label>
-          <input type="text" id="signup-flat" class="form-control" placeholder="A-101" required>
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="signup-password" class="form-control" required>
-        </div>
-        <button type="submit" class="btn btn-maroon">Create Account</button>
+        <div class="form-group"><label>Full Name</label><input type="text" id="signup-name" class="form-control" placeholder="e.g. Ramesh Patel" required></div>
+        <div class="form-group"><label>WhatsApp Mobile No.</label><input type="tel" id="signup-phone" class="form-control" placeholder="+91 9876543210" required></div>
+        <div class="form-group"><label>Email Address</label><input type="email" id="signup-email" class="form-control" required></div>
+        <div class="form-group"><label>Flat Number</label><input type="text" id="signup-flat" class="form-control" placeholder="A-101" required></div>
+        <div class="form-group"><label>Password</label><input type="password" id="signup-password" class="form-control" required></div>
+        <button type="submit" class="btn btn-success" style="margin-top: 10px;">Create Account</button>
       </form>
     </div>
   </div>
@@ -337,29 +187,79 @@
   <!-- MAIN APP SCREEN -->
   <div id="app-screen">
     <div class="navbar">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <img id="nav-avatar" src="https://ui-avatars.com/api/?name=User&background=6b0000&color=fff" style="width:40px; height:40px; border-radius:50%;">
+      <div class="user-profile-header">
+        <img id="nav-avatar" src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" class="avatar-img">
         <div>
-          <h4 id="nav-user-name">Loading...</h4>
+          <h3 id="nav-user-name">Loading...</h3>
           <p id="nav-user-flat" style="font-size:12px; color:var(--text-muted);">Flat: -</p>
         </div>
       </div>
-      <button class="btn btn-maroon" style="width:auto; padding:6px 14px; font-size:12px;" onclick="handleLogout()">Logout</button>
+
+      <div class="dropdown-container">
+        <button class="three-dots-btn" onclick="toggleDropdown()">⋮</button>
+        <div class="dropdown-menu" id="dropdown-menu">
+          <div class="dropdown-item" onclick="openProfileModal()"><i class="fa-solid fa-user"></i> My Profile</div>
+          <div class="dropdown-item" onclick="openReportModal()"><i class="fa-solid fa-file-pdf"></i> Financial Reports</div>
+          <div class="dropdown-item danger" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
+        </div>
+      </div>
     </div>
 
     <div class="app-nav">
-      <button class="nav-tab active" onclick="switchNavTab('notices')">Notices (જાહેરાત)</button>
-      <button class="nav-tab" onclick="switchNavTab('financial')">Financials (હિસાબ)</button>
+      <button class="nav-tab active" onclick="switchNavTab('dashboard')" id="tab-btn-dashboard">Dashboard</button>
+      <button class="nav-tab" onclick="switchNavTab('events')" id="tab-btn-events">Events</button>
+      <button class="nav-tab" onclick="switchNavTab('notices')" id="tab-btn-notices">Notices (જાહેરાત)</button>
+      <button class="nav-tab" onclick="switchNavTab('financial')" id="tab-btn-financial">Financials (હિસાબ)</button>
       <button class="nav-tab" onclick="openReportModal()">Generate PDF Report</button>
     </div>
 
     <div class="container">
       
-      <!-- NOTICES TAB -->
-      <div id="section-notices">
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card"><p style="font-size:12px; font-weight:700; color:var(--text-muted);">TOTAL INCOME</p><h2 style="color:var(--secondary);" id="stat-income">₹0</h2></div>
+        <div class="stat-card"><p style="font-size:12px; font-weight:700; color:var(--text-muted);">TOTAL EXPENSE</p><h2 style="color:var(--danger);" id="stat-expense">₹0</h2></div>
+        <div class="stat-card"><p style="font-size:12px; font-weight:700; color:var(--text-muted);">NET BALANCE</p><h2 style="color:var(--primary);" id="stat-balance">₹0</h2></div>
+      </div>
+
+      <!-- DASHBOARD TAB -->
+      <div id="section-dashboard">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h2>Society Overview Dashboard</h2>
+          <button class="btn btn-primary" style="width:auto; padding:6px 14px; font-size:13px;" onclick="openReportModal()">Generate PDF Report</button>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:20px;">
+          <div class="glass-card" style="padding:20px; background:white;">
+            <h4 style="font-size:16px; font-weight:700; color:var(--primary);">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h4>
+            <p style="font-size:12px; color:var(--text-muted);">Sarang Apartment, Pramukh Park Society</p>
+            <hr style="border:0; border-top:1px solid #e2e8f0; margin:12px 0;">
+            <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600;">
+              <span>Total Flats: <b>48 Flats</b></span>
+              <span>Active Events: <b id="dash-event-count">5</b></span>
+            </div>
+          </div>
+
+          <div class="glass-card" style="padding:20px; background:white;">
+            <h4 style="font-size:15px; font-weight:700; margin-bottom:8px;"><i class="fa-solid fa-bullhorn" style="color:var(--accent);"></i> Latest Announcement</h4>
+            <p id="dash-latest-notice" style="font-size:13px;">Loading latest announcement...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- EVENTS TAB -->
+      <div id="section-events" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h2>Upcoming Events & Bank Holidays (2026)</h2>
+          <button class="btn btn-primary" style="width:auto; padding:8px 16px;" onclick="openAddEventModal()">+ Add Event</button>
+        </div>
+        <div class="event-grid" id="events-list"></div>
+      </div>
+
+      <!-- NOTICES TAB (WITH EXACT DEMO TEMPLATE) -->
+      <div id="section-notices" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
           <h2>Official Notices</h2>
-          <button class="btn btn-maroon" style="width:auto; padding:8px 16px;" onclick="openAddNoticeModal()">+ New Notice</button>
+          <button class="btn btn-primary" style="width:auto; padding:8px 16px;" onclick="openAddNoticeModal()">+ New Notice</button>
         </div>
         <div id="notices-list"></div>
       </div>
@@ -367,20 +267,21 @@
       <!-- FINANCIALS TAB -->
       <div id="section-financial" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h2>Ledger Transactions</h2>
+          <h2>Financial Ledger (Income & Expense)</h2>
           <div style="display:flex; gap:8px;">
-            <button class="btn btn-maroon" style="width:auto;" onclick="openAddTransactionModal('income')">+ Income</button>
-            <button class="btn btn-maroon" style="width:auto; background:#dc2626;" onclick="openAddTransactionModal('expense')">+ Expense</button>
+            <button class="btn btn-success" style="width:auto;" onclick="openAddTransactionModal('income')">+ Income</button>
+            <button class="btn btn-danger" style="width:auto;" onclick="openAddTransactionModal('expense')">+ Expense</button>
           </div>
         </div>
-        <div style="background:white; border-radius:12px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+        <div class="glass-card" style="padding:20px; background:white; overflow-x:auto;">
           <table style="width:100%; border-collapse:collapse; font-size:14px;">
             <thead>
               <tr style="border-bottom:2px solid #e2e8f0; text-align:left;">
-                <th style="padding:10px;">Date</th>
-                <th style="padding:10px;">Particulars</th>
-                <th style="padding:10px;">Type</th>
-                <th style="padding:10px; text-align:right;">Amount</th>
+                <th style="padding:12px;">Date</th>
+                <th style="padding:12px;">Title</th>
+                <th style="padding:12px;">Category</th>
+                <th style="padding:12px;">Type</th>
+                <th style="padding:12px;">Amount</th>
               </tr>
             </thead>
             <tbody id="financial-list"></tbody>
@@ -391,19 +292,17 @@
     </div>
   </div>
 
-  <!-- FINANCIAL REPORT PDF MODAL WITH 100% EXACT MATCHING HEADER/FOOTER -->
+  <!-- FINANCIAL REPORT PDF MODAL (WITH EXACT DEMO TEMPLATE) -->
   <div class="modal" id="modal-report">
     <div class="modal-content">
       <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-        <h3>Official Statement PDF Preview</h3>
+        <h3>Official Financial Report PDF Preview</h3>
         <button onclick="closeModal('modal-report')" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
       </div>
 
-      <!-- EXACT MATCHING PDF REPORT TEMPLATE -->
-      <div id="printable-report" class="template-card">
-        
-        <!-- HEADER WITH EXACT CURVE & GOLDEN CIRCLE LOGO -->
-        <div class="template-header-svg">
+      <!-- EXACT DEMO TEMPLATE FOR PDF REPORT -->
+      <div id="printable-report" class="official-sample-card">
+        <div class="sample-header-svg">
           <svg class="top-curved-banner" viewBox="0 0 500 130" preserveAspectRatio="none">
             <path d="M0,0 L180,0 C120,40 100,110 0,125 Z" fill="#590000"/>
             <path d="M0,0 L200,0 C140,45 115,100 0,115 Z" fill="#800000" opacity="0.8"/>
@@ -412,11 +311,11 @@
 
           <div class="header-content-wrapper">
             <div class="gold-circle-logo">
-              <i class="fa-solid fa-hands-holding-child logo-inner-icon"></i>
+              <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:42px;"></i>
             </div>
             <div class="header-titles-box">
-              <p class="motto-top">|| એકતા • સેવા • સંસ્કાર ||</p>
-              <h1 class="main-society-title">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h1>
+              <p style="font-size:13px; font-weight:800; color:#000000;">|| એકતા • સેવા • સંસ્કાર ||</p>
+              <h1 style="font-size:28px; font-weight:800; color:#590000; font-family:'Noto Sans Gujarati';">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h1>
               <span class="slogan-pill">એકતા માં શક્તિ , સેવા માં આનંદ , સંસ્કાર માં આપણું ગૌરવ.</span>
             </div>
           </div>
@@ -427,9 +326,6 @@
           <span>તારીખ : <b id="rpt-date">--/--/----</b></span>
         </div>
 
-        <div class="watermark-hands"><i class="fa-solid fa-hands-clasp"></i></div>
-
-        <!-- REPORT BODY -->
         <div class="template-body-content">
           <h3 style="font-size:16px; font-weight:800; color:#590000; text-align:center; margin-bottom:12px;">નાણાકીય આવક - જાવક હિસાબ પત્રક</h3>
           <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px; border:1px solid #cbd5e1;">
@@ -451,9 +347,8 @@
           </div>
         </div>
 
-        <!-- FOOTER WITH EXACT BOTTOM RIGHT CURVE -->
         <div class="template-footer-svg">
-          <span class="footer-copyright-text">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
+          <span style="font-size:11px; color:#64748b; font-weight:600;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
 
           <svg class="bottom-right-curved-banner" viewBox="0 0 220 70" preserveAspectRatio="none">
             <path d="M50,70 Q130,20 220,0 L220,70 Z" fill="#590000"/>
@@ -463,8 +358,40 @@
       </div>
 
       <div class="no-print" style="margin-top:15px; text-align:right;">
-        <button class="btn btn-maroon" style="width:auto; padding:10px 24px;" onclick="window.print()"><i class="fa-solid fa-print"></i> Print / Save as PDF</button>
+        <button class="btn btn-primary" style="width:auto; padding:10px 24px;" onclick="window.print()"><i class="fa-solid fa-print"></i> Print / Save PDF</button>
       </div>
+    </div>
+  </div>
+
+  <!-- PROFILE MODAL -->
+  <div class="modal" id="modal-profile">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+        <h3>Edit Profile</h3>
+        <button onclick="closeModal('modal-profile')" style="border:none; background:none; font-size:20px;">✕</button>
+      </div>
+      <form onsubmit="handleProfileUpdate(event)">
+        <div class="form-group"><label>Full Name</label><input type="text" id="edit-name" class="form-control" required></div>
+        <div class="form-group"><label>WhatsApp Phone</label><input type="tel" id="edit-phone" class="form-control" required></div>
+        <div class="form-group"><label>Flat Number</label><input type="text" id="edit-flat" class="form-control" required></div>
+        <button type="submit" class="btn btn-primary">Save Profile</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD EVENT MODAL -->
+  <div class="modal" id="modal-add-event">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+        <h3>Add New Event</h3>
+        <button onclick="closeModal('modal-add-event')" style="border:none; background:none; font-size:20px;">✕</button>
+      </div>
+      <form onsubmit="handleCreateEvent(event)">
+        <div class="form-group"><label>Event Name</label><input type="text" id="event-name" class="form-control" required></div>
+        <div class="form-group"><label>Event Date</label><input type="date" id="event-date" class="form-control" required></div>
+        <div class="form-group"><label>Description</label><textarea id="event-desc" class="form-control" rows="3"></textarea></div>
+        <button type="submit" class="btn btn-primary">Publish Event</button>
+      </form>
     </div>
   </div>
 
@@ -476,19 +403,10 @@
         <button onclick="closeModal('modal-add-notice')" style="border:none; background:none; font-size:20px;">✕</button>
       </div>
       <form onsubmit="handleCreateNotice(event)">
-        <div class="form-group">
-          <label>પ્રતિ (To)</label>
-          <input type="text" id="notice-target" class="form-control" value="સમસ્ત સોસાયટી સભ્યો" required>
-        </div>
-        <div class="form-group">
-          <label>Title / વિષય</label>
-          <input type="text" id="notice-title" class="form-control" placeholder="જન્માષ્ટમી મહોત્સવ આયોજન" required>
-        </div>
-        <div class="form-group">
-          <label>Content / વિગત</label>
-          <textarea id="notice-desc" class="form-control" rows="4" required></textarea>
-        </div>
-        <button type="submit" class="btn btn-maroon">Publish Notice</button>
+        <div class="form-group"><label>પ્રતિ (Target)</label><input type="text" id="notice-target" class="form-control" value="સમસ્ત સોસાયટી સભ્યો" required></div>
+        <div class="form-group"><label>Notice Title</label><input type="text" id="notice-title" class="form-control" placeholder="જન્માષ્ટમી મહોત્સવ આયોજન" required></div>
+        <div class="form-group"><label>Content / વિગત</label><textarea id="notice-desc" class="form-control" rows="4" required></textarea></div>
+        <button type="submit" class="btn btn-primary">Publish Notice</button>
       </form>
     </div>
   </div>
@@ -497,15 +415,16 @@
   <div class="modal" id="modal-transaction">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-        <h3>Add Entry</h3>
+        <h3>Add Financial Entry</h3>
         <button onclick="closeModal('modal-transaction')" style="border:none; background:none; font-size:20px;">✕</button>
       </div>
       <form onsubmit="handleSaveTransaction(event)">
         <input type="hidden" id="tx-type" value="income">
         <div class="form-group"><label>Title</label><input type="text" id="tx-title" class="form-control" required></div>
+        <div class="form-group"><label>Category</label><input type="text" id="tx-category" class="form-control" value="General" required></div>
         <div class="form-group"><label>Amount (₹)</label><input type="number" id="tx-amount" class="form-control" required></div>
         <div class="form-group"><label>Date</label><input type="date" id="tx-date" class="form-control" required></div>
-        <button type="submit" class="btn btn-maroon">Save</button>
+        <button type="submit" class="btn btn-primary">Save Entry</button>
       </form>
     </div>
   </div>
@@ -513,13 +432,19 @@
   <script>
     let currentUser = null;
 
+    let eventsList = [
+      { id: 1, name: 'Shree Krishna Janmashtami 2026', date: '2026-09-04', type: 'Festival Holiday', desc: 'Sarang Apartment Ground Dahi Handi Celebration' },
+      { id: 2, name: 'Ganesh Chaturthi Mahotsav', date: '2026-09-14', type: 'Festival', desc: '10 Days Sthapana and Daily Aarti' },
+      { id: 3, name: 'Navratri Garba Mahotsav 2026', date: '2026-10-11', type: 'Grand Event', desc: 'Pramukh Park Society Lawn - 9 Days Garba' }
+    ];
+
     let noticesList = [
       { id: 1, target: 'સમસ્ત સોસાયટી સભ્યો', title: 'શ્રી કૃષ્ણ જન્માષ્ટમી મહોત્સવ ૨૦૨૬ આયોજન', date: '04 / 09 / 2026', desc: 'સર્વે સોસાયટી સભ્યોને જણાવવાનું કે આ વર્ષે જન્માષ્ટમી મહોત્સવ ધામધૂમથી ઉજવવામાં આવશે. સાંજે ૫:૦૦ કલાકે મટકી ફોડ અને રાત્રે ૧૨:૦૦ કલાકે મહા આરતી રાખેલ છે.' }
     ];
 
     let financialList = [
-      { id: 101, title: 'જન્માષ્ટમી ફાળો & ડોનેશન', type: 'income', amount: 25000, date: '2026-09-04' },
-      { id: 102, title: 'સાઉન્ડ સિસ્ટમ અને લાઈટિંગ', type: 'expense', amount: 8500, date: '2026-09-03' }
+      { id: 101, title: 'જન્માષ્ટમી ફાળો & ડોનેશન', category: 'Donation', type: 'income', amount: 25000, date: '2026-09-04' },
+      { id: 102, title: 'સાઉન્ડ સિસ્ટમ અને લાઈટિંગ', category: 'Sound & Light', type: 'expense', amount: 8500, date: '2026-09-03' }
     ];
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -540,7 +465,8 @@
     function handleLogin(e) {
       e.preventDefault();
       const email = document.getElementById('login-email').value;
-      currentUser = { name: email.split('@')[0], flat: 'A-102' };
+      const role = document.getElementById('login-role').value;
+      currentUser = { name: email.split('@')[0] || 'Admin', flat: 'A-102', role: role, avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(email)}` };
       localStorage.setItem('madhuli_user_session', JSON.stringify(currentUser));
       showAppScreen();
     }
@@ -549,7 +475,9 @@
       e.preventDefault();
       currentUser = {
         name: document.getElementById('signup-name').value,
-        flat: document.getElementById('signup-flat').value
+        flat: document.getElementById('signup-flat').value,
+        role: 'user',
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(document.getElementById('signup-name').value)}`
       };
       localStorage.setItem('madhuli_user_session', JSON.stringify(currentUser));
       showAppScreen();
@@ -561,20 +489,52 @@
       document.getElementById('nav-user-name').innerText = currentUser.name;
       document.getElementById('nav-user-flat').innerText = 'Flat: ' + currentUser.flat;
 
+      updateFinancialCalculations();
+      renderEvents();
       renderNotices();
       renderFinancials();
     }
 
+    function toggleDropdown() { document.getElementById('dropdown-menu').classList.toggle('show'); }
+
     function switchNavTab(tab) {
-      document.getElementById('section-notices').style.display = (tab === 'notices') ? 'block' : 'none';
-      document.getElementById('section-financial').style.display = (tab === 'financial') ? 'block' : 'none';
+      ['dashboard', 'events', 'notices', 'financial'].forEach(t => {
+        const sec = document.getElementById('section-' + t);
+        if (sec) sec.style.display = (t === tab) ? 'block' : 'none';
+        const btn = document.getElementById('tab-btn-' + t);
+        if (btn) btn.classList.toggle('active', t === tab);
+      });
+    }
+
+    function updateFinancialCalculations() {
+      const inc = financialList.filter(f => f.type === 'income').reduce((a, c) => a + Number(c.amount), 0);
+      const exp = financialList.filter(f => f.type === 'expense').reduce((a, c) => a + Number(c.amount), 0);
+      const bal = inc - exp;
+
+      document.getElementById('stat-income').innerText = '₹' + inc.toLocaleString('en-IN');
+      document.getElementById('stat-expense').innerText = '₹' + exp.toLocaleString('en-IN');
+      document.getElementById('stat-balance').innerText = '₹' + bal.toLocaleString('en-IN');
+    }
+
+    function renderEvents() {
+      const container = document.getElementById('events-list');
+      container.innerHTML = eventsList.map(ev => `
+        <div class="event-card">
+          <div>
+            <span class="event-badge">${ev.type}</span>
+            <h4 style="font-size:16px; font-weight:700;">${ev.name}</h4>
+            <p style="font-size:13px; color:var(--text-muted);">${ev.date}</p>
+            <p style="font-size:13px; margin-top:6px;">${ev.desc}</p>
+          </div>
+        </div>
+      `).join('');
     }
 
     function renderNotices() {
       const container = document.getElementById('notices-list');
       container.innerHTML = noticesList.map(n => `
-        <div class="template-card">
-          <div class="template-header-svg">
+        <div class="official-sample-card">
+          <div class="sample-header-svg">
             <svg class="top-curved-banner" viewBox="0 0 500 130" preserveAspectRatio="none">
               <path d="M0,0 L180,0 C120,40 100,110 0,125 Z" fill="#590000"/>
               <path d="M0,0 L200,0 C140,45 115,100 0,115 Z" fill="#800000" opacity="0.8"/>
@@ -583,11 +543,11 @@
 
             <div class="header-content-wrapper">
               <div class="gold-circle-logo">
-                <i class="fa-solid fa-hands-holding-child logo-inner-icon"></i>
+                <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:42px;"></i>
               </div>
               <div class="header-titles-box">
-                <p class="motto-top">|| એકતા • સેવા • સંસ્કાર ||</p>
-                <h1 class="main-society-title">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h1>
+                <p style="font-size:13px; font-weight:800; color:#000000;">|| એકતા • સેવા • સંસ્કાર ||</p>
+                <h1 style="font-size:28px; font-weight:800; color:#590000; font-family:'Noto Sans Gujarati';">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h1>
                 <span class="slogan-pill">એકતા માં શક્તિ , સેવા માં આનંદ , સંસ્કાર માં આપણું ગૌરવ.</span>
               </div>
             </div>
@@ -598,15 +558,13 @@
             <span>તારીખ : <b>${n.date}</b></span>
           </div>
 
-          <div class="watermark-hands"><i class="fa-solid fa-hands-clasp"></i></div>
-
           <div class="template-body-content">
             <h3 style="font-size:18px; font-weight:800; color:#590000; margin-bottom:10px;">${n.title}</h3>
             <p style="font-size:15px; line-height:1.7; color:#1e293b;">${n.desc}</p>
           </div>
 
           <div class="template-footer-svg">
-            <span class="footer-copyright-text">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
+            <span style="font-size:11px; color:#64748b; font-weight:600;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
 
             <svg class="bottom-right-curved-banner" viewBox="0 0 220 70" preserveAspectRatio="none">
               <path d="M50,70 Q130,20 220,0 L220,70 Z" fill="#590000"/>
@@ -621,10 +579,11 @@
       const container = document.getElementById('financial-list');
       container.innerHTML = financialList.map(f => `
         <tr style="border-bottom:1px solid #e2e8f0;">
-          <td style="padding:10px;">${f.date}</td>
-          <td style="padding:10px; font-weight:700;">${f.title}</td>
-          <td style="padding:10px; font-weight:700; color:${f.type === 'income' ? '#166534' : '#dc2626'};">${f.type.toUpperCase()}</td>
-          <td style="padding:10px; text-align:right; font-weight:800;">₹${Number(f.amount).toLocaleString('en-IN')}</td>
+          <td style="padding:12px;">${f.date}</td>
+          <td style="padding:12px; font-weight:700;">${f.title}</td>
+          <td style="padding:12px;">${f.category}</td>
+          <td style="padding:12px; font-weight:700; color:${f.type === 'income' ? 'var(--secondary)' : 'var(--danger)'};">${f.type.toUpperCase()}</td>
+          <td style="padding:12px; font-weight:800;">₹${Number(f.amount).toLocaleString('en-IN')}</td>
         </tr>
       `).join('');
     }
@@ -651,6 +610,13 @@
       document.getElementById('modal-report').classList.add('show');
     }
 
+    function openProfileModal() {
+      document.getElementById('edit-name').value = currentUser.name;
+      document.getElementById('edit-flat').value = currentUser.flat;
+      document.getElementById('modal-profile').classList.add('show');
+    }
+
+    function openAddEventModal() { document.getElementById('modal-add-event').classList.add('show'); }
     function openAddNoticeModal() { document.getElementById('modal-add-notice').classList.add('show'); }
     function openAddTransactionModal(type) {
       document.getElementById('tx-type').value = type;
@@ -658,28 +624,34 @@
     }
     function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
+    function handleProfileUpdate(e) {
+      e.preventDefault();
+      currentUser.name = document.getElementById('edit-name').value;
+      currentUser.flat = document.getElementById('edit-flat').value;
+      localStorage.setItem('madhuli_user_session', JSON.stringify(currentUser));
+      document.getElementById('nav-user-name').innerText = currentUser.name;
+      document.getElementById('nav-user-flat').innerText = 'Flat: ' + currentUser.flat;
+      closeModal('modal-profile');
+    }
+
+    function handleCreateEvent(e) {
+      e.preventDefault();
+      eventsList.unshift({ id: Date.now(), name: document.getElementById('event-name').value, date: document.getElementById('event-date').value, type: 'Society Program', desc: document.getElementById('event-desc').value });
+      renderEvents();
+      closeModal('modal-add-event');
+    }
+
     function handleCreateNotice(e) {
       e.preventDefault();
-      noticesList.unshift({
-        id: Date.now(),
-        target: document.getElementById('notice-target').value,
-        title: document.getElementById('notice-title').value,
-        desc: document.getElementById('notice-desc').value,
-        date: new Date().toLocaleDateString('en-IN')
-      });
+      noticesList.unshift({ id: Date.now(), target: document.getElementById('notice-target').value, title: document.getElementById('notice-title').value, desc: document.getElementById('notice-desc').value, date: new Date().toLocaleDateString('en-IN') });
       renderNotices();
       closeModal('modal-add-notice');
     }
 
     function handleSaveTransaction(e) {
       e.preventDefault();
-      financialList.unshift({
-        id: Date.now(),
-        title: document.getElementById('tx-title').value,
-        type: document.getElementById('tx-type').value,
-        amount: document.getElementById('tx-amount').value,
-        date: document.getElementById('tx-date').value
-      });
+      financialList.unshift({ id: Date.now(), title: document.getElementById('tx-title').value, category: document.getElementById('tx-category').value, type: document.getElementById('tx-type').value, amount: document.getElementById('tx-amount').value, date: document.getElementById('tx-date').value });
+      updateFinancialCalculations();
       renderFinancials();
       closeModal('modal-transaction');
     }
