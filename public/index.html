@@ -16,7 +16,8 @@
       --secondary: #10b981;
       --accent: #f59e0b;
       --danger: #ef4444;
-      --maroon: #800000;
+      --maroon: #6b0000;
+      --gold: #d4af37;
       --dark: #0f172a;
       --text-main: #1e293b;
       --text-muted: #64748b;
@@ -52,18 +53,19 @@
 
     .auth-box { width: 100%; max-width: 480px; padding: 32px; }
     .auth-header { text-align: center; margin-bottom: 24px; }
-    .auth-header h1 { font-size: 22px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+    .auth-header h1 { font-size: 22px; font-weight: 800; color: var(--maroon); margin-bottom: 4px; font-family: 'Noto Sans Gujarati'; }
 
     .tab-buttons { display: flex; background: #e2e8f0; padding: 4px; border-radius: 12px; margin-bottom: 24px; }
     .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; font-weight: 700; cursor: pointer; color: var(--text-muted); border-radius: 8px; }
-    .tab-btn.active { background: #ffffff; color: var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .tab-btn.active { background: #ffffff; color: var(--maroon); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
     .form-control { width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; }
 
-    .btn { width: 100%; padding: 12px 20px; border: none; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; }
+    .btn { width: 100%; padding: 12px 20px; border: none; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--maroon), #400000); color: white; }
+    .btn-whatsapp { background: #25D366; color: white; }
     .btn-success { background: var(--secondary); color: white; }
     .btn-danger { background: var(--danger); color: white; }
 
@@ -82,7 +84,7 @@
     }
 
     .user-profile-header { display: flex; align-items: center; gap: 12px; }
-    .avatar-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-light); }
+    .avatar-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--gold); }
 
     .dropdown-container { position: relative; }
     .three-dots-btn { background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 18px; }
@@ -94,7 +96,7 @@
 
     .app-nav { background: white; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: center; gap: 8px; padding: 8px 16px; overflow-x: auto; }
     .nav-tab { padding: 10px 18px; border: none; background: transparent; font-size: 14px; font-weight: 600; color: var(--text-muted); border-radius: 10px; cursor: pointer; white-space: nowrap; }
-    .nav-tab.active { background: var(--primary-light); color: var(--primary); }
+    .nav-tab.active { background: #fdf2f2; color: var(--maroon); font-weight: 700; }
 
     .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; flex: 1; }
 
@@ -103,10 +105,10 @@
 
     .event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
     .event-card { background: white; border-radius: 14px; border: 1px solid #e2e8f0; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
-    .event-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; background: var(--primary-light); color: var(--primary); margin-bottom: 8px; }
+    .event-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; background: #fdf2f2; color: var(--maroon); margin-bottom: 8px; }
 
-    /* EXACT DEMO TEMPLATE FOR NOTICE & PDF REPORT */
-    .official-sample-card {
+    /* EXACT MATCH EXACT TEMPLATE DESIGN FOR NOTICES & PDF REPORT */
+    .official-letterhead-card {
       background: #ffffff;
       border-radius: 12px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -116,24 +118,130 @@
       border: 1px solid #e2e8f0;
     }
 
-    .sample-header-svg { position: relative; width: 100%; background: #ffffff; padding-top: 15px; }
-    .top-curved-banner { position: absolute; top: 0; left: 0; width: 100%; height: 130px; z-index: 1; pointer-events: none; }
+    .letterhead-header {
+      position: relative;
+      width: 100%;
+      background: #ffffff;
+      padding: 15px 20px 5px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      overflow: hidden;
+    }
 
-    .header-content-wrapper { position: relative; z-index: 2; display: flex; align-items: center; padding: 10px 25px 0 25px; }
-    .gold-circle-logo { width: 95px; height: 95px; border-radius: 50%; background: #ffffff; border: 4px solid #d4af37; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 15px; }
-    .header-titles-box { flex: 1; text-align: center; }
+    /* Top Left Curved Banner */
+    .hdr-left-curve {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 320px;
+      height: 120px;
+      z-index: 1;
+      pointer-events: none;
+    }
 
-    .slogan-pill { display: inline-block; background: linear-gradient(90deg, #6b0000, #400000); color: #ffffff; font-size: 11px; font-weight: 700; padding: 4px 18px; border-radius: 20px; margin-top: 6px; }
+    .hdr-center-content {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      text-align: center;
+      padding: 0 10px;
+    }
 
-    .letterhead-meta-row { display: flex; justify-content: space-between; padding: 15px 35px 5px 35px; font-size: 14px; font-weight: 700; color: #334155; position: relative; z-index: 2; }
-    .template-body-content { padding: 20px 35px 30px 35px; min-height: 180px; position: relative; z-index: 2; }
+    .hdr-motto { font-size: 13px; font-weight: 800; color: #6b0000; letter-spacing: 0.5px; }
+    .hdr-ornament { color: #d4af37; font-size: 12px; margin: 2px 0; }
+    .hdr-main-title { font-size: 28px; font-weight: 800; color: #6b0000; font-family: 'Noto Sans Gujarati'; line-height: 1.2; }
+    .hdr-line { width: 80%; height: 1.5px; background: linear-gradient(90deg, transparent, #d4af37, transparent); margin: 6px auto; }
+    
+    .hdr-slogan-pill {
+      display: inline-block;
+      background: linear-gradient(180deg, #6b0000 0%, #4a0000 100%);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 18px;
+      border-radius: 20px;
+      border: 1px solid #d4af37;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    }
 
-    .template-footer-svg { position: relative; width: 100%; padding: 10px 35px 15px 35px; display: flex; justify-content: space-between; align-items: flex-end; background: #ffffff; }
-    .bottom-right-curved-banner { position: absolute; bottom: 0; right: 0; width: 220px; height: 70px; z-index: 1; pointer-events: none; }
+    .gold-logo-box {
+      position: relative;
+      z-index: 2;
+      width: 85px;
+      height: 85px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3.5px solid #d4af37;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .hdr-right-lamps {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      gap: 8px;
+      color: #d4af37;
+      font-size: 18px;
+      padding-right: 10px;
+    }
+
+    .letterhead-meta-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 30px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e293b;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+
+    .letterhead-body {
+      padding: 24px 30px;
+      min-height: 160px;
+      position: relative;
+    }
+
+    /* Watermark hands in body */
+    .body-watermark {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      opacity: 0.08;
+      font-size: 110px;
+      color: #6b0000;
+      pointer-events: none;
+    }
+
+    .letterhead-footer {
+      position: relative;
+      width: 100%;
+      padding: 12px 30px 16px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      background: #ffffff;
+      border-top: 1px solid #f1f5f9;
+      overflow: hidden;
+    }
+
+    .ftr-right-curve {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 220px;
+      height: 65px;
+      z-index: 1;
+      pointer-events: none;
+    }
 
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; align-items: center; justify-content: center; padding: 16px; }
     .modal.show { display: flex; }
-    .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; }
+    .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; }
 
     @media print {
       body { background: white !important; }
@@ -151,7 +259,7 @@
     <div class="glass-card auth-box">
       <div class="auth-header">
         <h1>મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h1>
-        <p style="font-weight:700; color:var(--primary); font-size:14px; margin-top:2px;">Society Function Manager</p>
+        <p style="font-weight:700; color:var(--maroon); font-size:14px; margin-top:2px;">Society Function Manager</p>
         <p style="font-size:12px; color:var(--text-muted);">Sarang Apartment, Pramukh Park Society</p>
       </div>
 
@@ -161,7 +269,7 @@
       </div>
 
       <form id="login-form" onsubmit="handleLogin(event)">
-        <div class="form-group"><label>Email Address</label><input type="email" id="login-email" class="form-control" placeholder="enter your email" required></div>
+        <div class="form-group"><label>Email Address</label><input type="email" id="login-email" class="form-control" placeholder="enter email" required></div>
         <div class="form-group"><label>Password</label><input type="password" id="login-password" class="form-control" placeholder="••••••••" required></div>
         <div class="form-group">
           <label>Role</label>
@@ -174,7 +282,7 @@
       </form>
 
       <form id="signup-form" style="display:none;" onsubmit="handleSignup(event)">
-        <div class="form-group"><label>Full Name</label><input type="text" id="signup-name" class="form-control" placeholder="e.g. Ramesh Patel" required></div>
+        <div class="form-group"><label>Full Name</label><input type="text" id="signup-name" class="form-control" placeholder="Ramesh Patel" required></div>
         <div class="form-group"><label>WhatsApp Mobile No.</label><input type="tel" id="signup-phone" class="form-control" placeholder="+91 9876543210" required></div>
         <div class="form-group"><label>Email Address</label><input type="email" id="signup-email" class="form-control" required></div>
         <div class="form-group"><label>Flat Number</label><input type="text" id="signup-flat" class="form-control" placeholder="A-101" required></div>
@@ -188,7 +296,7 @@
   <div id="app-screen">
     <div class="navbar">
       <div class="user-profile-header">
-        <img id="nav-avatar" src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" class="avatar-img">
+        <img id="nav-avatar" src="https://ui-avatars.com/api/?name=User&background=6b0000&color=fff" class="avatar-img">
         <div>
           <h3 id="nav-user-name">Loading...</h3>
           <p id="nav-user-flat" style="font-size:12px; color:var(--text-muted);">Flat: -</p>
@@ -219,29 +327,26 @@
       <div class="stats-grid">
         <div class="stat-card"><p style="font-size:12px; font-weight:700; color:var(--text-muted);">TOTAL INCOME</p><h2 style="color:var(--secondary);" id="stat-income">₹0</h2></div>
         <div class="stat-card"><p style="font-size:12px; font-weight:700; color:var(--text-muted);">TOTAL EXPENSE</p><h2 style="color:var(--danger);" id="stat-expense">₹0</h2></div>
-        <div class="stat-card"><p style="font-size:12px; font-weight:700; color:var(--text-muted);">NET BALANCE</p><h2 style="color:var(--primary);" id="stat-balance">₹0</h2></div>
+        <div class="stat-card"><p style="font-size:12px; font-weight:700; color:var(--text-muted);">NET BALANCE</p><h2 style="color:var(--maroon);" id="stat-balance">₹0</h2></div>
       </div>
 
       <!-- DASHBOARD TAB -->
       <div id="section-dashboard">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h2>Society Overview Dashboard</h2>
-          <button class="btn btn-primary" style="width:auto; padding:6px 14px; font-size:13px;" onclick="openReportModal()">Generate PDF Report</button>
-        </div>
+        <h2 style="margin-bottom:16px;">Society Overview Dashboard</h2>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:20px;">
           <div class="glass-card" style="padding:20px; background:white;">
-            <h4 style="font-size:16px; font-weight:700; color:var(--primary);">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h4>
+            <h4 style="font-size:18px; font-weight:800; color:var(--maroon); font-family:'Noto Sans Gujarati';">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h4>
             <p style="font-size:12px; color:var(--text-muted);">Sarang Apartment, Pramukh Park Society</p>
             <hr style="border:0; border-top:1px solid #e2e8f0; margin:12px 0;">
             <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600;">
               <span>Total Flats: <b>48 Flats</b></span>
-              <span>Active Events: <b id="dash-event-count">5</b></span>
+              <span>Active Events: <b id="dash-event-count">3</b></span>
             </div>
           </div>
 
           <div class="glass-card" style="padding:20px; background:white;">
             <h4 style="font-size:15px; font-weight:700; margin-bottom:8px;"><i class="fa-solid fa-bullhorn" style="color:var(--accent);"></i> Latest Announcement</h4>
-            <p id="dash-latest-notice" style="font-size:13px;">Loading latest announcement...</p>
+            <p id="dash-latest-notice" style="font-size:13px; color:#334155;">Loading latest announcement...</p>
           </div>
         </div>
       </div>
@@ -255,7 +360,7 @@
         <div class="event-grid" id="events-list"></div>
       </div>
 
-      <!-- NOTICES TAB (WITH EXACT DEMO TEMPLATE) -->
+      <!-- NOTICES TAB (WITH EXACT DEMO TEMPLATE & WHATSAPP SHARE) -->
       <div id="section-notices" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
           <h2>Official Notices</h2>
@@ -292,7 +397,7 @@
     </div>
   </div>
 
-  <!-- FINANCIAL REPORT PDF MODAL (WITH EXACT DEMO TEMPLATE) -->
+  <!-- FINANCIAL REPORT PDF MODAL (EXACT LETTERHEAD TEMPLATE) -->
   <div class="modal" id="modal-report">
     <div class="modal-content">
       <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -300,24 +405,34 @@
         <button onclick="closeModal('modal-report')" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
       </div>
 
-      <!-- EXACT DEMO TEMPLATE FOR PDF REPORT -->
-      <div id="printable-report" class="official-sample-card">
-        <div class="sample-header-svg">
-          <svg class="top-curved-banner" viewBox="0 0 500 130" preserveAspectRatio="none">
-            <path d="M0,0 L180,0 C120,40 100,110 0,125 Z" fill="#590000"/>
-            <path d="M0,0 L200,0 C140,45 115,100 0,115 Z" fill="#800000" opacity="0.8"/>
-            <path d="M0,0 L160,0 C100,30 90,85 0,95 Z" fill="#d4af37" opacity="0.5"/>
+      <!-- EXACT LETTERHEAD CONTAINER -->
+      <div id="printable-report" class="official-letterhead-card">
+        <div class="letterhead-header">
+          <!-- Top Left Maroon Curved Banner -->
+          <svg class="hdr-left-curve" viewBox="0 0 320 120" preserveAspectRatio="none">
+            <path d="M0,0 L200,0 C120,40 100,100 0,115 Z" fill="#4a0000"/>
+            <path d="M0,0 L220,0 C140,45 115,90 0,105 Z" fill="#6b0000" opacity="0.95"/>
+            <path d="M0,0 L170,0 C110,30 95,80 0,88 Z" fill="#d4af37" opacity="0.6"/>
           </svg>
 
-          <div class="header-content-wrapper">
-            <div class="gold-circle-logo">
-              <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:42px;"></i>
-            </div>
-            <div class="header-titles-box">
-              <p style="font-size:13px; font-weight:800; color:#000000;">|| એકતા • સેવા • સંસ્કાર ||</p>
-              <h1 style="font-size:28px; font-weight:800; color:#590000; font-family:'Noto Sans Gujarati';">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h1>
-              <span class="slogan-pill">એકતા માં શક્તિ , સેવા માં આનંદ , સંસ્કાર માં આપણું ગૌરવ.</span>
-            </div>
+          <!-- Gold Logo Circle -->
+          <div class="gold-logo-box">
+            <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:38px;"></i>
+          </div>
+
+          <!-- Header Titles -->
+          <div class="hdr-center-content">
+            <div class="hdr-motto">|| એકતા • સેવા • સંસ્કાર ||</div>
+            <div class="hdr-ornament">❖ ────── ✦ ────── ❖</div>
+            <div class="hdr-main-title">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</div>
+            <div class="hdr-line"></div>
+            <div class="hdr-slogan-pill">એકતા માં શક્તિ , સેવા માં આનંદ , સંસ્કાર માં આપણું ગૌરવ.</div>
+          </div>
+
+          <!-- Right Hanging Lamps Decorative SVG -->
+          <div class="hdr-right-lamps">
+            <i class="fa-solid fa-lightbulb" style="font-size:16px;"></i>
+            <i class="fa-solid fa-sun" style="font-size:22px;"></i>
           </div>
         </div>
 
@@ -326,11 +441,12 @@
           <span>તારીખ : <b id="rpt-date">--/--/----</b></span>
         </div>
 
-        <div class="template-body-content">
-          <h3 style="font-size:16px; font-weight:800; color:#590000; text-align:center; margin-bottom:12px;">નાણાકીય આવક - જાવક હિસાબ પત્રક</h3>
+        <div class="letterhead-body">
+          <i class="fa-solid fa-hands-holding-child body-watermark"></i>
+          <h3 style="font-size:16px; font-weight:800; color:#6b0000; text-align:center; margin-bottom:14px; font-family:'Noto Sans Gujarati';">નાણાકીય આવક - જાવક હિસાબ પત્રક</h3>
           <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px; border:1px solid #cbd5e1;">
             <thead>
-              <tr style="background:#590000; color:white; text-align:left;">
+              <tr style="background:#6b0000; color:white; text-align:left;">
                 <th style="padding:8px;">તારીખ</th>
                 <th style="padding:8px;">વિગત (Particulars)</th>
                 <th style="padding:8px;">પ્રકાર</th>
@@ -340,19 +456,21 @@
             <tbody id="report-table-body"></tbody>
           </table>
 
-          <div style="display:flex; justify-content:space-between; background:#fdf2f2; padding:10px 14px; border-radius:8px; border:1px solid #590000; font-size:13px; font-weight:700;">
+          <div style="display:flex; justify-content:space-between; background:#fdf2f2; padding:10px 14px; border-radius:8px; border:1px solid #6b0000; font-size:13px; font-weight:700;">
             <span>કુલ આવક: <b style="color:#166534" id="rpt-inc">₹0</b></span>
             <span>કુલ ખર્ચ: <b style="color:#991b1b" id="rpt-exp">₹0</b></span>
-            <span>બાકી બચત: <b style="color:#590000" id="rpt-bal">₹0</b></span>
+            <span>બાકી બચત: <b style="color:#6b0000" id="rpt-bal">₹0</b></span>
           </div>
         </div>
 
-        <div class="template-footer-svg">
-          <span style="font-size:11px; color:#64748b; font-weight:600;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
+        <div class="letterhead-footer">
+          <span style="font-size:11px; color:#64748b; font-weight:600; position:relative; z-index:2;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
+          <span style="font-size:12px; font-weight:700; color:#6b0000; position:relative; z-index:2;">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</span>
 
-          <svg class="bottom-right-curved-banner" viewBox="0 0 220 70" preserveAspectRatio="none">
-            <path d="M50,70 Q130,20 220,0 L220,70 Z" fill="#590000"/>
-            <path d="M80,70 Q150,30 220,10 L220,70 Z" fill="#800000" opacity="0.7"/>
+          <!-- Bottom Right Curved Banner -->
+          <svg class="ftr-right-curve" viewBox="0 0 220 65" preserveAspectRatio="none">
+            <path d="M40,65 Q120,15 220,0 L220,65 Z" fill="#6b0000"/>
+            <path d="M70,65 Q140,25 220,5 L220,65 Z" fill="#d4af37" opacity="0.6"/>
           </svg>
         </div>
       </div>
@@ -395,17 +513,27 @@
     </div>
   </div>
 
-  <!-- ADD NOTICE MODAL -->
+  <!-- ADD NOTICE MODAL WITH HOLIDAY / EVENT DROPDOWN -->
   <div class="modal" id="modal-add-notice">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-        <h3>Create Notice</h3>
+        <h3>Create New Notice</h3>
         <button onclick="closeModal('modal-add-notice')" style="border:none; background:none; font-size:20px;">✕</button>
       </div>
       <form onsubmit="handleCreateNotice(event)">
-        <div class="form-group"><label>પ્રતિ (Target)</label><input type="text" id="notice-target" class="form-control" value="સમસ્ત સોસાયટી સભ્યો" required></div>
-        <div class="form-group"><label>Notice Title</label><input type="text" id="notice-title" class="form-control" placeholder="જન્માષ્ટમી મહોત્સવ આયોજન" required></div>
-        <div class="form-group"><label>Content / વિગત</label><textarea id="notice-desc" class="form-control" rows="4" required></textarea></div>
+        <div class="form-group">
+          <label>Select Festival / Holiday (તહેવાર પસંદ કરો)</label>
+          <select id="notice-event-select" class="form-control" onchange="autoFillNoticeTemplate()">
+            <option value="જન્માષ્ટમી મહોત્સવ">શ્રી કૃષ્ણ જન્માષ્ટમી મહોત્સવ ૨૦૨૬</option>
+            <option value="ગણેશ ચતુર્થી મહોત્સવ">ગણેશ ચતુર્થી મહોત્સવ ૨૦૨૬</option>
+            <option value="નવરાત્રી ગરબા મહોત્સવ">નવરાત્રી ગરબા મહોત્સવ ૨૦૨૬</option>
+            <option value="દિવાળી સ્નેહ મિલન">દિવાળી સ્નેહ મિલન ૨૦૨૬</option>
+            <option value="સામાન્ય સોસાયટી જાહેરાત">સામાન્ય સોસાયટી જાહેરાત (General Notice)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>પ્રતિ (Target Audience)</label><input type="text" id="notice-target" class="form-control" value="સમસ્ત સોસાયટી સભ્યો" required></div>
+        <div class="form-group"><label>Notice Title</label><input type="text" id="notice-title" class="form-control" value="શ્રી કૃષ્ણ જન્માષ્ટમી મહોત્સવ ૨૦૨૬ આયોજન" required></div>
+        <div class="form-group"><label>Notice Content / વિગત</label><textarea id="notice-desc" class="form-control" rows="4" required>સર્વે સોસાયટી સભ્યોને જણાવવાનું કે આ વર્ષે જન્માષ્ટમી મહોત્સવ ધામધૂમથી ઉજવવામાં આવશે. સાંજે ૫:૦૦ કલાકે મટકી ફોડ અને રાત્રે ૧૨:૦૦ કલાકે મહા આરતી રાખેલ છે.</textarea></div>
         <button type="submit" class="btn btn-primary">Publish Notice</button>
       </form>
     </div>
@@ -532,24 +660,35 @@
 
     function renderNotices() {
       const container = document.getElementById('notices-list');
-      container.innerHTML = noticesList.map(n => `
-        <div class="official-sample-card">
-          <div class="sample-header-svg">
-            <svg class="top-curved-banner" viewBox="0 0 500 130" preserveAspectRatio="none">
-              <path d="M0,0 L180,0 C120,40 100,110 0,125 Z" fill="#590000"/>
-              <path d="M0,0 L200,0 C140,45 115,100 0,115 Z" fill="#800000" opacity="0.8"/>
-              <path d="M0,0 L160,0 C100,30 90,85 0,95 Z" fill="#d4af37" opacity="0.5"/>
+      if (noticesList.length > 0) {
+        document.getElementById('dash-latest-notice').innerText = noticesList[0].title + ' - ' + noticesList[0].desc;
+      }
+      container.innerHTML = noticesList.map(n => {
+        const waText = encodeURIComponent(`*મધુલી યુવા ગ્રુપ મિત્ર મંડળ*\n*જાહેરાત: ${n.title}*\nતારીખ: ${n.date}\nપ્રતિ: ${n.target}\n\n${n.desc}`);
+        return `
+        <div class="official-letterhead-card">
+          <div class="letterhead-header">
+            <svg class="hdr-left-curve" viewBox="0 0 320 120" preserveAspectRatio="none">
+              <path d="M0,0 L200,0 C120,40 100,100 0,115 Z" fill="#4a0000"/>
+              <path d="M0,0 L220,0 C140,45 115,90 0,105 Z" fill="#6b0000" opacity="0.95"/>
+              <path d="M0,0 L170,0 C110,30 95,80 0,88 Z" fill="#d4af37" opacity="0.6"/>
             </svg>
 
-            <div class="header-content-wrapper">
-              <div class="gold-circle-logo">
-                <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:42px;"></i>
-              </div>
-              <div class="header-titles-box">
-                <p style="font-size:13px; font-weight:800; color:#000000;">|| એકતા • સેવા • સંસ્કાર ||</p>
-                <h1 style="font-size:28px; font-weight:800; color:#590000; font-family:'Noto Sans Gujarati';">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h1>
-                <span class="slogan-pill">એકતા માં શક્તિ , સેવા માં આનંદ , સંસ્કાર માં આપણું ગૌરવ.</span>
-              </div>
+            <div class="gold-logo-box">
+              <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:38px;"></i>
+            </div>
+
+            <div class="hdr-center-content">
+              <div class="hdr-motto">|| એકતા • સેવા • સંસ્કાર ||</div>
+              <div class="hdr-ornament">❖ ────── ✦ ────── ❖</div>
+              <div class="hdr-main-title">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</div>
+              <div class="hdr-line"></div>
+              <div class="hdr-slogan-pill">એકતા માં શક્તિ , સેવા માં આનંદ , સંસ્કાર માં આપણું ગૌરવ.</div>
+            </div>
+
+            <div class="hdr-right-lamps">
+              <i class="fa-solid fa-lightbulb" style="font-size:16px;"></i>
+              <i class="fa-solid fa-sun" style="font-size:22px;"></i>
             </div>
           </div>
 
@@ -558,21 +697,24 @@
             <span>તારીખ : <b>${n.date}</b></span>
           </div>
 
-          <div class="template-body-content">
-            <h3 style="font-size:18px; font-weight:800; color:#590000; margin-bottom:10px;">${n.title}</h3>
+          <div class="letterhead-body">
+            <i class="fa-solid fa-hands-holding-child body-watermark"></i>
+            <h3 style="font-size:18px; font-weight:800; color:#6b0000; margin-bottom:10px; font-family:'Noto Sans Gujarati';">${n.title}</h3>
             <p style="font-size:15px; line-height:1.7; color:#1e293b;">${n.desc}</p>
           </div>
 
-          <div class="template-footer-svg">
-            <span style="font-size:11px; color:#64748b; font-weight:600;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
+          <div class="letterhead-footer">
+            <span style="font-size:11px; color:#64748b; font-weight:600; position:relative; z-index:2;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
+            <a href="https://api.whatsapp.com/send?text=${waText}" target="_blank" class="btn btn-whatsapp" style="width:auto; padding:6px 14px; font-size:12px; position:relative; z-index:2;"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</a>
 
-            <svg class="bottom-right-curved-banner" viewBox="0 0 220 70" preserveAspectRatio="none">
-              <path d="M50,70 Q130,20 220,0 L220,70 Z" fill="#590000"/>
-              <path d="M80,70 Q150,30 220,10 L220,70 Z" fill="#800000" opacity="0.7"/>
+            <svg class="ftr-right-curve" viewBox="0 0 220 65" preserveAspectRatio="none">
+              <path d="M40,65 Q120,15 220,0 L220,65 Z" fill="#6b0000"/>
+              <path d="M70,65 Q140,25 220,5 L220,65 Z" fill="#d4af37" opacity="0.6"/>
             </svg>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     function renderFinancials() {
@@ -608,6 +750,23 @@
       `).join('');
 
       document.getElementById('modal-report').classList.add('show');
+    }
+
+    function autoFillNoticeTemplate() {
+      const val = document.getElementById('notice-event-select').value;
+      if (val === 'શ્રી કૃષ્ણ જન્માષ્ટમી મહોત્સવ') {
+        document.getElementById('notice-title').value = 'શ્રી કૃષ્ણ જન્માષ્ટમી મહોત્સવ ૨૦૨૬ આયોજન';
+        document.getElementById('notice-desc').value = 'સર્વે સોસાયટી સભ્યોને જણાવવાનું કે આ વર્ષે જન્માષ્ટમી મહોત્સવ ધામધૂમથી ઉજવવામાં આવશે. સાંજે ૫:૦૦ કલાકે મટકી ફોડ અને રાત્રે ૧૨:૦૦ કલાકે મહા આરતી રાખેલ છે.';
+      } else if (val === 'ગણેશ ચતુર્થી મહોત્સવ') {
+        document.getElementById('notice-title').value = 'ગણેશ ચતુર્થી મહા મહોત્સવ સપ્રેમ આમંત્રણ';
+        document.getElementById('notice-desc').value = 'સર્વે સોસાયટી નિવાસીઓને જણાવવાનું કે ગણેશ સ્થાપના નિમિત્તે દરરોજ સાંજે ૭:૩૦ કલાકે મહા આરતી તથા પ્રસાદીનું આયોજન કરેલ છે.';
+      } else if (val === 'નવરાત્રી ગરબા મહોત્સવ') {
+        document.getElementById('notice-title').value = 'નવરાત્રી રાસ ગરબા મહોત્સવ ૨૦૨૬';
+        document.getElementById('notice-desc').value = 'નવરાત્રી મહોત્સવ નિમિત્તે સોસાયટી ગ્રાઉન્ડમાં દરરોજ રાત્રે ૯:૦૦ કલાકે પ્રાચીન-અર્વાચીન ગરબાનું આયોજન કરવામાં આવ્યું છે.';
+      } else if (val === 'દિવાળી સ્નેહ મિલન') {
+        document.getElementById('notice-title').value = 'દિવાળી શૂભેચ્છા & સ્નેહ મિલન સમારોહ';
+        document.getElementById('notice-desc').value = 'નૂતન વર્ષ નિમિત્તે સોસાયટીના સભ્યો માટે સ્નેહ મિલન સમારોહ રાખેલ છે. આપ સૌ ને ઉપસ્થિત રહેવા નમ્ર વિનંતી.';
+      }
     }
 
     function openProfileModal() {
