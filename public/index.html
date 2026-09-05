@@ -527,6 +527,11 @@
         </select>
       </div>
 
+      <div class="form-group">
+        <label>Flat Number (Optional)</label>
+        <input type="text" id="signupFlat" placeholder="e.g., A-101">
+      </div>
+
       <div class="checkbox-group">
         <input type="checkbox" id="agreeTerms">
         <label for="agreeTerms">I agree to Terms & Conditions</label>
@@ -594,11 +599,23 @@
 
     <!-- Profile/Settings Tabs -->
     <div id="profileTab" class="tab-content">
-      <div class="card" style="max-width: 500px;">
-        <h3 style="margin-top: 0;">Profile Information</h3>
+      <div class="card" style="max-width: 600px;">
+        <h3 style="margin-top: 0;">👤 Profile Information</h3>
+
+        <!-- Profile Photo Section -->
+        <div style="text-align: center; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border);">
+          <div id="profilePhotoPreview" style="width: 120px; height: 120px; border-radius: 50%; background: var(--light); display: flex; align-items: center; justify-content: center; font-size: 48px; margin: 0 auto 12px; border: 3px solid var(--primary); cursor: pointer;" onclick="document.getElementById('profilePhotoInput').click()">
+            👤
+          </div>
+          <input type="file" id="profilePhotoInput" accept="image/jpeg,image/jpg,image/png" style="display: none;" onchange="handlePhotoSelect(event)">
+          <p style="font-size: 12px; color: var(--muted);">Click to upload profile photo</p>
+          <button class="btn btn-sm" onclick="document.getElementById('profilePhotoInput').click()" style="margin-top: 8px;">📸 Change Photo</button>
+          <button class="btn btn-sm" style="background: var(--danger); color: white; margin-left: 8px;" onclick="removeProfilePhoto()">❌ Remove</button>
+        </div>
+
         <div class="form-group">
           <label>Name</label>
-          <input type="text" id="profileName" readonly>
+          <input type="text" id="profileName">
         </div>
         <div class="form-group">
           <label>Email</label>
@@ -606,12 +623,19 @@
         </div>
         <div class="form-group">
           <label>Mobile</label>
-          <input type="tel" id="profileMobile" readonly>
+          <input type="tel" id="profileMobile">
         </div>
         <div class="form-group">
           <label>Flat Number</label>
-          <input type="text" id="profileFlat" readonly>
+          <input type="text" id="profileFlat">
         </div>
+        <div class="form-group">
+          <label>Family Members</label>
+          <input type="number" id="profileFamily" min="1" max="20">
+        </div>
+
+        <button class="btn btn-primary" onclick="updateProfile()">💾 Save Changes</button>
+        <div id="profileMessage" style="margin-top: 12px; font-size: 14px;"></div>
       </div>
     </div>
 
@@ -739,6 +763,7 @@
     const password = document.getElementById('signupPassword').value;
     const confirm = document.getElementById('signupConfirm').value;
     const role = document.getElementById('signupRole').value;
+    const flat_number = document.getElementById('signupFlat').value;
     const agree = document.getElementById('agreeTerms').checked;
     const errorDiv = document.getElementById('signupError');
     const successDiv = document.getElementById('signupSuccess');
@@ -767,7 +792,7 @@
     fetch(`${API_URL}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, mobile, password, role })
+      body: JSON.stringify({ name, email, mobile, password, role, flat_number })
     })
     .then(r => r.json())
     .then(data => {
@@ -901,6 +926,11 @@
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     event.target.classList.add('active');
     document.getElementById(tab + 'Tab').classList.add('active');
+
+    // Load profile when switching to profile tab
+    if (tab === 'profile' && currentUser) {
+      loadProfile();
+    }
   }
 
   function switchTab(tab) {
@@ -912,6 +942,164 @@
 
   function toggleMenu() {
     document.getElementById('dropdown').classList.toggle('active');
+  }
+
+  // ==================== PROFILE FUNCTIONS ====================
+
+  function loadProfile() {
+    fetch(`${API_URL}/profile`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(profile => {
+        if (profile.error) {
+          console.error('Profile load error:', profile.error);
+          return;
+        }
+
+        // Update profile form fields
+        document.getElementById('profileName').value = profile.name || '';
+        document.getElementById('profileEmail').value = profile.email || '';
+        document.getElementById('profileMobile').value = profile.mobile || '';
+        document.getElementById('profileFlat').value = profile.flat_number || '';
+        document.getElementById('profileFamily').value = profile.family_members || 1;
+
+        // Update profile photo preview
+        const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+        if (profile.profile_photo_url) {
+          profilePhotoPreview.innerHTML = '';
+          const img = document.createElement('img');
+          img.src = `${API_URL}${profile.profile_photo_url}`;
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.borderRadius = '50%';
+          img.style.objectFit = 'cover';
+          profilePhotoPreview.appendChild(img);
+        } else {
+          profilePhotoPreview.innerHTML = '👤';
+          profilePhotoPreview.style.fontSize = '48px';
+        }
+      })
+      .catch(err => console.error('Profile load error:', err));
+  }
+
+  function updateProfile() {
+    const name = document.getElementById('profileName').value;
+    const mobile = document.getElementById('profileMobile').value;
+    const flat_number = document.getElementById('profileFlat').value;
+    const family_members = document.getElementById('profileFamily').value;
+
+    fetch(`${API_URL}/profile`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name, mobile, flat_number, family_members: parseInt(family_members) })
+    })
+      .then(r => r.json())
+      .then(data => {
+        const msg = document.getElementById('profileMessage');
+        if (data.error) {
+          msg.style.color = 'var(--danger)';
+          msg.textContent = 'Error: ' + data.error;
+        } else {
+          msg.style.color = 'var(--secondary)';
+          msg.textContent = '✅ Profile updated successfully';
+
+          // Update currentUser object
+          currentUser.name = name;
+          currentUser.flat_number = flat_number;
+          localStorage.setItem('user', JSON.stringify(currentUser));
+
+          // Update header display
+          updateHeaderDisplay();
+        }
+      })
+      .catch(err => {
+        const msg = document.getElementById('profileMessage');
+        msg.style.color = 'var(--danger)';
+        msg.textContent = 'Error updating profile: ' + err.message;
+      });
+  }
+
+  function handlePhotoSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.match('image/jpeg') && !file.type.match('image/jpg') && !file.type.match('image/png')) {
+      alert('Please select a JPEG or PNG image');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+      profilePhotoPreview.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.borderRadius = '50%';
+      img.style.objectFit = 'cover';
+      profilePhotoPreview.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload photo
+    const formData = new FormData();
+    formData.append('profilePhoto', file);
+
+    fetch(`${API_URL}/profile/photo`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) {
+          alert('Upload error: ' + data.error);
+        } else {
+          // Update profile photo in header
+          updateHeaderDisplay();
+        }
+      })
+      .catch(err => alert('Upload failed: ' + err.message));
+  }
+
+  function removeProfilePhoto() {
+    if (!confirm('Remove profile photo?')) return;
+
+    fetch(`${API_URL}/profile`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ profile_photo_url: null })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) {
+          alert('Error: ' + data.error);
+        } else {
+          const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+          profilePhotoPreview.innerHTML = '👤';
+          profilePhotoPreview.style.fontSize = '48px';
+
+          // Update header display
+          updateHeaderDisplay();
+        }
+      })
+      .catch(err => alert('Error: ' + err.message));
   }
 
   function logout() {
