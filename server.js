@@ -9,8 +9,8 @@ const fs = require('fs');
 const PDFDocument = require('pdfkit');
 
 const app = express();
-const PORT = 5000;
-const JWT_SECRET = 'society-management-secret-key-2024';
+const PORT = process.env.PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET || 'society-management-secret-key-2024';
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
