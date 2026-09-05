@@ -213,6 +213,67 @@ const initializeDatabase = () => {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     )`);
+
+    // User profiles table
+    db.run(`CREATE TABLE IF NOT EXISTS user_profiles (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL UNIQUE,
+      profile_photo_url TEXT,
+      phone_verified BOOLEAN DEFAULT 0,
+      email_verified BOOLEAN DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )`);
+
+    // User roles table (for admin hierarchy)
+    db.run(`CREATE TABLE IF NOT EXISTS user_roles (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      role_type TEXT NOT NULL,
+      permissions TEXT,
+      created_by INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      FOREIGN KEY(created_by) REFERENCES users(id)
+    )`);
+
+    // Notice templates table
+    db.run(`CREATE TABLE IF NOT EXISTS notice_templates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      category TEXT,
+      template_text TEXT,
+      placeholder_fields TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // Verification tokens table
+    db.run(`CREATE TABLE IF NOT EXISTS verification_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token TEXT UNIQUE NOT NULL,
+      type TEXT NOT NULL,
+      expires_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    )`);
+
+    // Add columns to users table if they don't exist
+    db.run(`PRAGMA table_info(users)`, [], (err, columns) => {
+      if (!err && columns) {
+        const columnNames = columns.map(c => c.name);
+        if (!columnNames.includes('profile_photo_url')) {
+          db.run(`ALTER TABLE users ADD COLUMN profile_photo_url TEXT`);
+        }
+        if (!columnNames.includes('phone_verified')) {
+          db.run(`ALTER TABLE users ADD COLUMN phone_verified BOOLEAN DEFAULT 0`);
+        }
+        if (!columnNames.includes('whatsapp_verified')) {
+          db.run(`ALTER TABLE users ADD COLUMN whatsapp_verified BOOLEAN DEFAULT 0`);
+        }
+      }
+    });
   });
 };
 
@@ -303,10 +364,17 @@ const seedData = () => {
                         );
 
                         db.run(
-                          `INSERT INTO expenses (society_id, event_id, category, vendor, description, amount, payment_method) 
+                          `INSERT INTO expenses (society_id, event_id, category, vendor, description, amount, payment_method)
                            VALUES (?, ?, ?, ?, ?, ?, ?)`,
                           [societyId, eventId, 'Food', 'Catering Services', 'Food for 200 people', 12000, 'Bank Transfer']
                         );
+
+                        // Seed default Notice Templates
+                        db.run(`INSERT INTO notice_templates (name, category, template_text, placeholder_fields) VALUES
+                          ('Event Notice', 'Event', '🎉 *{event_name}*\n📅 Date: {date}\n⏰ Time: {time}\n📍 Location: {location}\n\n{description}\n\n- Madhuli Yuva Group Society', '["event_name", "date", "time", "location", "description"]'),
+                          ('Maintenance Notice', 'Maintenance', '⚠️ *Maintenance Notice*\n\nDear Members,\n{description}\n\nDate: {date}\nTime: {time}\n\n- Madhuli Yuva Group Society', '["description", "date", "time"]'),
+                          ('Festival Announcement', 'Festival', '🚩 *{festival_name} Celebration*\n\nWe invite all members to join us for {festival_name}.\n\n📅 Date: {date}\n⏰ Time: {time}\n📍 Venue: {venue}\n\n- Madhuli Yuva Group Society', '["festival_name", "date", "time", "venue"]')
+                        `);
                       }
                     }
                   );
