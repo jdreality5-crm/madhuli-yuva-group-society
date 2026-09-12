@@ -70,6 +70,80 @@
     .ltr-body-area { position: relative; padding: 25px 35px 35px 35px; min-height: 250px; z-index: 5; }
     .ltr-footer-container { position: relative; min-height: 55px; padding: 12px 35px; display: flex; align-items: center; justify-content: space-between; border-top: 2px solid #d4af37; background: #ffffff; }
     .ltr-bottom-right-curve { position: absolute; bottom: 0; right: 0; width: 250px; height: 65px; z-index: 2; pointer-events: none; }
+    /* APPROVED SOCIETY NOTICE LETTERHEAD */
+    .notice-letterhead-card {
+      position: relative;
+      width: 100%;
+      max-width: 1190px;
+      aspect-ratio: 1190 / 881;
+      margin: 0 auto;
+      background: url('/assets/letterhead.jpg') center center / 100% 100% no-repeat;
+      overflow: hidden;
+      border: 1px solid #d4af37;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.10);
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .notice-letterhead-content {
+      position: absolute;
+      left: 6.5%;
+      right: 6.5%;
+      top: 35.5%;
+      bottom: 10.5%;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Noto Sans Gujarati', 'Plus Jakarta Sans', sans-serif;
+      color: #1e293b;
+    }
+    .notice-letterhead-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      font-size: clamp(11px, 1.25vw, 15px);
+      font-weight: 700;
+      line-height: 1.5;
+      padding: 0 1.5%;
+    }
+    .notice-letterhead-meta .target { text-align: left; }
+    .notice-letterhead-meta .date { text-align: right; white-space: nowrap; }
+    .notice-letterhead-body {
+      flex: 1;
+      overflow: hidden;
+      padding: 4% 1.5% 0;
+    }
+    .notice-letterhead-title {
+      margin: 0 0 2.2%;
+      color: #6b0000;
+      font-family: 'Noto Sans Gujarati', sans-serif;
+      font-size: clamp(18px, 2.5vw, 32px);
+      line-height: 1.3;
+      font-weight: 800;
+      text-align: center;
+    }
+    .notice-letterhead-description {
+      margin: 0;
+      font-family: 'Noto Sans Gujarati', sans-serif;
+      font-size: clamp(12px, 1.45vw, 18px);
+      line-height: 1.8;
+      font-weight: 600;
+      text-align: left;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .notice-letterhead-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 12px 0 28px;
+    }
+    @media (max-width: 700px) {
+      .notice-letterhead-content { left: 5.5%; right: 5.5%; top: 35%; bottom: 10%; }
+      .notice-letterhead-meta { gap: 8px; padding: 0 1%; }
+      .notice-letterhead-body { padding-top: 3%; }
+      .notice-letterhead-description { line-height: 1.55; }
+      .notice-letterhead-actions { margin-bottom: 20px; }
+    }
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 500; align-items: center; justify-content: center; padding: 16px; }
     .modal.show { display: flex; }
     .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; border: 2px solid var(--gold-accent); }
@@ -476,62 +550,45 @@
         </div>
       `).join('');
     }
-
+    function escapeNoticeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
     function renderNotices() {
       const container = document.getElementById('notices-list');
       if (noticesList.length > 0) {
         document.getElementById('dash-latest-notice').innerText = noticesList[0].title + ' - ' + noticesList[0].desc;
       }
       container.innerHTML = noticesList.map(n => {
-        const waText = encodeURIComponent(`*મધુલી યુવા ગ્રુપ મિત્ર મંડળ*\n*જાહેરાત: ${n.title}*\nતારીખ: ${n.date}\nપ્રતિ: ${n.target}\n\n${n.desc}`);
+        const target = escapeNoticeHtml(n.target || 'àª¸àª®àª¸à«àª¤ àª¸à«‹àª¸àª¾àª¯àªŸà«€ àª¸àª­à«àª¯à«‹');
+        const title = escapeNoticeHtml(n.title || 'àª¸à«‚àªšàª¨àª¾');
+        const desc = escapeNoticeHtml(n.desc || '');
+        const date = escapeNoticeHtml(n.date || new Date().toLocaleDateString('en-IN'));
+        const waText = encodeURIComponent(`*àª®àª§à«àª²à«€ àª¯à«àªµàª¾ àª—à«àª°à«àªª àª®àª¿àª¤à«àª° àª®àª‚àª¡àª³*\n*àªœàª¾àª¹à«‡àª°àª¾àª¤: ${n.title}*\nàª¤àª¾àª°à«€àª–: ${n.date}\nàªªà«àª°àª¤àª¿: ${n.target}\n\n${n.desc}`);
+
         return `
-        <div class="exact-letterhead-paper">
-          <div class="ltr-header-container">
-            <svg class="ltr-top-left-curve" viewBox="0 0 320 145" preserveAspectRatio="none">
-              <path d="M0,0 L240,0 C160,35 120,95 0,140 Z" fill="#4a0000"/>
-              <path d="M0,0 L270,0 C190,40 140,110 0,132 Z" fill="#6b0000" opacity="0.96"/>
-              <path d="M0,0 L200,0 C130,25 105,75 0,95 Z" fill="#d4af37" opacity="0.75"/>
-            </svg>
-            <svg class="ltr-top-right-decor" viewBox="0 0 220 140" preserveAspectRatio="none">
-              <circle cx="170" cy="20" r="60" fill="none" stroke="#d4af37" stroke-width="0.7" opacity="0.3" stroke-dasharray="3,3"/>
-              <path d="M190,0 L190,45 M170,0 L170,30 M150,0 L150,55" stroke="#d4af37" stroke-width="1.2" opacity="0.6"/>
-            </svg>
-            <div class="ltr-logo-box">
-              <div class="ltr-logo-inner-icon">
-                <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:36px;"></i>
+          <div class="notice-letterhead-card">
+            <div class="notice-letterhead-content">
+              <div class="notice-letterhead-meta">
+                <span class="target">àªªà«àª°àª¤àª¿, <b>${target}</b></span>
+                <span class="date">àª¤àª¾àª°à«€àª– : <b>${date}</b></span>
+              </div>
+              <div class="notice-letterhead-body">
+                <h3 class="notice-letterhead-title">${title}</h3>
+                <p class="notice-letterhead-description">${desc}</p>
               </div>
             </div>
-            <div class="ltr-titles-wrapper">
-              <div class="ltr-motto-text">|| એકતા • સેવા • સંસ્કાર ||</div>
-              <div class="ltr-ornament-line">❖ ────────────── ✦ ────────────── ❖</div>
-              <div class="ltr-main-heading">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</div>
-              <div class="ltr-slogan-pill-box">એકતા માં શક્તિ , સેવા માં આનંદ , સંસ્કાર માં આપણું ગૌરવ.</div>
-            </div>
           </div>
-
-          <div class="ltr-meta-bar">
-            <span>પ્રતિ, <b>${n.target}</b></span>
-            <span>તારીખ : <b>${n.date}</b></span>
+          <div class="notice-letterhead-actions">
+            <a href="https://api.whatsapp.com/send?text=${waText}" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</a>
           </div>
-
-          <div class="ltr-body-area">
-            <h3 style="font-size:18px; font-weight:800; color:#6b0000; margin-bottom:10px; font-family:'Noto Sans Gujarati';">${n.title}</h3>
-            <p style="font-size:15px; line-height:1.7; color:#1e293b;">${n.desc}</p>
-          </div>
-
-          <div class="ltr-footer-container">
-            <span style="font-size:11px; color:#64748b; font-weight:600; z-index:5;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
-            <a href="https://api.whatsapp.com/send?text=${waText}" target="_blank" class="btn btn-whatsapp" style="padding:6px 14px; font-size:12px; z-index:5;"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</a>
-            <svg class="ltr-bottom-right-curve" viewBox="0 0 250 65" preserveAspectRatio="none">
-              <path d="M50,65 Q150,15 250,0 L250,65 Z" fill="#6b0000"/>
-              <path d="M90,65 Q180,25 250,5 L250,65 Z" fill="#d4af37" opacity="0.75"/>
-            </svg>
-          </div>
-        </div>
-      `;
+        `;
       }).join('');
     }
-
     function renderFinancials() {
       const container = document.getElementById('financial-list');
       container.innerHTML = financialList.map(f => `
