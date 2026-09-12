@@ -99,51 +99,58 @@
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .stat-card { background: white; padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0; border-top: 4px solid var(--primary-maroon); }
 
-    /* MASTER APPROVED LETTERHEAD DESIGN */
+    /* FIXED CLEAN LETTERHEAD CARD DESIGN */
     .exact-letterhead-paper {
       background: #ffffff;
       border-radius: 10px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-      border: 1px solid #d4af37;
+      border: 1.5px solid #d4af37;
       position: relative;
       overflow: hidden;
       margin-bottom: 24px;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
 
     .ltr-header-bg {
       position: relative;
       background: #ffffff;
-      padding: 16px 20px 10px 20px;
+      padding: 16px 20px 14px 20px;
       display: flex;
       align-items: center;
       border-bottom: 2px solid #d4af37;
-      min-height: 125px;
+      min-height: 120px;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
 
-    .ltr-top-banner-svg {
+    .ltr-header-banner-bg {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      pointer-events: none;
+      background: linear-gradient(135deg, #6b0000 0%, #4a0000 45%, #ffffff 85%);
+      opacity: 0.12;
       z-index: 1;
     }
 
     .ltr-logo-wrapper {
       position: relative;
       z-index: 2;
-      width: 85px;
-      height: 85px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       background: #ffffff;
-      border: 3.5px solid #d4af37;
+      border: 3px solid #d4af37;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-      margin-right: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      margin-right: 20px;
       flex-shrink: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
 
     .ltr-header-titles {
@@ -154,17 +161,20 @@
     }
 
     .ltr-motto { font-size: 13px; font-weight: 800; color: #6b0000; letter-spacing: 0.5px; margin-bottom: 2px; }
-    .ltr-main-title { font-size: 26px; font-weight: 800; color: #6b0000; font-family: 'Noto Sans Gujarati'; line-height: 1.2; }
+    .ltr-main-title { font-size: 26px; font-weight: 800; color: #6b0000; font-family: 'Noto Sans Gujarati'; line-height: 1.2; margin: 4px 0; }
+    
     .ltr-slogan-pill {
       display: inline-block;
-      background: linear-gradient(180deg, #6b0000 0%, #4a0000 100%);
-      color: #ffffff;
+      background: #6b0000 !important;
+      color: #ffffff !important;
       font-size: 11px;
       font-weight: 700;
       padding: 4px 16px;
       border-radius: 20px;
       border: 1px solid #d4af37;
       margin-top: 4px;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
 
     .paper-meta-row {
@@ -190,19 +200,27 @@
       background: #ffffff;
       position: relative;
       border-top: 1px solid #f1f5f9;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
 
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 500; align-items: center; justify-content: center; padding: 16px; }
     .modal.show { display: flex; }
     .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; border: 2px solid var(--gold-accent); }
 
-    /* STRICT 100% CLEAN PRINT FIX */
+    /* EXACT CLEAN PRINT MEDIA RULES */
     @media print {
+      @page {
+        size: A4 portrait;
+        margin: 10mm;
+      }
       body * {
         visibility: hidden !important;
       }
       #printable-report, #printable-report * {
         visibility: visible !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
       #printable-report {
         position: absolute !important;
@@ -211,8 +229,11 @@
         width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
-        border: none !important;
+        border: 1.5px solid #d4af37 !important;
         box-shadow: none !important;
+      }
+      .no-print {
+        display: none !important;
       }
     }
   </style>
@@ -373,11 +394,7 @@
 
       <div id="printable-report" class="exact-letterhead-paper">
         <div class="ltr-header-bg">
-          <svg class="ltr-top-banner-svg" viewBox="0 0 320 125" preserveAspectRatio="none">
-            <path d="M0,0 L200,0 C120,40 100,100 0,118 Z" fill="#4a0000"/>
-            <path d="M0,0 L220,0 C140,45 115,90 0,108 Z" fill="#6b0000" opacity="0.95"/>
-            <path d="M0,0 L170,0 C110,30 95,80 0,88 Z" fill="#d4af37" opacity="0.6"/>
-          </svg>
+          <div class="ltr-header-banner-bg"></div>
           <div class="ltr-logo-wrapper">
             <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:38px;"></i>
           </div>
@@ -630,11 +647,7 @@
         return `
         <div class="exact-letterhead-paper">
           <div class="ltr-header-bg">
-            <svg class="ltr-top-banner-svg" viewBox="0 0 320 125" preserveAspectRatio="none">
-              <path d="M0,0 L200,0 C120,40 100,100 0,118 Z" fill="#4a0000"/>
-              <path d="M0,0 L220,0 C140,45 115,90 0,108 Z" fill="#6b0000" opacity="0.95"/>
-              <path d="M0,0 L170,0 C110,30 95,80 0,88 Z" fill="#d4af37" opacity="0.6"/>
-            </svg>
+            <div class="ltr-header-banner-bg"></div>
             <div class="ltr-logo-wrapper">
               <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:38px;"></i>
             </div>
