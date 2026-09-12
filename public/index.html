@@ -99,124 +99,185 @@
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .stat-card { background: white; padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0; border-top: 4px solid var(--primary-maroon); }
 
-    /* FIXED CLEAN LETTERHEAD CARD DESIGN */
+    /* EXACT 100% MATCHING LETTERHEAD CARD DESIGN */
     .exact-letterhead-paper {
       background: #ffffff;
-      border-radius: 10px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-      border: 1.5px solid #d4af37;
+      border-radius: 6px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      border: 1px solid #d4af37;
       position: relative;
       overflow: hidden;
-      margin-bottom: 24px;
+      margin-bottom: 28px;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
 
-    .ltr-header-bg {
+    .ltr-header-container {
       position: relative;
+      min-height: 155px;
       background: #ffffff;
-      padding: 16px 20px 14px 20px;
       display: flex;
-      align-items: center;
-      border-bottom: 2px solid #d4af37;
-      min-height: 120px;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
+      align-items: flex-start;
+      padding: 15px 25px;
     }
 
-    .ltr-header-banner-bg {
+    /* Top Left Curved Banner SVG */
+    .ltr-top-left-curve {
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #6b0000 0%, #4a0000 45%, #ffffff 85%);
-      opacity: 0.12;
+      width: 320px;
+      height: 145px;
       z-index: 1;
+      pointer-events: none;
     }
 
-    .ltr-logo-wrapper {
+    /* Top Right Hanging Lanterns & Mandala Pattern */
+    .ltr-top-right-decor {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 220px;
+      height: 140px;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.85;
+    }
+
+    /* Gold Circular Logo with Mandap Frame */
+    .ltr-logo-box {
       position: relative;
-      z-index: 2;
-      width: 80px;
-      height: 80px;
+      z-index: 5;
+      width: 95px;
+      height: 95px;
       border-radius: 50%;
       background: #ffffff;
       border: 3px solid #d4af37;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-      margin-right: 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+      margin-top: 5px;
+      margin-left: 10px;
       flex-shrink: 0;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
     }
 
-    .ltr-header-titles {
+    .ltr-logo-inner-icon {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff 40%, #fdfbf7 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e2e8f0;
+    }
+
+    .ltr-titles-wrapper {
       position: relative;
-      z-index: 2;
+      z-index: 5;
       flex: 1;
       text-align: center;
+      padding-left: 10px;
+      padding-top: 5px;
     }
 
-    .ltr-motto { font-size: 13px; font-weight: 800; color: #6b0000; letter-spacing: 0.5px; margin-bottom: 2px; }
-    .ltr-main-title { font-size: 26px; font-weight: 800; color: #6b0000; font-family: 'Noto Sans Gujarati'; line-height: 1.2; margin: 4px 0; }
-    
-    .ltr-slogan-pill {
-      display: inline-block;
-      background: #6b0000 !important;
-      color: #ffffff !important;
+    .ltr-motto-text {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #6b0000;
+      letter-spacing: 0.5px;
+    }
+
+    .ltr-ornament-line {
       font-size: 11px;
-      font-weight: 700;
-      padding: 4px 16px;
-      border-radius: 20px;
-      border: 1px solid #d4af37;
-      margin-top: 4px;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
+      color: #d4af37;
+      margin: 1px 0;
     }
 
-    .paper-meta-row {
+    .ltr-main-heading {
+      font-size: 32px;
+      font-weight: 800;
+      color: #6b0000;
+      font-family: 'Noto Sans Gujarati';
+      line-height: 1.15;
+      text-shadow: 0.5px 0.5px 0px rgba(0,0,0,0.1);
+    }
+
+    .ltr-slogan-pill-box {
+      display: inline-block;
+      background: linear-gradient(180deg, #6b0000 0%, #4a0000 100%);
+      color: #ffffff;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 4px 22px;
+      border-radius: 20px;
+      border: 1.5px solid #d4af37;
+      margin-top: 6px;
+      box-shadow: 0 2px 6px rgba(107,0,0,0.3);
+    }
+
+    .ltr-meta-bar {
+      position: relative;
+      z-index: 5;
       display: flex;
       justify-content: space-between;
-      padding: 14px 24px 6px 24px;
-      font-size: 14px;
+      padding: 10px 35px 8px 35px;
+      font-size: 14.5px;
       font-weight: 700;
       color: #1e293b;
+      border-bottom: 1px solid #f1f5f9;
     }
 
-    .paper-body-content {
-      padding: 20px 24px 30px 24px;
-      min-height: 180px;
+    .ltr-body-area {
       position: relative;
+      padding: 24px 35px 35px 35px;
+      min-height: 220px;
+      z-index: 5;
     }
 
-    .paper-footer-banner {
-      padding: 12px 24px 16px 24px;
+    /* Bottom Left Unity Watermark Icon */
+    .ltr-watermark-bg {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      width: 140px;
+      height: 140px;
+      opacity: 0.07;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .ltr-footer-container {
+      position: relative;
+      min-height: 55px;
+      padding: 12px 35px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
+      border-top: 1px dashed #cbd5e1;
       background: #ffffff;
-      position: relative;
-      border-top: 1px solid #f1f5f9;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
+    }
+
+    /* Bottom Right Curve SVG */
+    .ltr-bottom-right-curve {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 250px;
+      height: 65px;
+      z-index: 2;
+      pointer-events: none;
     }
 
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 500; align-items: center; justify-content: center; padding: 16px; }
     .modal.show { display: flex; }
     .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; border: 2px solid var(--gold-accent); }
 
-    /* EXACT CLEAN PRINT MEDIA RULES */
+    /* EXACT PRINT RULES */
     @media print {
-      @page {
-        size: A4 portrait;
-        margin: 10mm;
-      }
-      body * {
-        visibility: hidden !important;
-      }
+      @page { size: A4 portrait; margin: 8mm; }
+      body * { visibility: hidden !important; }
       #printable-report, #printable-report * {
         visibility: visible !important;
         -webkit-print-color-adjust: exact !important;
@@ -229,12 +290,10 @@
         width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
-        border: 1.5px solid #d4af37 !important;
+        border: 1px solid #d4af37 !important;
         box-shadow: none !important;
       }
-      .no-print {
-        display: none !important;
-      }
+      .no-print { display: none !important; }
     }
   </style>
 </head>
@@ -393,24 +452,42 @@
       </div>
 
       <div id="printable-report" class="exact-letterhead-paper">
-        <div class="ltr-header-bg">
-          <div class="ltr-header-banner-bg"></div>
-          <div class="ltr-logo-wrapper">
-            <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:38px;"></i>
+        <div class="ltr-header-container">
+          <svg class="ltr-top-left-curve" viewBox="0 0 320 145" preserveAspectRatio="none">
+            <path d="M0,0 L240,0 C160,35 120,95 0,140 Z" fill="#4a0000"/>
+            <path d="M0,0 L270,0 C190,40 140,110 0,132 Z" fill="#6b0000" opacity="0.96"/>
+            <path d="M0,0 L200,0 C130,25 105,75 0,95 Z" fill="#d4af37" opacity="0.75"/>
+          </svg>
+
+          <svg class="ltr-top-right-decor" viewBox="0 0 220 140" preserveAspectRatio="none">
+            <circle cx="170" cy="20" r="60" fill="none" stroke="#d4af37" stroke-width="0.7" opacity="0.3" stroke-dasharray="3,3"/>
+            <path d="M190,0 L190,45 M170,0 L170,30 M150,0 L150,55" stroke="#d4af37" stroke-width="1.2" opacity="0.6"/>
+          </svg>
+
+          <div class="ltr-logo-box">
+            <div class="ltr-logo-inner-icon">
+              <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:36px;"></i>
+            </div>
           </div>
-          <div class="ltr-header-titles">
-            <div class="ltr-motto">|| એકતા • સેવા • સંસ્કાર ||</div>
-            <div class="ltr-main-title">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</div>
-            <div class="ltr-slogan-pill">એકતા માં શક્તિ , સેવા માં આનંદ , સંસ્કાર માં આપણું ગૌરવ.</div>
+
+          <div class="ltr-titles-wrapper">
+            <div class="ltr-motto-text">|| એકતા • સેવા • સંસ્કાર ||</div>
+            <div class="ltr-ornament-line">❖ ────────────── ✦ ────────────── ❖</div>
+            <div class="ltr-main-heading">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</div>
+            <div class="ltr-slogan-pill-box">એકતા માં શક્તિ , સેવા માં આનંદ , સંસ્કાર માં આપણું ગૌરવ.</div>
           </div>
         </div>
 
-        <div class="paper-meta-row">
+        <div class="ltr-meta-bar">
           <span>પ્રતિ, <b>સમસ્ત સોસાયટી સભ્યો</b></span>
           <span>તારીખ : <b id="rpt-date">--/--/----</b></span>
         </div>
 
-        <div class="paper-body-content">
+        <div class="ltr-body-area">
+          <svg class="ltr-watermark-bg" viewBox="0 0 100 100">
+            <path d="M50,10 L90,90 L10,90 Z" fill="#6b0000"/>
+          </svg>
+
           <h3 style="font-size:16px; font-weight:800; color:#6b0000; text-align:center; margin-bottom:14px; font-family:'Noto Sans Gujarati';">નાણાકીય આવક - જાવક હિસાબ પત્રક</h3>
           <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px; border:1px solid #cbd5e1;">
             <thead>
@@ -431,9 +508,14 @@
           </div>
         </div>
 
-        <div class="paper-footer-banner">
-          <span style="font-size:11px; color:#64748b; font-weight:600;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
-          <span style="font-size:12px; font-weight:700; color:#6b0000;">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</span>
+        <div class="ltr-footer-container">
+          <span style="font-size:11px; color:#64748b; font-weight:600; z-index:5;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
+          <span style="font-size:12px; font-weight:700; color:#6b0000; z-index:5;">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</span>
+
+          <svg class="ltr-bottom-right-curve" viewBox="0 0 250 65" preserveAspectRatio="none">
+            <path d="M50,65 Q150,15 250,0 L250,65 Z" fill="#6b0000"/>
+            <path d="M90,65 Q180,25 250,5 L250,65 Z" fill="#d4af37" opacity="0.75"/>
+          </svg>
         </div>
       </div>
 
@@ -646,31 +728,50 @@
         const waText = encodeURIComponent(`*મધુલી યુવા ગ્રુપ મિત્ર મંડળ*\n*જાહેરાત: ${n.title}*\nતારીખ: ${n.date}\nપ્રતિ: ${n.target}\n\n${n.desc}`);
         return `
         <div class="exact-letterhead-paper">
-          <div class="ltr-header-bg">
-            <div class="ltr-header-banner-bg"></div>
-            <div class="ltr-logo-wrapper">
-              <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:38px;"></i>
+          <div class="ltr-header-container">
+            <svg class="ltr-top-left-curve" viewBox="0 0 320 145" preserveAspectRatio="none">
+              <path d="M0,0 L240,0 C160,35 120,95 0,140 Z" fill="#4a0000"/>
+              <path d="M0,0 L270,0 C190,40 140,110 0,132 Z" fill="#6b0000" opacity="0.96"/>
+              <path d="M0,0 L200,0 C130,25 105,75 0,95 Z" fill="#d4af37" opacity="0.75"/>
+            </svg>
+
+            <svg class="ltr-top-right-decor" viewBox="0 0 220 140" preserveAspectRatio="none">
+              <circle cx="170" cy="20" r="60" fill="none" stroke="#d4af37" stroke-width="0.7" opacity="0.3" stroke-dasharray="3,3"/>
+              <path d="M190,0 L190,45 M170,0 L170,30 M150,0 L150,55" stroke="#d4af37" stroke-width="1.2" opacity="0.6"/>
+            </svg>
+
+            <div class="ltr-logo-box">
+              <div class="ltr-logo-inner-icon">
+                <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:36px;"></i>
+              </div>
             </div>
-            <div class="ltr-header-titles">
-              <div class="ltr-motto">|| એકતા • સેવા • સંસ્કાર ||</div>
-              <div class="ltr-main-title">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</div>
-              <div class="ltr-slogan-pill">એકતા માં શક્તિ , સેવા માં આનંદ , સંસ્કાર માં આપણું ગૌરવ.</div>
+
+            <div class="ltr-titles-wrapper">
+              <div class="ltr-motto-text">|| એકતા • સેવા • સંસ્કાર ||</div>
+              <div class="ltr-ornament-line">❖ ────────────── ✦ ────────────── ❖</div>
+              <div class="ltr-main-heading">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</div>
+              <div class="ltr-slogan-pill-box">એકતા માં શક્તિ , સેવા માં આનંદ , સંસ્કાર માં આપણું ગૌરવ.</div>
             </div>
           </div>
 
-          <div class="paper-meta-row">
+          <div class="ltr-meta-bar">
             <span>પ્રતિ, <b>${n.target}</b></span>
             <span>તારીખ : <b>${n.date}</b></span>
           </div>
 
-          <div class="paper-body-content">
+          <div class="ltr-body-area">
             <h3 style="font-size:18px; font-weight:800; color:#6b0000; margin-bottom:10px; font-family:'Noto Sans Gujarati';">${n.title}</h3>
             <p style="font-size:15px; line-height:1.7; color:#1e293b;">${n.desc}</p>
           </div>
 
-          <div class="paper-footer-banner">
-            <span style="font-size:11px; color:#64748b; font-weight:600;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
-            <a href="https://api.whatsapp.com/send?text=${waText}" target="_blank" class="btn btn-whatsapp" style="padding:6px 14px; font-size:12px;"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</a>
+          <div class="ltr-footer-container">
+            <span style="font-size:11px; color:#64748b; font-weight:600; z-index:5;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
+            <a href="https://api.whatsapp.com/send?text=${waText}" target="_blank" class="btn btn-whatsapp" style="padding:6px 14px; font-size:12px; z-index:5;"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</a>
+
+            <svg class="ltr-bottom-right-curve" viewBox="0 0 250 65" preserveAspectRatio="none">
+              <path d="M50,65 Q150,15 250,0 L250,65 Z" fill="#6b0000"/>
+              <path d="M90,65 Q180,25 250,5 L250,65 Z" fill="#d4af37" opacity="0.75"/>
+            </svg>
           </div>
         </div>
       `;
