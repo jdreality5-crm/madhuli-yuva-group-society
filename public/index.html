@@ -13,16 +13,12 @@
       --primary-maroon: #6b0000;
       --primary-dark-maroon: #4a0000;
       --gold-accent: #d4af37;
-      --gold-light: #fef08a;
       --bg-cream: #fdfbf7;
-      --content-bg: #ffffff;
       --text-dark: #1e293b;
       --text-muted: #64748b;
       --secondary-green: #15803d;
       --danger-red: #b91c1c;
       --radius: 12px;
-      --shadow-sm: 0 2px 8px rgba(107, 0, 0, 0.08);
-      --shadow-md: 0 10px 25px rgba(107, 0, 0, 0.12);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', 'Noto Sans Gujarati', sans-serif; }
@@ -35,7 +31,6 @@
       flex-direction: column;
     }
 
-    /* AUTH SCREEN */
     #auth-screen {
       display: flex;
       align-items: center;
@@ -57,26 +52,21 @@
 
     .auth-header { text-align: center; margin-bottom: 24px; }
     .auth-header h1 { font-size: 24px; font-weight: 800; color: var(--primary-maroon); margin-bottom: 4px; font-family: 'Noto Sans Gujarati'; }
-    .auth-header p { font-size: 13px; color: var(--text-muted); }
 
     .tab-buttons { display: flex; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
     .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; font-weight: 700; cursor: pointer; color: var(--text-muted); border-radius: 8px; }
-    .tab-btn.active { background: var(--primary-maroon); color: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+    .tab-btn.active { background: var(--primary-maroon); color: #ffffff; }
 
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #334155; }
     .form-control { width: 100%; padding: 11px 15px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
-    .form-control:focus { border-color: var(--primary-maroon); box-shadow: 0 0 0 3px rgba(107, 0, 0, 0.1); }
 
     .btn { padding: 11px 18px; border: none; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
     .btn-primary { background: linear-gradient(180deg, var(--primary-maroon) 0%, var(--primary-dark-maroon) 100%); color: white; border: 1px solid var(--gold-accent); }
-    .btn-primary:hover { background: var(--primary-dark-maroon); }
     .btn-whatsapp { background: #25D366; color: white; }
     .btn-success { background: var(--secondary-green); color: white; }
     .btn-danger { background: var(--danger-red); color: white; }
-    .btn-outline { background: transparent; border: 1.5px solid var(--primary-maroon); color: var(--primary-maroon); }
 
-    /* MAIN APP SCREEN */
     #app-screen { display: none; flex-direction: column; min-height: 100vh; background: var(--bg-cream); }
 
     .navbar {
@@ -89,7 +79,6 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: var(--shadow-sm);
     }
 
     .user-profile-header { display: flex; align-items: center; gap: 12px; }
@@ -97,71 +86,63 @@
 
     .dropdown-container { position: relative; }
     .three-dots-btn { background: #fdf2f2; border: 1px solid #fecaca; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 18px; color: var(--primary-maroon); }
-    .dropdown-menu { display: none; position: absolute; right: 0; top: 46px; background: white; border-radius: 10px; box-shadow: var(--shadow-md); border: 1px solid var(--gold-accent); width: 220px; z-index: 200; overflow: hidden; }
+    .dropdown-menu { display: none; position: absolute; right: 0; top: 46px; background: white; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 1px solid var(--gold-accent); width: 220px; z-index: 200; overflow: hidden; }
     .dropdown-menu.show { display: block; }
-    .dropdown-item { padding: 12px 16px; display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; font-weight: 600; color: #334155; }
-    .dropdown-item:hover { background: #fdf2f2; color: var(--primary-maroon); }
-    .dropdown-item.danger { color: var(--danger-red); }
+    .dropdown-item { padding: 12px 16px; display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; font-weight: 600; }
 
     .app-nav { background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: center; gap: 6px; padding: 8px 16px; overflow-x: auto; }
     .nav-tab { padding: 9px 16px; border: none; background: transparent; font-size: 13.5px; font-weight: 700; color: var(--text-muted); border-radius: 8px; cursor: pointer; white-space: nowrap; }
     .nav-tab.active { background: #fdf2f2; color: var(--primary-maroon); border: 1px solid #fecaca; }
 
-    .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; flex: 1; }
+    .container { max-width: 1000px; margin: 24px auto; padding: 0 16px; flex: 1; }
 
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: white; padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0; border-top: 4px solid var(--primary-maroon); box-shadow: var(--shadow-sm); }
+    .stat-card { background: white; padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0; border-top: 4px solid var(--primary-maroon); }
 
-    .event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-    .event-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; }
-    .event-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; background: #fdf2f2; color: var(--primary-maroon); border: 1px solid #fecaca; margin-bottom: 8px; }
-
-    /* MASTER APPROVED LETTERHEAD DESIGN STRUCTURE */
-    .master-letterhead-card {
+    /* MASTER APPROVED LETTERHEAD DESIGN */
+    .exact-letterhead-paper {
       background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(107, 0, 0, 0.12);
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      border: 1px solid #d4af37;
       position: relative;
       overflow: hidden;
       margin-bottom: 24px;
-      border: 1px solid #d4af37;
     }
 
     .ltr-header-bg {
       position: relative;
-      width: 100%;
       background: #ffffff;
       padding: 16px 20px 10px 20px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      overflow: hidden;
-      border-bottom: 2px solid var(--gold-accent);
+      border-bottom: 2px solid #d4af37;
+      min-height: 125px;
     }
 
-    /* Maroon Top Curved Banner SVG overlay */
     .ltr-top-banner-svg {
       position: absolute;
       top: 0;
       left: 0;
-      width: 320px;
-      height: 125px;
-      z-index: 1;
+      width: 100%;
+      height: 100%;
       pointer-events: none;
+      z-index: 1;
     }
 
     .ltr-logo-wrapper {
       position: relative;
       z-index: 2;
-      width: 88px;
-      height: 88px;
+      width: 85px;
+      height: 85px;
       border-radius: 50%;
       background: #ffffff;
       border: 3.5px solid #d4af37;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      margin-right: 15px;
       flex-shrink: 0;
     }
 
@@ -170,95 +151,69 @@
       z-index: 2;
       flex: 1;
       text-align: center;
-      padding: 0 12px;
     }
 
-    .ltr-motto { font-size: 13px; font-weight: 800; color: #6b0000; letter-spacing: 0.5px; }
-    .ltr-ornament { color: #d4af37; font-size: 11px; margin: 1px 0; }
-    .ltr-main-title { font-size: 27px; font-weight: 800; color: #6b0000; font-family: 'Noto Sans Gujarati'; line-height: 1.25; }
-    .ltr-divider-line { width: 85%; height: 1.5px; background: linear-gradient(90deg, transparent, #d4af37, transparent); margin: 5px auto; }
-
+    .ltr-motto { font-size: 13px; font-weight: 800; color: #6b0000; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .ltr-main-title { font-size: 26px; font-weight: 800; color: #6b0000; font-family: 'Noto Sans Gujarati'; line-height: 1.2; }
     .ltr-slogan-pill {
       display: inline-block;
       background: linear-gradient(180deg, #6b0000 0%, #4a0000 100%);
       color: #ffffff;
       font-size: 11px;
       font-weight: 700;
-      padding: 4px 20px;
+      padding: 4px 16px;
       border-radius: 20px;
       border: 1px solid #d4af37;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      margin-top: 4px;
     }
 
-    .ltr-hanging-lamps {
-      position: relative;
-      z-index: 2;
-      display: flex;
-      gap: 6px;
-      color: #d4af37;
-      font-size: 18px;
-    }
-
-    .ltr-meta-row {
+    .paper-meta-row {
       display: flex;
       justify-content: space-between;
-      padding: 12px 30px;
+      padding: 14px 24px 6px 24px;
       font-size: 14px;
       font-weight: 700;
       color: #1e293b;
-      background: #fafafa;
-      border-bottom: 1px dashed #cbd5e1;
     }
 
-    .ltr-body-content {
-      padding: 24px 30px;
-      min-height: 160px;
+    .paper-body-content {
+      padding: 20px 24px 30px 24px;
+      min-height: 180px;
       position: relative;
     }
 
-    .ltr-body-watermark {
-      position: absolute;
-      bottom: 15px;
-      left: 15px;
-      opacity: 0.08;
-      font-size: 115px;
-      color: #6b0000;
-      pointer-events: none;
-    }
-
-    .ltr-footer-bg {
-      position: relative;
-      width: 100%;
-      padding: 12px 30px 16px 30px;
+    .paper-footer-banner {
+      padding: 12px 24px 16px 24px;
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
+      align-items: center;
       background: #ffffff;
+      position: relative;
       border-top: 1px solid #f1f5f9;
-      overflow: hidden;
     }
 
-    .ltr-ftr-bottom-curve {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 220px;
-      height: 65px;
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    /* MODAL */
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 500; align-items: center; justify-content: center; padding: 16px; }
     .modal.show { display: flex; }
     .modal-content { background: white; padding: 24px; border-radius: 16px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; border: 2px solid var(--gold-accent); }
 
+    /* STRICT 100% CLEAN PRINT FIX */
     @media print {
-      body { background: white !important; }
-      #auth-screen, #app-screen > *:not(.container), .navbar, .app-nav, .no-print { display: none !important; }
-      .modal { position: absolute !important; inset: 0 !important; background: white !important; padding: 0 !important; display: block !important; }
-      .modal-content { max-width: 100% !important; border: none !important; padding: 0 !important; }
-      #printable-report { border: none !important; box-shadow: none !important; }
+      body * {
+        visibility: hidden !important;
+      }
+      #printable-report, #printable-report * {
+        visibility: visible !important;
+      }
+      #printable-report {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
     }
   </style>
 </head>
@@ -333,7 +288,7 @@
 
     <div class="container">
       
-      <!-- STATS (ORGANIZER ONLY) -->
+      <!-- STATS -->
       <div class="stats-grid organizer-only" id="organizer-stats">
         <div class="stat-card"><p style="font-size:12px; font-weight:800; color:var(--text-muted);">TOTAL INCOME</p><h2 style="color:var(--secondary-green);" id="stat-income">₹0</h2></div>
         <div class="stat-card"><p style="font-size:12px; font-weight:800; color:var(--text-muted);">TOTAL EXPENSE</p><h2 style="color:var(--danger-red);" id="stat-expense">₹0</h2></div>
@@ -344,7 +299,7 @@
       <div id="section-dashboard">
         <h2 style="margin-bottom:16px; color:var(--primary-maroon);">Society Overview Dashboard</h2>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:20px;">
-          <div class="glass-card" style="padding:20px; background:white; border:1px solid #e2e8f0;">
+          <div class="glass-card" style="padding:20px; background:white; border:1px solid #e2e8f0; border-radius:12px;">
             <h4 style="font-size:18px; font-weight:800; color:var(--primary-maroon); font-family:'Noto Sans Gujarati';">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</h4>
             <p style="font-size:12px; color:var(--text-muted);">Sarang Apartment, Pramukh Park Society</p>
             <hr style="border:0; border-top:1px solid #e2e8f0; margin:12px 0;">
@@ -354,7 +309,7 @@
             </div>
           </div>
 
-          <div class="glass-card" style="padding:20px; background:white; border:1px solid #e2e8f0;">
+          <div class="glass-card" style="padding:20px; background:white; border:1px solid #e2e8f0; border-radius:12px;">
             <h4 style="font-size:15px; font-weight:700; margin-bottom:8px; color:var(--primary-maroon);"><i class="fa-solid fa-bullhorn" style="color:var(--gold-accent);"></i> Latest Announcement</h4>
             <p id="dash-latest-notice" style="font-size:13px; color:#334155;">Loading latest announcement...</p>
           </div>
@@ -379,7 +334,7 @@
         <div id="notices-list"></div>
       </div>
 
-      <!-- FINANCIALS TAB (ORGANIZER ONLY) -->
+      <!-- FINANCIALS TAB -->
       <div id="section-financial" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
           <h2 style="color:var(--primary-maroon);">Financial Ledger (Income & Expense)</h2>
@@ -388,7 +343,7 @@
             <button class="btn btn-danger" style="width:auto;" onclick="openAddTransactionModal('expense')">+ Expense</button>
           </div>
         </div>
-        <div class="glass-card" style="padding:20px; background:white; overflow-x:auto;">
+        <div class="glass-card" style="padding:20px; background:white; overflow-x:auto; border-radius:12px; border:1px solid #e2e8f0;">
           <table style="width:100%; border-collapse:collapse; font-size:14px;">
             <thead>
               <tr style="border-bottom:2px solid #e2e8f0; text-align:left; background:#f8fafc;">
@@ -412,44 +367,33 @@
   <div class="modal" id="modal-report">
     <div class="modal-content">
       <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-        <h3>Official Financial Report PDF Preview</h3>
+        <h3 style="color:var(--primary-maroon);">Official Financial Report PDF Preview</h3>
         <button onclick="closeModal('modal-report')" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
       </div>
 
-      <!-- MASTER LETTERHEAD CARD -->
-      <div id="printable-report" class="master-letterhead-card">
+      <div id="printable-report" class="exact-letterhead-paper">
         <div class="ltr-header-bg">
           <svg class="ltr-top-banner-svg" viewBox="0 0 320 125" preserveAspectRatio="none">
             <path d="M0,0 L200,0 C120,40 100,100 0,118 Z" fill="#4a0000"/>
             <path d="M0,0 L220,0 C140,45 115,90 0,108 Z" fill="#6b0000" opacity="0.95"/>
             <path d="M0,0 L170,0 C110,30 95,80 0,88 Z" fill="#d4af37" opacity="0.6"/>
           </svg>
-
           <div class="ltr-logo-wrapper">
             <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:38px;"></i>
           </div>
-
           <div class="ltr-header-titles">
             <div class="ltr-motto">|| એકતા • સેવા • સંસ્કાર ||</div>
-            <div class="ltr-ornament">❖ ────── ✦ ────── ❖</div>
             <div class="ltr-main-title">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</div>
-            <div class="ltr-divider-line"></div>
             <div class="ltr-slogan-pill">એકતા માં શક્તિ , સેવા માં આનંદ , સંસ્કાર માં આપણું ગૌરવ.</div>
-          </div>
-
-          <div class="ltr-hanging-lamps">
-            <i class="fa-solid fa-lightbulb" style="font-size:16px;"></i>
-            <i class="fa-solid fa-sun" style="font-size:22px;"></i>
           </div>
         </div>
 
-        <div class="ltr-meta-row">
+        <div class="paper-meta-row">
           <span>પ્રતિ, <b>સમસ્ત સોસાયટી સભ્યો</b></span>
           <span>તારીખ : <b id="rpt-date">--/--/----</b></span>
         </div>
 
-        <div class="ltr-body-content">
-          <i class="fa-solid fa-hands-holding-child ltr-body-watermark"></i>
+        <div class="paper-body-content">
           <h3 style="font-size:16px; font-weight:800; color:#6b0000; text-align:center; margin-bottom:14px; font-family:'Noto Sans Gujarati';">નાણાકીય આવક - જાવક હિસાબ પત્રક</h3>
           <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px; border:1px solid #cbd5e1;">
             <thead>
@@ -470,14 +414,9 @@
           </div>
         </div>
 
-        <div class="ltr-footer-bg">
-          <span style="font-size:11px; color:#64748b; font-weight:600; position:relative; z-index:2;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
-          <span style="font-size:12px; font-weight:700; color:#6b0000; position:relative; z-index:2;">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</span>
-
-          <svg class="ltr-ftr-bottom-curve" viewBox="0 0 220 65" preserveAspectRatio="none">
-            <path d="M40,65 Q120,15 220,0 L220,65 Z" fill="#6b0000"/>
-            <path d="M70,65 Q140,25 220,5 L220,65 Z" fill="#d4af37" opacity="0.6"/>
-          </svg>
+        <div class="paper-footer-banner">
+          <span style="font-size:11px; color:#64748b; font-weight:600;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
+          <span style="font-size:12px; font-weight:700; color:#6b0000;">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</span>
         </div>
       </div>
 
@@ -487,12 +426,12 @@
     </div>
   </div>
 
-  <!-- PROFILE MODAL WITH PHOTO & EMAIL -->
+  <!-- PROFILE MODAL -->
   <div class="modal" id="modal-profile">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
         <h3 style="color:var(--primary-maroon);">My Profile & Settings</h3>
-        <button onclick="closeModal('modal-profile')" style="border:none; background:none; font-size:20px;">✕</button>
+        <button onclick="closeModal('modal-profile')" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
       </div>
       <form onsubmit="handleProfileUpdate(event)">
         <div style="text-align:center; margin-bottom:16px;">
@@ -518,7 +457,7 @@
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
         <h3 style="color:var(--primary-maroon);">Add New Event</h3>
-        <button onclick="closeModal('modal-add-event')" style="border:none; background:none; font-size:20px;">✕</button>
+        <button onclick="closeModal('modal-add-event')" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
       </div>
       <form onsubmit="handleCreateEvent(event)">
         <div class="form-group"><label>Event Name</label><input type="text" id="event-name" class="form-control" required></div>
@@ -534,7 +473,7 @@
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
         <h3 style="color:var(--primary-maroon);">Create New Notice</h3>
-        <button onclick="closeModal('modal-add-notice')" style="border:none; background:none; font-size:20px;">✕</button>
+        <button onclick="closeModal('modal-add-notice')" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
       </div>
       <form onsubmit="handleCreateNotice(event)">
         <div class="form-group">
@@ -560,7 +499,7 @@
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
         <h3 style="color:var(--primary-maroon);">Add Financial Entry</h3>
-        <button onclick="closeModal('modal-transaction')" style="border:none; background:none; font-size:20px;">✕</button>
+        <button onclick="closeModal('modal-transaction')" style="border:none; background:none; font-size:20px; cursor:pointer;">✕</button>
       </div>
       <form onsubmit="handleSaveTransaction(event)">
         <input type="hidden" id="tx-type" value="income">
@@ -636,7 +575,7 @@
       document.getElementById('nav-user-flat').innerText = 'Flat: ' + currentUser.flat;
       if (currentUser.avatar) document.getElementById('nav-avatar').src = currentUser.avatar;
 
-      // Role Based Access Check
+      // Role Security Logic
       const isOrganizer = currentUser.role === 'organizer';
       document.querySelectorAll('.organizer-only').forEach(el => {
         el.style.display = isOrganizer ? '' : 'none';
@@ -672,13 +611,11 @@
     function renderEvents() {
       const container = document.getElementById('events-list');
       container.innerHTML = eventsList.map(ev => `
-        <div class="event-card">
-          <div>
-            <span class="event-badge">${ev.type}</span>
-            <h4 style="font-size:16px; font-weight:700; color:var(--primary-maroon);">${ev.name}</h4>
-            <p style="font-size:13px; color:var(--text-muted);">${ev.date}</p>
-            <p style="font-size:13px; margin-top:6px;">${ev.desc}</p>
-          </div>
+        <div style="background:white; padding:16px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:12px;">
+          <span style="font-size:11px; font-weight:700; color:var(--primary-maroon); background:#fdf2f2; padding:3px 8px; border-radius:4px;">${ev.type}</span>
+          <h4 style="font-size:16px; font-weight:700; color:var(--primary-maroon); margin-top:6px;">${ev.name}</h4>
+          <p style="font-size:12.5px; color:var(--text-muted);">${ev.date}</p>
+          <p style="font-size:13px; margin-top:6px; color:#334155;">${ev.desc}</p>
         </div>
       `).join('');
     }
@@ -691,51 +628,36 @@
       container.innerHTML = noticesList.map(n => {
         const waText = encodeURIComponent(`*મધુલી યુવા ગ્રુપ મિત્ર મંડળ*\n*જાહેરાત: ${n.title}*\nતારીખ: ${n.date}\nપ્રતિ: ${n.target}\n\n${n.desc}`);
         return `
-        <div class="master-letterhead-card">
+        <div class="exact-letterhead-paper">
           <div class="ltr-header-bg">
             <svg class="ltr-top-banner-svg" viewBox="0 0 320 125" preserveAspectRatio="none">
               <path d="M0,0 L200,0 C120,40 100,100 0,118 Z" fill="#4a0000"/>
               <path d="M0,0 L220,0 C140,45 115,90 0,108 Z" fill="#6b0000" opacity="0.95"/>
               <path d="M0,0 L170,0 C110,30 95,80 0,88 Z" fill="#d4af37" opacity="0.6"/>
             </svg>
-
             <div class="ltr-logo-wrapper">
               <i class="fa-solid fa-hands-holding-child" style="color:#6b0000; font-size:38px;"></i>
             </div>
-
             <div class="ltr-header-titles">
               <div class="ltr-motto">|| એકતા • સેવા • સંસ્કાર ||</div>
-              <div class="ltr-ornament">❖ ────── ✦ ────── ❖</div>
               <div class="ltr-main-title">મધુલી યુવા ગ્રુપ મિત્ર મંડળ</div>
-              <div class="ltr-divider-line"></div>
               <div class="ltr-slogan-pill">એકતા માં શક્તિ , સેવા માં આનંદ , સંસ્કાર માં આપણું ગૌરવ.</div>
-            </div>
-
-            <div class="ltr-hanging-lamps">
-              <i class="fa-solid fa-lightbulb" style="font-size:16px;"></i>
-              <i class="fa-solid fa-sun" style="font-size:22px;"></i>
             </div>
           </div>
 
-          <div class="ltr-meta-row">
+          <div class="paper-meta-row">
             <span>પ્રતિ, <b>${n.target}</b></span>
             <span>તારીખ : <b>${n.date}</b></span>
           </div>
 
-          <div class="ltr-body-content">
-            <i class="fa-solid fa-hands-holding-child ltr-body-watermark"></i>
+          <div class="paper-body-content">
             <h3 style="font-size:18px; font-weight:800; color:#6b0000; margin-bottom:10px; font-family:'Noto Sans Gujarati';">${n.title}</h3>
             <p style="font-size:15px; line-height:1.7; color:#1e293b;">${n.desc}</p>
           </div>
 
-          <div class="ltr-footer-bg">
-            <span style="font-size:11px; color:#64748b; font-weight:600; position:relative; z-index:2;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
-            <a href="https://api.whatsapp.com/send?text=${waText}" target="_blank" class="btn btn-whatsapp" style="width:auto; padding:6px 14px; font-size:12px; position:relative; z-index:2;"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</a>
-
-            <svg class="ltr-ftr-bottom-curve" viewBox="0 0 220 65" preserveAspectRatio="none">
-              <path d="M40,65 Q120,15 220,0 L220,65 Z" fill="#6b0000"/>
-              <path d="M70,65 Q140,25 220,5 L220,65 Z" fill="#d4af37" opacity="0.6"/>
-            </svg>
+          <div class="paper-footer-banner">
+            <span style="font-size:11px; color:#64748b; font-weight:600;">Madhuliyuvagroupmitramandal2026 @All Rights Reserved.</span>
+            <a href="https://api.whatsapp.com/send?text=${waText}" target="_blank" class="btn btn-whatsapp" style="padding:6px 14px; font-size:12px;"><i class="fa-brands fa-whatsapp"></i> Share on WhatsApp</a>
           </div>
         </div>
       `;
