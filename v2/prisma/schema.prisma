@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum Role {
+  MASTER_ADMIN
   ORGANIZER
   OWNER
 }
@@ -151,7 +152,7 @@ model Expense {
   amountPaise     BigInt
   paymentMethod   PaymentMethod
   billNumber      String?
-  notes           String?
+  notes            String?
   society         Society @relation(fields: [societyId], references: [id])
   event           Event? @relation(fields: [eventId], references: [id])
   createdById     String
