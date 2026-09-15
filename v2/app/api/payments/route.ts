@@ -3,13 +3,12 @@ import { z } from 'zod';
 import { prisma, requireSession } from '@/lib/auth';
 import { createSignedFileUrl, getSupabaseAdmin, STORAGE_BUCKET } from '@/lib/supabase-admin';
 
-const screenshot = z.string().trim().max(4000000).refine(v => v === '' || v.startsWith('https://') || v.startsWith('http://') || v.startsWith('data:image/'), 'Invalid screenshot reference');
+const screenshot = z.string().trim().max(4000000).refine(v => v === '' || v.startsWith('data:image/'), 'Invalid screenshot reference');
 const createSchema = z.object({ paymentAccountId: z.string().min(1), eventId: z.string().optional().or(z.literal('')), amountPaise: z.string().regex(/^\d+$/) });
 const updateSchema = z.object({ transactionId: z.string().trim().min(4).max(120), screenshotUrl: screenshot.optional(), notes: z.string().trim().max(500).optional().or(z.literal('')) });
 
 async function storeScreenshot(value: string, societyId: string) {
   if (!value) return null;
-  if (!value.startsWith('data:image/')) return value;
   const match = value.match(/^data:(image\/(jpeg|png|webp));base64,(.+)$/);
   if (!match) throw new Error('INVALID_SCREENSHOT');
   const contentType = match[1];
