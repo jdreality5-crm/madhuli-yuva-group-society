@@ -1,11 +1,26 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma, requireSession } from '@/lib/auth';
-import { createSignedFileUrl } from '@/lib/supabase-admin';
+import { createSignedFileUrl, getSupabaseAdmin, STORAGE_BUCKET } from '@/lib/supabase-admin';
 
-const screenshot = z.string().trim().max(500).refine(v => v === '' || v.startsWith('https://') || v.startsWith('http://') || v.includes('/payment-screenshots/'), 'Invalid screenshot reference');
+const screenshot = z.string().trim().max(4000000).refine(v => v === '' || v.startsWith('https://') || v.startsWith('http://') || v.startsWith('data:image/'), 'Invalid screenshot reference');
 const createSchema = z.object({ paymentAccountId: z.string().min(1), eventId: z.string().optional().or(z.literal('')), amountPaise: z.string().regex(/^\d+$/) });
 const updateSchema = z.object({ transactionId: z.string().trim().min(4).max(120), screenshotUrl: screenshot.optional(), notes: z.string().trim().max(500).optional().or(z.literal('')) });
+
+async function storeScreenshot(value: string, societyId: string) {
+  if (!value) return null;
+  if (!value.startsWith('data:image/')) return value;
+  const match = value.match(/^data:(image\/(jpeg|png|webp));base64,(.+)$/);
+  if (!match) throw new Error('INVALID_SCREENSHOT');
+  const contentType = match[1];
+  const extension = match[2] === 'jpeg' ? 'jpg' : match[2];
+  const buffer = Buffer.from(match[3], 'base64');
+  if (buffer.length > 5 * 1024 * 1024) throw new Error('SCREENSHOT_TOO_LARGE');
+  const path = `${societyId}/payment-screenshots/${crypto.randomUUID()}.${extension}`;
+  const { error } = await getSupabaseAdmin().storage.from(STORAGE_BUCKET).upload(path, buffer, { contentType, upsert: false, cacheControl: '3600' });
+  if (error) throw error;
+  return path;
+}
 
 export async function GET() {
   try {
@@ -45,9 +60,12 @@ export async function PATCH(req: Request) {
     if (!payment) return NextResponse.json({ error: 'Payment not found.' }, { status: 404 });
     if (payment.status !== 'PENDING') return NextResponse.json({ error: 'This payment is no longer editable.' }, { status: 409 });
     if (payment.expiresAt < new Date()) return NextResponse.json({ error: 'The 10-minute payment session has expired. Start a new payment.' }, { status: 409 });
-    const screenshotUrl = data.screenshotUrl || null;
-    if (screenshotUrl && !screenshotUrl.startsWith('https://') && !screenshotUrl.startsWith('http://') && !screenshotUrl.startsWith(`${session.societyId}/payment-screenshots/`)) return NextResponse.json({ error: 'Invalid payment screenshot.' }, { status: 400 });
+    const screenshotUrl = await storeScreenshot(data.screenshotUrl || '', session.societyId);
     const updated = await prisma.payment.update({ where: { id: payment.id }, data: { transactionId: data.transactionId, screenshotUrl, notes: data.notes || null } });
     return NextResponse.json({ payment: { ...updated, amountPaise: updated.amountPaise.toString() } });
-  } catch (e) { const status = e instanceof z.ZodError ? 400 : e instanceof Error && e.message === 'UNAUTHORIZED' ? 401 : 500; return NextResponse.json({ error: status === 400 ? 'Invalid transaction details.' : status === 401 ? 'Unauthorized' : 'Server error' }, { status }); }
+  } catch (e) {
+    const message = e instanceof Error ? e.message : '';
+    const status = e instanceof z.ZodError ? 400 : message === 'UNAUTHORIZED' ? 401 : message === 'SCREENSHOT_TOO_LARGE' || message === 'INVALID_SCREENSHOT' ? 400 : 500;
+    return NextResponse.json({ error: status === 400 ? 'Invalid payment screenshot/details.' : status === 401 ? 'Unauthorized' : 'Server error' }, { status });
+  }
 }
