@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
 import { prisma } from './prisma';
 
-export type SessionUser = { id: string; role: 'ORGANIZER' | 'OWNER'; societyId: string; email: string; name: string };
+export type SessionUser = { id: string; role: 'MASTER_ADMIN' | 'ORGANIZER' | 'OWNER'; societyId: string; email: string; name: string };
 const secret = process.env.JWT_SECRET;
 if (!secret) throw new Error('JWT_SECRET is required');
 const key = new TextEncoder().encode(secret);
@@ -19,13 +19,27 @@ export async function getSession(): Promise<SessionUser | null> {
   try {
     const { payload } = await jwtVerify(token, key);
     if (!payload.id || !payload.role || !payload.societyId || !payload.email || !payload.name) return null;
-    return { id: String(payload.id), role: payload.role as SessionUser['role'], societyId: String(payload.societyId), email: String(payload.email), name: String(payload.name) };
+    const role = payload.role as SessionUser['role'];
+    if (!['MASTER_ADMIN', 'ORGANIZER', 'OWNER'].includes(role)) return null;
+    return { id: String(payload.id), role, societyId: String(payload.societyId), email: String(payload.email), name: String(payload.name) };
   } catch { return null; }
+}
+
+export async function requireAdmin() {
+  const session = await getSession();
+  if (!session || !['MASTER_ADMIN', 'ORGANIZER'].includes(session.role)) throw new Error('FORBIDDEN');
+  return session;
 }
 
 export async function requireOrganizer() {
   const session = await getSession();
-  if (!session || session.role !== 'ORGANIZER') throw new Error('FORBIDDEN');
+  if (!session || !['MASTER_ADMIN', 'ORGANIZER'].includes(session.role)) throw new Error('FORBIDDEN');
+  return session;
+}
+
+export async function requireMasterAdmin() {
+  const session = await getSession();
+  if (!session || session.role !== 'MASTER_ADMIN') throw new Error('FORBIDDEN');
   return session;
 }
 
