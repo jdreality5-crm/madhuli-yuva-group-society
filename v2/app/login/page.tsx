@@ -49,6 +49,7 @@ export default function Login() {
           {error && <div className="login-error" role="alert">{error}</div>}
           <button className="premium-btn" disabled={busy}>{busy ? 'Signing in…' : 'Sign in securely'}</button>
         </form>
+        {role === 'OWNER' && <div style={{ marginTop: 14, textAlign: 'center' }}><span style={{ color: 'var(--muted)', fontSize: 12 }}>New Flat Owner?</span>{' '}<a href="/signup" style={{ color: 'var(--maroon)', fontWeight: 700, fontSize: 12 }}>Create an account</a></div>}
         <small>Access is protected by secure session authentication. Never share your password or secret keys.</small>
       </section>
     </div>
