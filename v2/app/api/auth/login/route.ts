@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { createSession, prisma } from '@/lib/auth';
 
-const schema = z.object({ email: z.string().email(), password: z.string().min(1), role: z.enum(['ORGANIZER', 'OWNER']).optional() });
+const schema = z.object({ email: z.string().email(), password: z.string().min(1), role: z.enum(['MASTER_ADMIN', 'ORGANIZER', 'OWNER']).optional() });
 
 export async function POST(req: Request) {
   try {
