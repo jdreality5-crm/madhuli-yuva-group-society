@@ -1,0 +1,2 @@
+Cloudflare deployment trigger for fresh-society-v2.
+Triggered by ChatGPT on 2026-09-15.
