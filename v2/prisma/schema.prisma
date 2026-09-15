@@ -7,12 +7,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role { ORGANIZER OWNER }
-enum RecordStatus { ACTIVE INACTIVE }
-enum PublishStatus { DRAFT PUBLISHED }
-enum PaymentMethod { CASH BANK_TRANSFER UPI CHEQUE OTHER }
+enum Role {
+  ORGANIZER
+  OWNER
+}
 
-enum BillType { INVOICE RECEIPT OTHER }
+enum RecordStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  UPI
+  CHEQUE
+  OTHER
+}
+
+enum BillType {
+  INVOICE
+  RECEIPT
+  OTHER
+}
 
 model User {
   id              String   @id @default(cuid())
