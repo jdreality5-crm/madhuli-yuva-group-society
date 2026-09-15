@@ -1,3 +1,63 @@
 'use client';
-import {useEffect,useState} from 'react';
-export default function Flats(){const[rows,setRows]=useState<any[]>([]);const[form,setForm]=useState({flatNumber:'',ownerName:'',mobile:'',email:'',status:'ACTIVE'});const[error,setError]=useState('');async function load(){const r=await fetch('/api/admin/flats');if(r.ok)setRows(await r.json());else setError('Organizer access required')}useEffect(()=>{load()},[]);async function save(e:any){e.preventDefault();setError('');const r=await fetch('/api/admin/flats',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(form)});if(!r.ok){setError('Could not save flat. Check flat number and details.');return}setForm({flatNumber:'',ownerName:'',mobile:'',email:'',status:'ACTIVE'});load()}return <div className="main"><div className="page-title"><div><p className="eyebrow">SOCIETY • MEMBERS</p><h1>Flats & Owners / ફ્લેટ અને સભ્યો</h1><p>Flat, owner અને contact details manage કરો.</p></div></div><div className="card" style={{marginBottom:18}}><form onSubmit={save} className="form-grid"><div className="field"><label>Flat Number</label><input className="input" required value={form.flatNumber} onChange={e=>setForm({...form,flatNumber:e.target.value})}/></div><div className="field"><label>Owner Name</label><input className="input" value={form.ownerName} onChange={e=>setForm({...form,ownerName:e.target.value})}/></div><div className="field"><label>Mobile</label><input className="input" value={form.mobile} onChange={e=>setForm({...form,mobile:e.target.value})}/></div><div className="field"><label>Email</label><input className="input" type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></div><div className="field"><label>Status</label><select className="input" value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option>ACTIVE</option><option>INACTIVE</option></select></div><button className="btn btn-primary">Add Flat / Owner</button></form>{error&&<p className="login-error">{error}</p>}</div><div className="table-wrap"><table className="table"><thead><tr><th>Flat</th><th>Owner</th><th>Mobile</th><th>Email</th><th>Status</th></tr></thead><tbody>{rows.map(x=><tr key={x.id}><td><b>{x.flatNumber}</b></td><td>{x.ownerName||'—'}</td><td>{x.mobile||'—'}</td><td>{x.email||'—'}</td><td>{x.status}</td></tr>)}{!rows.length&&<tr><td colSpan={5}>No flats added yet.</td></tr>}</tbody></table></div></div>}
+import { useEffect, useState } from 'react';
+
+type Flat = { id: string; flatNumber: string; ownerName: string | null; mobile: string | null; email: string | null; status: 'ACTIVE' | 'INACTIVE' };
+
+export default function Flats() {
+  const [rows, setRows] = useState<Flat[]>([]);
+  const [form, setForm] = useState({ flatNumber: '', ownerName: '', mobile: '', email: '', status: 'ACTIVE' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [query, setQuery] = useState('');
+
+  async function load() {
+    setLoading(true);
+    const r = await fetch('/api/admin/flats', { cache: 'no-store' });
+    if (r.ok) setRows(await r.json()); else setError('Organizer access required');
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault(); setError(''); setSaving(true);
+    try {
+      const r = await fetch('/api/admin/flats', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) { setError(body.error || 'Could not save flat.'); return; }
+      setForm({ flatNumber: '', ownerName: '', mobile: '', email: '', status: 'ACTIVE' });
+      await load();
+    } finally { setSaving(false); }
+  }
+
+  const filtered = rows.filter(x => [x.flatNumber, x.ownerName, x.mobile, x.email].some(v => (v || '').toLowerCase().includes(query.toLowerCase())));
+
+  return <div className="main">
+    <div className="page-title">
+      <div><p className="eyebrow">SOCIETY • MEMBERS</p><h1>Flats & Owners / ફ્લેટ અને સભ્યો</h1><p>Pre-register flat owner details before allowing Flat Owner signup.</p></div>
+      <div className="stat-card"><span className="stat-label">Registered Flats</span><strong>{rows.length}</strong></div>
+    </div>
+
+    <div className="card" style={{ marginBottom: 18 }}>
+      <div className="section-heading"><div><h2>Register Flat / ફ્લેટ નોંધણી</h2><p>Owner signup will verify the submitted email or mobile against this record.</p></div></div>
+      <form onSubmit={save} className="form-grid">
+        <div className="field"><label htmlFor="flatNumber">Flat Number</label><input id="flatNumber" className="input" required value={form.flatNumber} onChange={e => setForm({ ...form, flatNumber: e.target.value })} placeholder="A-101" /></div>
+        <div className="field"><label htmlFor="ownerName">Owner Name</label><input id="ownerName" className="input" value={form.ownerName} onChange={e => setForm({ ...form, ownerName: e.target.value })} placeholder="Full name" /></div>
+        <div className="field"><label htmlFor="mobile">Registered Mobile</label><input id="mobile" className="input" inputMode="tel" value={form.mobile} onChange={e => setForm({ ...form, mobile: e.target.value })} placeholder="98765 43210" /></div>
+        <div className="field"><label htmlFor="email">Registered Email</label><input id="email" className="input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="owner@example.com" /></div>
+        <div className="field"><label htmlFor="status">Status</label><select id="status" className="input" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}><option>ACTIVE</option><option>INACTIVE</option></select></div>
+        <button className="btn btn-primary" disabled={saving}>{saving ? 'Saving…' : 'Add Flat / Owner'}</button>
+      </form>
+      {error && <p className="login-error" role="alert">{error}</p>}
+    </div>
+
+    <div className="card">
+      <div className="section-heading"><div><h2>Flat Directory</h2><p>{rows.length} registered flat{rows.length === 1 ? '' : 's'}</p></div><input className="input" style={{ maxWidth: 280 }} value={query} onChange={e => setQuery(e.target.value)} placeholder="Search flat or owner…" aria-label="Search flats" /></div>
+      <div className="table-wrap"><table className="table"><thead><tr><th>Flat</th><th>Owner</th><th>Mobile</th><th>Email</th><th>Status</th></tr></thead><tbody>
+        {loading && <tr><td colSpan={5}>Loading flats…</td></tr>}
+        {!loading && filtered.map(x => <tr key={x.id}><td><b>{x.flatNumber}</b></td><td>{x.ownerName || '—'}</td><td>{x.mobile || '—'}</td><td>{x.email || '—'}</td><td><span className="badge">{x.status}</span></td></tr>)}
+        {!loading && !filtered.length && <tr><td colSpan={5}>No flats found.</td></tr>}
+      </tbody></table></div>
+    </div>
+  </div>;
+}
