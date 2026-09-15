@@ -1,0 +1,8 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "society-function-management-v2",
+  "compatibility_date": "2026-09-15",
+  "compatibility_flags": ["nodejs_compat", "nodejs_compat_populate_process_env"],
+  "main": "vinext/server/app-router-entry",
+  "preview_urls": true
+}
