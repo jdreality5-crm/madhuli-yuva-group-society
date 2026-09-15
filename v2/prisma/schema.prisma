@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role { ORGANIZER OWNER }
+enum RecordStatus { ACTIVE INACTIVE }
+enum PublishStatus { DRAFT PUBLISHED }
+enum PaymentMethod { CASH BANK_TRANSFER UPI CHEQUE OTHER }
+
+enum BillType { INVOICE RECEIPT OTHER }
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  passwordHash    String
+  name            String
+  mobile          String?
+  role            Role
+  status          RecordStatus @default(ACTIVE)
+  societyId       String
+  flatId          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  society         Society  @relation(fields: [societyId], references: [id])
+  flat            Flat?    @relation(fields: [flatId], references: [id])
+  createdIncome   Income[] @relation("IncomeCreatedBy")
+  createdExpense  Expense[] @relation("ExpenseCreatedBy")
+  auditLogs       AuditLog[]
+  @@index([societyId, role])
+}
+
+model Society {
+  id                 String @id @default(cuid())
+  name               String
+  address            String?
+  city               String?
+  state              String?
+  pincode            String?
+  logoUrl             String?
+  contact            String?
+  authorizedSignatory String?
+  reportFooter       String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  users              User[]
+  flats              Flat[]
+  events             Event[]
+  income             Income[]
+  expenses           Expense[]
+  bills              Bill[]
+  notices            Notice[]
+  photos             Photo[]
+}
+
+model Flat {
+  id          String @id @default(cuid())
+  societyId   String
+  flatNumber  String
+  ownerName   String?
+  mobile      String?
+  email       String?
+  status      RecordStatus @default(ACTIVE)
+  society     Society @relation(fields: [societyId], references: [id])
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@unique([societyId, flatNumber])
+  @@index([societyId, status])
+}
+
+model Event {
+  id           String @id @default(cuid())
+  societyId    String
+  title        String
+  gujaratiTitle String?
+  date         DateTime
+  time         String?
+  location     String?
+  type         String?
+  description  String?
+  imageUrl     String?
+  status       PublishStatus @default(PUBLISHED)
+  visibility   String @default("OWNER")
+  society      Society @relation(fields: [societyId], references: [id])
+  income       Income[]
+  expenses     Expense[]
+  bills        Bill[]
+  photos       Photo[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  @@index([societyId, date])
+}
+
+model Income {
+  id              String @id @default(cuid())
+  societyId       String
+  eventId         String?
+  date            DateTime
+  category        String?
+  description     String?
+  receivedFrom    String?
+  amountPaise     BigInt
+  paymentMethod   PaymentMethod
+  referenceNumber String?
+  notes           String?
+  society         Society @relation(fields: [societyId], references: [id])
+  event           Event? @relation(fields: [eventId], references: [id])
+  createdById     String
+  createdBy       User @relation("IncomeCreatedBy", fields: [createdById], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([societyId, date])
+  @@index([societyId, category])
+}
+
+model Expense {
+  id              String @id @default(cuid())
+  societyId       String
+  eventId         String?
+  date            DateTime
+  category        String?
+  description     String?
+  paidTo          String?
+  amountPaise     BigInt
+  paymentMethod   PaymentMethod
+  billNumber      String?
+  notes           String?
+  society         Society @relation(fields: [societyId], references: [id])
+  event           Event? @relation(fields: [eventId], references: [id])
+  createdById     String
+  createdBy       User @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([societyId, date])
+  @@index([societyId, category])
+}
+
+model Bill {
+  id            String @id @default(cuid())
+  societyId     String
+  eventId       String?
+  type          BillType
+  fileUrl       String?
+  amountPaise   BigInt
+  vendor        String?
+  category      String?
+  date          DateTime
+  paymentMethod PaymentMethod?
+  notes         String?
+  society       Society @relation(fields: [societyId], references: [id])
+  event         Event? @relation(fields: [eventId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  @@index([societyId, date])
+}
+
+model Notice {
+  id            String @id @default(cuid())
+  societyId     String
+  title         String
+  gujaratiTitle String?
+  content       String
+  gujaratiContent String?
+  date          DateTime @default(now())
+  important     Boolean @default(false)
+  imageUrl      String?
+  status        PublishStatus @default(DRAFT)
+  society       Society @relation(fields: [societyId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  @@index([societyId, status, date])
+}
+
+model Photo {
+  id        String @id @default(cuid())
+  societyId String
+  eventId   String?
+  title     String?
+  fileUrl   String
+  altText   String?
+  albumName String?
+  society   Society @relation(fields: [societyId], references: [id])
+  event     Event? @relation(fields: [eventId], references: [id])
+  createdAt DateTime @default(now())
+  @@index([societyId, eventId])
+}
+
+model AuditLog {
+  id        String @id @default(cuid())
+  userId    String
+  action    String
+  module    String
+  recordId  String?
+  details   String?
+  createdAt DateTime @default(now())
+  user      User @relation(fields: [userId], references: [id])
+  @@index([userId, createdAt])
+}
