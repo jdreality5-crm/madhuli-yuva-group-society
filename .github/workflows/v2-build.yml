@@ -1,0 +1,26 @@
+name: V2 Build Check
+on:
+  push:
+    branches: [fresh-society-v2]
+  pull_request:
+    branches: [fresh-society-v2]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: v2/package-lock.json
+      - run: npm install
+      - run: npx prisma generate
+      - run: npm run build
+        env:
+          DATABASE_URL: postgresql://build:build@localhost:5432/build?schema=public
+          JWT_SECRET: ci-build-secret-change-in-production
