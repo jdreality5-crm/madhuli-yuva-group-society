@@ -21,12 +21,26 @@ async function main() {
     select: { id: true },
   });
 
+  const password = process.env.MASTER_ADMIN_PASSWORD;
+  const resetRequested = process.env.RESET_MASTER_ADMIN_PASSWORD === 'true';
+
   if (existing) {
-    console.log('Master Admin already exists. Seed skipped.');
+    if (resetRequested) {
+      if (!password) {
+        throw new Error('MASTER_ADMIN_PASSWORD is required when RESET_MASTER_ADMIN_PASSWORD=true.');
+      }
+      const passwordHash = await bcrypt.hash(password, 12);
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: { passwordHash, status: 'ACTIVE', role: 'MASTER_ADMIN', societyId: society.id },
+      });
+      console.log('Master Admin password reset successfully. Disable RESET_MASTER_ADMIN_PASSWORD after deployment.');
+    } else {
+      console.log('Master Admin already exists. Seed skipped.');
+    }
     return;
   }
 
-  const password = process.env.MASTER_ADMIN_PASSWORD;
   if (!password) {
     throw new Error('MASTER_ADMIN_PASSWORD is required only for the first Master Admin seed. Set it in the deployment environment; never commit it.');
   }
