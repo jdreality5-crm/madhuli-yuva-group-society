@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { createSession, prisma } from '@/lib/auth';
 
 const schema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().email(),
   password: z.string().min(1),
   role: z.enum(['MASTER_ADMIN', 'ORGANIZER', 'OWNER']).optional(),
 });
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       body = schema.parse(await req.json());
     } catch (error) {
       console.error('[auth/login] invalid request payload', error);
-      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid email, password, or role.' }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({
