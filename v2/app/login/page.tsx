@@ -2,4 +2,34 @@
 import {useState} from 'react';
 import {useRouter} from 'next/navigation';
 import '../globals.css';
-export default function Login(){const[email,setEmail]=useState('');const[password,setPassword]=useState('');const[role,setRole]=useState<'MASTER_ADMIN'|'ORGANIZER'|'OWNER'>('MASTER_ADMIN');const[busy,setBusy]=useState(false);const[error,setError]=useState('');const r=useRouter();async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);setError('');try{const x=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,role})});if(!x.ok)throw Error();r.push('/')}catch{setError('Login failed. Please check your credentials.')}finally{setBusy(false)}}return <main style={{minHeight:'100vh',display:'grid',placeItems:'center',padding:20,background:'radial-gradient(circle at 20% 10%,#ead9c4 0,#faf7f0 35%,#f4ede4 100%)'}}><div className="card" style={{width:'100%',maxWidth:440,padding:32,borderTop:'5px solid var(--gold)'}}><div style={{textAlign:'center',marginBottom:25}}><div style={{fontSize:38}}>🏛️</div><h1 style={{color:'var(--maroon)',margin:'8px 0'}}>Society Administration</h1><p>સોસાયટી ફંક્શન મેનેજમેન્ટ</p></div><div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:18}}>{(['MASTER_ADMIN','ORGANIZER','OWNER'] as const).map(x=><button key={x} className={role===x?'btn btn-primary':'btn btn-secondary'} onClick={()=>setRole(x)}>{x==='MASTER_ADMIN'?'Master Admin':x==='ORGANIZER'?'Sub Admin':'Flat Owner'}</button>)}</div><form onSubmit={submit} className="grid"><div className="field"><label>Email</label><input className="input" type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></div><div className="field"><label>Password</label><input className="input" type="password" required value={password} onChange={e=>setPassword(e.target.value)}/></div>{error&&<div style={{color:'#9b2525',fontSize:13}}>{error}</div>}<button className="btn btn-primary" disabled={busy}>{busy?'Signing in…':'Sign in securely'}</button></form></div></main>}
+
+export default function Login(){
+  const[email,setEmail]=useState('');
+  const[password,setPassword]=useState('');
+  const[role,setRole]=useState<'MASTER_ADMIN'|'ORGANIZER'|'OWNER'>('MASTER_ADMIN');
+  const[busy,setBusy]=useState(false);
+  const[error,setError]=useState('');
+  const r=useRouter();
+
+  async function submit(e:React.FormEvent){
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try{
+      const x=await fetch('/api/auth/login',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email,password,role})
+      });
+      const data=await x.json().catch(()=>null);
+      if(!x.ok) throw Error(data?.error || `Login failed (${x.status})`);
+      r.push('/');
+    }catch(err){
+      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+    }finally{
+      setBusy(false);
+    }
+  }
+
+  return <main style={{minHeight:'100vh',display:'grid',placeItems:'center',padding:20,background:'radial-gradient(circle at 20% 10%,#ead9c4 0,#faf7f0 35%,#f4ede4 100%)'}}><div className="card" style={{width:'100%',maxWidth:440,padding:32,borderTop:'5px solid var(--gold)'}}><div style={{textAlign:'center',marginBottom:25}}><div style={{fontSize:38}}>🏛️</div><h1 style={{color:'var(--maroon)',margin:'8px 0'}}>Society Administration</h1><p>સોસાયટી ફંક્શન મેનેજમેન્ટ</p></div><div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:18}}>{(['MASTER_ADMIN','ORGANIZER','OWNER'] as const).map(x=><button key={x} type="button" className={role===x?'btn btn-primary':'btn btn-secondary'} onClick={()=>setRole(x)}>{x==='MASTER_ADMIN'?'Master Admin':x==='ORGANIZER'?'Sub Admin':'Flat Owner'}</button>)}</div><form onSubmit={submit} className="grid"><div className="field"><label>Email</label><input className="input" type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></div><div className="field"><label>Password</label><input className="input" type="password" required value={password} onChange={e=>setPassword(e.target.value)}/></div>{error&&<div style={{color:'#9b2525',fontSize:13}}>{error}</div>}<button className="btn btn-primary" disabled={busy}>{busy?'Signing in…':'Sign in securely'}</button></form></div></main>
+}
