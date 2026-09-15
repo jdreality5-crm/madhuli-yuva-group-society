@@ -37,6 +37,13 @@ enum BillType {
   OTHER
 }
 
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
 model User {
   id              String   @id @default(cuid())
   email           String   @unique
@@ -53,6 +60,9 @@ model User {
   flat            Flat?    @relation(fields: [flatId], references: [id])
   createdIncome   Income[] @relation("IncomeCreatedBy")
   createdExpense  Expense[] @relation("ExpenseCreatedBy")
+  paymentAccounts PaymentAccount[] @relation("PaymentAccountOwner")
+  ownerPayments   Payment[] @relation("PaymentOwner")
+  verifiedPayments Payment[] @relation("PaymentVerifier")
   auditLogs       AuditLog[]
   @@index([societyId, role])
 }
@@ -78,6 +88,8 @@ model Society {
   bills              Bill[]
   notices            Notice[]
   photos             Photo[]
+  paymentAccounts    PaymentAccount[]
+  payments           Payment[]
 }
 
 model Flat {
@@ -114,6 +126,7 @@ model Event {
   expenses     Expense[]
   bills        Bill[]
   photos       Photo[]
+  payments     Payment[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   @@index([societyId, date])
@@ -152,7 +165,7 @@ model Expense {
   amountPaise     BigInt
   paymentMethod   PaymentMethod
   billNumber      String?
-  notes            String?
+  notes           String?
   society         Society @relation(fields: [societyId], references: [id])
   event           Event? @relation(fields: [eventId], references: [id])
   createdById     String
@@ -211,6 +224,51 @@ model Photo {
   event     Event? @relation(fields: [eventId], references: [id])
   createdAt DateTime @default(now())
   @@index([societyId, eventId])
+}
+
+model PaymentAccount {
+  id          String @id @default(cuid())
+  societyId   String
+  ownerUserId String?
+  displayName String
+  upiId       String?
+  qrImageUrl  String?
+  purpose     String
+  instructions String?
+  status      RecordStatus @default(ACTIVE)
+  society     Society @relation(fields: [societyId], references: [id])
+  ownerUser   User? @relation("PaymentAccountOwner", fields: [ownerUserId], references: [id])
+  payments    Payment[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([societyId, status])
+}
+
+model Payment {
+  id              String @id @default(cuid())
+  societyId       String
+  eventId         String?
+  paymentAccountId String
+  ownerUserId     String
+  amountPaise     BigInt
+  status          PaymentStatus @default(PENDING)
+  transactionId   String?
+  screenshotUrl   String?
+  notes           String?
+  initiatedAt     DateTime @default(now())
+  expiresAt       DateTime
+  verifiedAt      DateTime?
+  verifiedById    String?
+  rejectionReason String?
+  society         Society @relation(fields: [societyId], references: [id])
+  event           Event? @relation(fields: [eventId], references: [id])
+  paymentAccount  PaymentAccount @relation(fields: [paymentAccountId], references: [id])
+  ownerUser       User @relation("PaymentOwner", fields: [ownerUserId], references: [id])
+  verifiedBy      User? @relation("PaymentVerifier", fields: [verifiedById], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([societyId, status, initiatedAt])
+  @@index([ownerUserId, createdAt])
 }
 
 model AuditLog {
