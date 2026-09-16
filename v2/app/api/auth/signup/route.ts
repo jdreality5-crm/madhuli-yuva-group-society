@@ -17,8 +17,7 @@ export async function POST(req: Request) {
     if (!society) return NextResponse.json({ error: 'Society registration is not ready yet. Please ask the society administrator.' }, { status: 503 });
     const flat = await prisma.flat.findFirst({ where: { societyId: society.id, flatNumber: body.flatNumber, status: 'ACTIVE' } });
     if (!flat) return NextResponse.json({ error: 'This flat is not registered or is inactive. Please contact the society administrator.' }, { status: 404 });
-    const eligibility = await prisma.$queryRaw<Array<{ signupEnabled: boolean }>>`SELECT "signupEnabled" FROM public."Flat" WHERE id=${flat.id} LIMIT 1`;
-    if (!eligibility[0]?.signupEnabled) return NextResponse.json({ error: 'Owner signup is not enabled for this flat. Please contact the society administrator.' }, { status: 403 });
+    if (!flat.signupEnabled) return NextResponse.json({ error: 'Owner signup is not enabled for this flat. Please contact the society administrator.' }, { status: 403 });
     const registeredEmail = flat.email?.trim().toLowerCase();
     const registeredMobile = flat.mobile ? normalizeMobile(flat.mobile) : null;
     if (!registeredEmail && !registeredMobile) return NextResponse.json({ error: 'This flat is not pre-registered for online signup.' }, { status: 403 });
