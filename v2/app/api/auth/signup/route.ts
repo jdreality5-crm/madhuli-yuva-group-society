@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { createHash, randomInt } from 'node:crypto';
 import { z } from 'zod';
 import { createSession, prisma } from '@/lib/auth';
 import { emailVerificationConfigured, sendVerificationOtp } from '@/lib/verification-email';
@@ -8,20 +7,25 @@ import { emailVerificationConfigured, sendVerificationOtp } from '@/lib/verifica
 const SOCIETY_ID = 'demo-society-v2';
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000;
-const MAX_ATTEMPTS = 5;
 const schema = z.object({ name: z.string().trim().min(2).max(100), email: z.string().trim().email(), mobile: z.string().trim().min(10).max(15), flatNumber: z.string().trim().min(1).max(30), password: z.string().min(8).max(128) });
 const normalizeMobile = (value: string) => value.replace(/[^0-9+]/g, '');
-const hashOtp = (otp: string) => createHash('sha256').update(otp).digest('hex');
-const newOtp = () => randomInt(100000, 1000000).toString();
+const hashOtp = async (otp: string) => {
+  const bytes = new TextEncoder().encode(otp);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest)).map(value => value.toString(16).padStart(2, '0')).join('');
+};
+const newOtp = () => {
+  const bytes = new Uint32Array(1);
+  crypto.getRandomValues(bytes);
+  return String(100000 + (bytes[0] % 900000));
+};
 
 async function issueOtp(userId: string, email: string) {
   const latest = await prisma.verificationToken.findFirst({ where: { userId, consumedAt: null }, orderBy: { createdAt: 'desc' } });
-  if (latest && Date.now() - latest.createdAt.getTime() < RESEND_COOLDOWN_MS) {
-    throw new Error('OTP_COOLDOWN');
-  }
+  if (latest && Date.now() - latest.createdAt.getTime() < RESEND_COOLDOWN_MS) throw new Error('OTP_COOLDOWN');
   await prisma.verificationToken.updateMany({ where: { userId, consumedAt: null }, data: { consumedAt: new Date() } });
   const otp = newOtp();
-  await prisma.verificationToken.create({ data: { userId, tokenHash: hashOtp(otp), expiresAt: new Date(Date.now() + OTP_TTL_MS) } });
+  await prisma.verificationToken.create({ data: { userId, tokenHash: await hashOtp(otp), expiresAt: new Date(Date.now() + OTP_TTL_MS) } });
   await sendVerificationOtp(email, otp);
 }
 
@@ -43,7 +47,7 @@ export async function POST(req: Request) {
     if (registeredEmail && registeredEmail !== email) return NextResponse.json({ error: 'The email does not match the society record for this flat.' }, { status: 403 });
     if (registeredMobile && registeredMobile !== mobile) return NextResponse.json({ error: 'The mobile number does not match the society record for this flat.' }, { status: 403 });
     const existingEmail = await prisma.user.findUnique({ where: { email } });
-    if (existingEmail) return NextResponse.json({ error: existingEmail.status === 'INACTIVE' && existingEmail.role === 'OWNER' ? 'This signup is already awaiting email verification. Please use the verification code.' : 'An account with this email already exists. Please login instead.' }, { status: 409 });
+    if (existingEmail) return NextResponse.json({ error: existingEmail.status === 'INACTIVE' && existingEmail.role === 'OWNER' ? 'This signup is already awaiting email verification. Please use the verification code or resend it.' : 'An account with this email already exists. Please login instead.' }, { status: 409 });
     const existingFlatOwner = await prisma.user.findFirst({ where: { societyId: society.id, flatId: flat.id, role: 'OWNER' }, select: { id: true } });
     if (existingFlatOwner) return NextResponse.json({ error: 'This flat already has a registered owner account. Please login or contact the administrator.' }, { status: 409 });
 
