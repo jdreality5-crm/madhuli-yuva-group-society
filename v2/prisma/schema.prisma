@@ -46,26 +46,39 @@ enum PaymentStatus {
 }
 
 model User {
-  id              String   @id @default(cuid())
-  email           String   @unique
-  passwordHash    String
-  name            String
-  mobile          String?
-  role            Role
-  status          RecordStatus @default(ACTIVE)
-  societyId       String
-  flatId          String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  society         Society  @relation(fields: [societyId], references: [id])
-  flat            Flat?    @relation(fields: [flatId], references: [id])
-  createdIncome   Income[] @relation("IncomeCreatedBy")
-  createdExpense  Expense[] @relation("ExpenseCreatedBy")
-  paymentAccounts PaymentAccount[] @relation("PaymentAccountOwner")
-  ownerPayments   Payment[] @relation("PaymentOwner")
-  verifiedPayments Payment[] @relation("PaymentVerifier")
-  auditLogs       AuditLog[]
+  id                String   @id @default(cuid())
+  email             String   @unique
+  passwordHash      String
+  name              String
+  mobile            String?
+  role              Role
+  status            RecordStatus @default(ACTIVE)
+  societyId         String
+  flatId            String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  society           Society  @relation(fields: [societyId], references: [id])
+  flat              Flat?    @relation(fields: [flatId], references: [id])
+  createdIncome     Income[] @relation("IncomeCreatedBy")
+  createdExpense    Expense[] @relation("ExpenseCreatedBy")
+  paymentAccounts   PaymentAccount[] @relation("PaymentAccountOwner")
+  ownerPayments     Payment[] @relation("PaymentOwner")
+  verifiedPayments  Payment[] @relation("PaymentVerifier")
+  auditLogs         AuditLog[]
+  verificationTokens VerificationToken[]
   @@index([societyId, role])
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  attempts   Int      @default(0)
+  consumedAt DateTime?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, expiresAt])
 }
 
 model Society {
