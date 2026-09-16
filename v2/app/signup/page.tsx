@@ -28,11 +28,7 @@ export default function Signup() {
     }
     setBusy(true);
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: form.name, email: form.email, mobile: form.mobile, flatNumber: form.flatNumber, password: form.password }),
-      });
+      const response = await fetch('/api/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: form.name, email: form.email, mobile: form.mobile, flatNumber: form.flatNumber, password: form.password }) });
       const data = await response.json().catch(() => null);
       if (!response.ok) throw new Error(data?.error || `Signup failed (${response.status})`);
       setVerificationEmail(data.email || form.email.toLowerCase());
@@ -40,34 +36,23 @@ export default function Signup() {
       setMessage('A 6-digit verification code has been sent to your registered email.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Signup failed. Please try again.');
-    } finally {
-      setBusy(false);
-    }
+    } finally { setBusy(false); }
   }
 
   async function verify(event: React.FormEvent) {
     event.preventDefault();
     setError('');
     setMessage('');
-    if (!/^\d{6}$/.test(otp)) {
-      setError('Please enter the 6-digit verification code.');
-      return;
-    }
+    if (!/^\d{6}$/.test(otp)) { setError('Please enter the 6-digit verification code.'); return; }
     setBusy(true);
     try {
-      const response = await fetch('/api/auth/verify-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: verificationEmail, otp }),
-      });
+      const response = await fetch('/api/auth/verify-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: verificationEmail, otp }) });
       const data = await response.json().catch(() => null);
       if (!response.ok) throw new Error(data?.error || `Verification failed (${response.status})`);
       router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Verification failed. Please try again.');
-    } finally {
-      setBusy(false);
-    }
+    } finally { setBusy(false); }
   }
 
   async function resend() {
@@ -75,20 +60,14 @@ export default function Signup() {
     setMessage('');
     setBusy(true);
     try {
-      const response = await fetch('/api/auth/resend-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: verificationEmail }),
-      });
+      const response = await fetch('/api/auth/resend-verification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: verificationEmail }) });
       const data = await response.json().catch(() => null);
       if (!response.ok) throw new Error(data?.error || `Unable to resend (${response.status})`);
       setOtp('');
       setMessage('A new verification code has been sent.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to resend verification code.');
-    } finally {
-      setBusy(false);
-    }
+    } finally { setBusy(false); }
   }
 
   return <main className="login-page">
@@ -108,14 +87,8 @@ export default function Signup() {
           <form onSubmit={submit}>
             <div className="field"><label htmlFor="name">Full name</label><input id="name" className="input" autoComplete="name" required value={form.name} onChange={e => update('name', e.target.value)} /></div>
             <div className="field"><label htmlFor="flatNumber">Flat number</label><input id="flatNumber" className="input" placeholder="e.g. A-101" required value={form.flatNumber} onChange={e => update('flatNumber', e.target.value)} /></div>
-            <div className="form-grid">
-              <div className="field"><label htmlFor="email">Registered email</label><input id="email" className="input" type="email" autoComplete="email" required value={form.email} onChange={e => update('email', e.target.value)} /></div>
-              <div className="field"><label htmlFor="mobile">Registered mobile</label><input id="mobile" className="input" type="tel" autoComplete="tel" required value={form.mobile} onChange={e => update('mobile', e.target.value)} /></div>
-            </div>
-            <div className="form-grid">
-              <div className="field"><label htmlFor="password">Password</label><input id="password" className="input" type="password" autoComplete="new-password" minLength={8} required value={form.password} onChange={e => update('password', e.target.value)} /></div>
-              <div className="field"><label htmlFor="confirmPassword">Confirm password</label><input id="confirmPassword" className="input" type="password" autoComplete="new-password" minLength={8} required value={form.confirmPassword} onChange={e => update('confirmPassword', e.target.value)} /></div>
-            </div>
+            <div className="form-grid"><div className="field"><label htmlFor="email">Registered email</label><input id="email" className="input" type="email" autoComplete="email" required value={form.email} onChange={e => update('email', e.target.value)} /></div><div className="field"><label htmlFor="mobile">Registered mobile</label><input id="mobile" className="input" type="tel" autoComplete="tel" required value={form.mobile} onChange={e => update('mobile', e.target.value)} /></div></div>
+            <div className="form-grid"><div className="field"><label htmlFor="password">Password</label><input id="password" className="input" type="password" autoComplete="new-password" minLength={8} required value={form.password} onChange={e => update('password', e.target.value)} /></div><div className="field"><label htmlFor="confirmPassword">Confirm password</label><input id="confirmPassword" className="input" type="password" autoComplete="new-password" minLength={8} required value={form.confirmPassword} onChange={e => update('confirmPassword', e.target.value)} /></div></div>
             {error && <div className="login-error" role="alert">{error}</div>}
             <button className="premium-btn" disabled={busy}>{busy ? 'Sending verification code…' : 'Continue & verify email'}</button>
           </form>
@@ -128,7 +101,7 @@ export default function Signup() {
             {error && <div className="login-error" role="alert">{error}</div>}
             <button className="premium-btn" disabled={busy}>{busy ? 'Verifying…' : 'Verify & activate account'}</button>
           </form>
-          <button type="button" className="secondary-btn" onClick={resend} disabled={busy} style={{ marginTop: 12, width: '100%' }}>Resend code</button>
+          <button type="button" className="btn btn-secondary" onClick={resend} disabled={busy}>Resend code</button>
           <button type="button" className="text-btn" onClick={() => { setStep('signup'); setError(''); setMessage(''); }} style={{ marginTop: 10 }}>Back to signup details</button>
         </>}
         <small>Admin/Sub Admin accounts are never created through public signup. Already registered? <a href="/login" style={{ color: 'var(--maroon)', fontWeight: 700 }}>Sign in</a>.</small>
