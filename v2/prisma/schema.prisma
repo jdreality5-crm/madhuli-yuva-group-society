@@ -94,19 +94,21 @@ model Society {
 }
 
 model Flat {
-  id          String @id @default(cuid())
-  societyId   String
-  flatNumber  String
-  ownerName   String?
-  mobile      String?
-  email       String?
-  status      RecordStatus @default(ACTIVE)
-  society     Society @relation(fields: [societyId], references: [id])
-  users       User[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String @id @default(cuid())
+  societyId     String
+  flatNumber    String
+  ownerName     String?
+  mobile        String?
+  email         String?
+  signupEnabled Boolean @default(false)
+  status        RecordStatus @default(ACTIVE)
+  society       Society @relation(fields: [societyId], references: [id])
+  users         User[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   @@unique([societyId, flatNumber])
   @@index([societyId, status])
+  @@index([societyId, signupEnabled])
 }
 
 model Event {
