@@ -1,0 +1,35 @@
+import { NextResponse } from 'next/server';
+import { createHash, randomInt } from 'node:crypto';
+import { z } from 'zod';
+import { prisma } from '@/lib/auth';
+import { emailVerificationConfigured, sendVerificationOtp } from '@/lib/verification-email';
+
+const schema = z.object({ email: z.string().trim().email() });
+const OTP_TTL_MS = 10 * 60 * 1000;
+const RESEND_COOLDOWN_MS = 60 * 1000;
+const hashOtp = (otp: string) => createHash('sha256').update(otp).digest('hex');
+const newOtp = () => randomInt(100000, 1000000).toString();
+
+export async function POST(req: Request) {
+  try {
+    let body: z.infer<typeof schema>;
+    try { body = schema.parse(await req.json()); } catch { return NextResponse.json({ error: 'Enter a valid email address.' }, { status: 400 }); }
+    if (!emailVerificationConfigured()) return NextResponse.json({ error: 'Email verification is not configured yet.' }, { status: 503 });
+    const email = body.email.toLowerCase();
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || user.role !== 'OWNER' || user.status !== 'INACTIVE') return NextResponse.json({ error: 'No pending owner verification was found for this email.' }, { status: 404 });
+    const latest = await prisma.verificationToken.findFirst({ where: { userId: user.id, consumedAt: null }, orderBy: { createdAt: 'desc' } });
+    if (latest && Date.now() - latest.createdAt.getTime() < RESEND_COOLDOWN_MS) return NextResponse.json({ error: 'Please wait 60 seconds before requesting another code.' }, { status: 429 });
+
+    await prisma.verificationToken.updateMany({ where: { userId: user.id, consumedAt: null }, data: { consumedAt: new Date() } });
+    const otp = newOtp();
+    await prisma.verificationToken.create({ data: { userId: user.id, tokenHash: hashOtp(otp), expiresAt: new Date(Date.now() + OTP_TTL_MS) } });
+    try {
+      await sendVerificationOtp(email, otp);
+    } catch (error) {
+      await prisma.verificationToken.updateMany({ where: { userId: user.id, tokenHash: hashOtp(otp), consumedAt: null }, data: { consumedAt: new Date() } });
+      throw error;
+    }
+    return NextResponse.json({ sent: true, email, message: 'A new verification code has been sent.' });
+  } catch (error) { console.error('[auth/resend-verification] server error', error); return NextResponse.json({ error: 'Unable to resend verification code' }, { status: 500 }); }
+}
