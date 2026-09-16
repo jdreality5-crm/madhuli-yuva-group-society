@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
-import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import { createSession, prisma } from '@/lib/auth';
 
 const schema = z.object({ email: z.string().trim().email(), otp: z.string().regex(/^\d{6}$/) });
-const hashOtp = (otp: string) => createHash('sha256').update(otp).digest('hex');
 const MAX_ATTEMPTS = 5;
+const hashOtp = async (otp: string) => {
+  const bytes = new TextEncoder().encode(otp);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest)).map(value => value.toString(16).padStart(2, '0')).join('');
+};
 
 export async function POST(req: Request) {
   try {
@@ -19,7 +22,7 @@ export async function POST(req: Request) {
     if (!token || token.expiresAt.getTime() <= Date.now()) return NextResponse.json({ error: 'This verification code has expired. Please request a new code.' }, { status: 400 });
     if (token.attempts >= MAX_ATTEMPTS) return NextResponse.json({ error: 'Too many incorrect attempts. Please request a new code.' }, { status: 429 });
 
-    if (hashOtp(body.otp) !== token.tokenHash) {
+    if (await hashOtp(body.otp) !== token.tokenHash) {
       await prisma.verificationToken.update({ where: { id: token.id }, data: { attempts: { increment: 1 } } });
       return NextResponse.json({ error: 'Incorrect verification code.' }, { status: 400 });
     }
