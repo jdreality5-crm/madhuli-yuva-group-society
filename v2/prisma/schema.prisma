@@ -80,7 +80,8 @@ model User {
   updatedAt           DateTime        @updatedAt
   society             Society         @relation(fields: [societyId], references: [id])
   flat                Flat?           @relation(fields: [flatId], references: [id])
-  unit                PropertyUnit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  unit                PropertyUnit?   @relation("UserUnit", fields: [unitId], references: [id], onDelete: SetNull)
+  residentUnitLinks   PropertyUnit[]  @relation("UnitResident")
   createdIncome       Income[]        @relation("IncomeCreatedBy")
   createdExpense      Expense[]       @relation("ExpenseCreatedBy")
   paymentAccounts     PaymentAccount[] @relation("PaymentAccountOwner")
@@ -124,7 +125,7 @@ model Society {
   events             Event[]
   income             Income[]
   expenses           Expense[]
-  bills               Bill[]
+  bills              Bill[]
   notices            Notice[]
   photos             Photo[]
   paymentAccounts    PaymentAccount[]
@@ -181,8 +182,8 @@ model PropertyUnit {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   property       Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  residentUser   User?         @relation(fields: [residentUserId], references: [id], onDelete: SetNull)
-  users          User[]
+  residentUser   User?         @relation("UnitResident", fields: [residentUserId], references: [id], onDelete: SetNull)
+  users          User[]        @relation("UserUnit")
   @@unique([propertyId, label])
   @@index([propertyId, floorNumber])
   @@index([residentUserId])
