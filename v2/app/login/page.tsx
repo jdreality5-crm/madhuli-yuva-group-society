@@ -12,36 +12,34 @@ export default function Login() {
   const router = useRouter();
 
   async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError('');
+    e.preventDefault(); setBusy(true); setError('');
     try {
       const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, role }) });
       const data = await response.json().catch(() => null);
       if (!response.ok) throw Error(data?.error || `Login failed (${response.status})`);
       router.push('/');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
-    } finally {
-      setBusy(false);
-    }
+    } catch (err) { setError(err instanceof Error ? err.message : 'Login failed. Please try again.'); }
+    finally { setBusy(false); }
   }
 
   return <main className="login-page">
-    <div className="login-shell">
-      <section className="login-copy">
+    <div className="login-blade" aria-hidden="true" />
+    <div className="login-shell auth-animate">
+      <section className="login-copy auth-copy">
         <div className="login-brand"><div className="brand-mark">S</div><span>Society Administration</span></div>
         <p className="eyebrow" style={{ marginTop: 70 }}>Saranga Flat &amp; Pramukhpark Society</p>
         <h1>One secure workspace for <em>society operations.</em></h1>
         <p>Manage programs, members, notices and authorized financial operations with a clean, responsive administration experience.</p>
+        <div className="auth-points"><span>Secure role-based access</span><span>Resident-friendly workspace</span></div>
       </section>
 
-      <section className="login-card">
+      <section className="login-card auth-card">
+        <div className="auth-card-glow" aria-hidden="true" />
         <p className="eyebrow">Secure access</p>
         <h2>Welcome back</h2>
         <p>Choose your role and sign in to continue.</p>
         <div className="role-switch">
-          {(['MASTER_ADMIN', 'ORGANIZER', 'OWNER'] as const).map(item => <button key={item} type="button" className={role === item ? 'btn btn-primary' : 'btn btn-secondary'} onClick={() => setRole(item)}>{item === 'MASTER_ADMIN' ? 'Master Admin' : item === 'ORGANIZER' ? 'Sub Admin' : 'Flat Owner'}</button>)}
+          {(['MASTER_ADMIN', 'ORGANIZER', 'OWNER'] as const).map(item => <button key={item} type="button" className={role === item ? 'btn btn-primary' : 'btn btn-secondary'} onClick={() => setRole(item)}>{item === 'MASTER_ADMIN' ? 'Master Admin' : item === 'ORGANIZER' ? 'Sub Admin' : 'Resident'}</button>)}
         </div>
         <form onSubmit={submit}>
           <div className="field"><label htmlFor="email">Email</label><input id="email" className="input" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
@@ -49,7 +47,7 @@ export default function Login() {
           {error && <div className="login-error" role="alert">{error}</div>}
           <button className="premium-btn" disabled={busy}>{busy ? 'Signing in…' : 'Sign in securely'}</button>
         </form>
-        {role === 'OWNER' && <div style={{ marginTop: 14, textAlign: 'center' }}><span style={{ color: 'var(--muted)', fontSize: 12 }}>New Flat Owner?</span>{' '}<a href="/signup" style={{ color: 'var(--maroon)', fontWeight: 700, fontSize: 12 }}>Create an account</a></div>}
+        {role === 'OWNER' && <div className="auth-link-row"><span>New Resident?</span> <a href="/signup">Create an account</a></div>}
         <small>Access is protected by secure session authentication. Never share your password or secret keys.</small>
       </section>
     </div>
