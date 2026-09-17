@@ -24,7 +24,10 @@ export async function POST(req: Request) {
     if (!emailVerificationConfigured()) return NextResponse.json({ error: 'Email verification is not configured yet.' }, { status: 503 });
     const email = body.email.toLowerCase();
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || user.role !== 'OWNER' || user.status !== 'INACTIVE') return NextResponse.json({ error: 'No pending owner verification was found for this email.' }, { status: 404 });
+    if (!user || user.role !== 'OWNER') return NextResponse.json({ error: 'No owner verification request was found for this email.' }, { status: 404 });
+    if (user.approvalStatus !== 'APPROVED') return NextResponse.json({ error: 'Master Admin approval is required before sending an OTP.' }, { status: 403 });
+    if (user.emailVerified) return NextResponse.json({ error: 'This email is already verified. Please login.' }, { status: 409 });
+    if (user.status !== 'INACTIVE') return NextResponse.json({ error: 'No pending owner verification was found for this email.' }, { status: 404 });
     const latest = await prisma.verificationToken.findFirst({ where: { userId: user.id, consumedAt: null }, orderBy: { createdAt: 'desc' } });
     if (latest && Date.now() - latest.createdAt.getTime() < RESEND_COOLDOWN_MS) return NextResponse.json({ error: 'Please wait 60 seconds before requesting another code.' }, { status: 429 });
 
