@@ -51,31 +51,46 @@ enum PaymentStatus {
   EXPIRED
 }
 
+enum PropertyType {
+  APARTMENT
+  TENAMENT
+}
+
+enum ResidentType {
+  OWNER
+  TENANT
+}
+
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique
-  passwordHash      String
-  name              String
-  mobile            String?
-  role              Role
-  status            RecordStatus @default(ACTIVE)
-  approvalStatus    ApprovalStatus @default(APPROVED)
-  emailVerified     Boolean  @default(true)
-  societyId         String
-  flatId            String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  society           Society  @relation(fields: [societyId], references: [id])
-  flat              Flat?    @relation(fields: [flatId], references: [id])
-  createdIncome     Income[] @relation("IncomeCreatedBy")
-  createdExpense    Expense[] @relation("ExpenseCreatedBy")
-  paymentAccounts   PaymentAccount[] @relation("PaymentAccountOwner")
-  ownerPayments     Payment[] @relation("PaymentOwner")
-  verifiedPayments  Payment[] @relation("PaymentVerifier")
-  auditLogs         AuditLog[]
-  verificationTokens VerificationToken[]
+  id                  String          @id @default(cuid())
+  email               String          @unique
+  passwordHash        String
+  name                String
+  mobile              String?
+  role                Role
+  status              RecordStatus    @default(ACTIVE)
+  approvalStatus      ApprovalStatus  @default(APPROVED)
+  emailVerified       Boolean         @default(true)
+  societyId           String
+  flatId              String?
+  profileImageUrl     String?
+  unitId              String?
+  residentType        ResidentType?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  society             Society         @relation(fields: [societyId], references: [id])
+  flat                Flat?           @relation(fields: [flatId], references: [id])
+  unit                PropertyUnit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  createdIncome       Income[]        @relation("IncomeCreatedBy")
+  createdExpense      Expense[]       @relation("ExpenseCreatedBy")
+  paymentAccounts     PaymentAccount[] @relation("PaymentAccountOwner")
+  ownerPayments       Payment[]       @relation("PaymentOwner")
+  verifiedPayments    Payment[]       @relation("PaymentVerifier")
+  auditLogs           AuditLog[]
+  verificationTokens  VerificationToken[]
   @@index([societyId, role])
   @@index([societyId, role, approvalStatus])
+  @@index([unitId])
 }
 
 model VerificationToken {
@@ -97,18 +112,19 @@ model Society {
   city               String?
   state              String?
   pincode            String?
-  logoUrl             String?
-  contact             String?
+  logoUrl            String?
+  contact            String?
   authorizedSignatory String?
   reportFooter       String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   users              User[]
   flats              Flat[]
+  properties         Property[]
   events             Event[]
   income             Income[]
   expenses           Expense[]
-  bills              Bill[]
+  bills               Bill[]
   notices            Notice[]
   photos             Photo[]
   paymentAccounts    PaymentAccount[]
@@ -131,6 +147,45 @@ model Flat {
   @@unique([societyId, flatNumber])
   @@index([societyId, status])
   @@index([societyId, signupEnabled])
+}
+
+model Property {
+  id             String       @id @default(cuid())
+  societyId      String
+  type           PropertyType
+  name           String
+  propertyNumber String
+  block          String?
+  status         RecordStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  society        Society      @relation(fields: [societyId], references: [id])
+  units          PropertyUnit[]
+  @@unique([societyId, type, propertyNumber])
+  @@index([societyId, type, status])
+  @@index([societyId])
+}
+
+model PropertyUnit {
+  id             String        @id @default(cuid())
+  propertyId     String
+  label          String
+  floorNumber    Int
+  floorLabel     String
+  residentType   ResidentType?
+  ownerName      String?
+  ownerMobile    String?
+  ownerEmail     String?
+  residentUserId String?
+  status         RecordStatus  @default(ACTIVE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  property       Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  residentUser   User?         @relation(fields: [residentUserId], references: [id], onDelete: SetNull)
+  users          User[]
+  @@unique([propertyId, label])
+  @@index([propertyId, floorNumber])
+  @@index([residentUserId])
 }
 
 model Event {
