@@ -19,6 +19,12 @@ enum RecordStatus {
   INACTIVE
 }
 
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum PublishStatus {
   DRAFT
   PUBLISHED
@@ -53,6 +59,8 @@ model User {
   mobile            String?
   role              Role
   status            RecordStatus @default(ACTIVE)
+  approvalStatus    ApprovalStatus @default(APPROVED)
+  emailVerified     Boolean  @default(true)
   societyId         String
   flatId            String?
   createdAt         DateTime @default(now())
@@ -67,6 +75,7 @@ model User {
   auditLogs         AuditLog[]
   verificationTokens VerificationToken[]
   @@index([societyId, role])
+  @@index([societyId, role, approvalStatus])
 }
 
 model VerificationToken {
@@ -89,7 +98,7 @@ model Society {
   state              String?
   pincode            String?
   logoUrl             String?
-  contact            String?
+  contact             String?
   authorizedSignatory String?
   reportFooter       String?
   createdAt          DateTime @default(now())
