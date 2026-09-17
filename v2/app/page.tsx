@@ -9,7 +9,7 @@ const money = (p?: string) => p ? `₹ ${(Number(p) / 100).toLocaleString('en-IN
 
 const primaryLinks = [
   ['Dashboard', '/'],
-  ['Society', '#'],
+  ['Properties', '/admin/properties'],
   ['Flats & Owners', '/admin/flats'],
   ['Programs', '/admin/programs'],
   ['Notices', '#'],
@@ -17,12 +17,12 @@ const primaryLinks = [
 ] as const;
 
 const roleLinks = (role: Role) => role === 'MASTER_ADMIN'
-  ? [['Sub Admins', '/admin/subadmins'], ['UPI Accounts', '/admin/payment-accounts'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Settings', '#']] as const
+  ? [['Resident Approvals', '/admin/owner-approvals'], ['Sub Admins', '/admin/subadmins'], ['UPI Accounts', '/admin/payment-accounts'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Profile', '/profile'], ['Settings', '#']] as const
   : role === 'ORGANIZER'
-    ? [['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Settings', '#']] as const
-    : [['Make Payment', '/payments']] as const;
+    ? [['Resident Approvals', '/admin/owner-approvals'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Profile', '/profile'], ['Settings', '#']] as const
+    : [['Make Payment', '/payments'], ['Profile', '/profile']] as const;
 
-const roleLabel = (role: Role) => role === 'MASTER_ADMIN' ? 'Master Admin' : role === 'ORGANIZER' ? 'Sub Admin / Organizer' : 'Flat Owner';
+const roleLabel = (role: Role) => role === 'MASTER_ADMIN' ? 'Master Admin' : role === 'ORGANIZER' ? 'Sub Admin / Organizer' : 'Resident';
 
 export default function Home() {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
@@ -52,7 +52,7 @@ export default function Home() {
   const notices = dashboard?.notices ?? [];
   const photos = dashboard?.photos ?? [];
   const location = [dashboard?.society?.city, dashboard?.society?.state].filter(Boolean).join(', ');
-  const mobileLinks = useMemo(() => dashboard?.role === 'OWNER' ? [['Home', '/'], ['Make Payment', '/payments']] : [['Home', '/'], ['Programs', '/admin/programs'], ['Income', '/admin/income'], ['Reports', '/reports']], [dashboard?.role]);
+  const mobileLinks = useMemo(() => dashboard?.role === 'OWNER' ? [['Home', '/'], ['Make Payment', '/payments'], ['Profile', '/profile']] : [['Home', '/'], ['Properties', '/admin/properties'], ['Programs', '/admin/programs'], ['Reports', '/reports'], ['Profile', '/profile']], [dashboard?.role]);
 
   return <div className="app-shell">
     <header className="topbar">
