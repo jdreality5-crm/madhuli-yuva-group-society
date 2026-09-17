@@ -8,140 +8,183 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role { MASTER_ADMIN ORGANIZER OWNER }
-enum RecordStatus { ACTIVE INACTIVE }
-enum ApprovalStatus { PENDING APPROVED REJECTED }
-enum PublishStatus { DRAFT PUBLISHED }
-enum PaymentMethod { CASH BANK_TRANSFER UPI CHEQUE OTHER }
-enum BillType { INVOICE RECEIPT OTHER }
-enum PaymentStatus { PENDING VERIFIED REJECTED EXPIRED }
-enum PropertyType { APARTMENT TENAMENT }
-enum ResidentType { OWNER TENANT }
+enum Role {
+  MASTER_ADMIN
+  ORGANIZER
+  OWNER
+}
+
+enum RecordStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  UPI
+  CHEQUE
+  OTHER
+}
+
+enum BillType {
+  INVOICE
+  RECEIPT
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum PropertyType {
+  APARTMENT
+  TENAMENT
+}
+
+enum ResidentType {
+  OWNER
+  TENANT
+}
 
 model User {
-  id String @id @default(cuid())
-  email String @unique
-  passwordHash String
-  name String
-  mobile String?
-  role Role
-  status RecordStatus @default(ACTIVE)
-  approvalStatus ApprovalStatus @default(APPROVED)
-  emailVerified Boolean @default(true)
-  societyId String
-  flatId String?
-  profileImageUrl String?
-  unitId String?
-  residentType ResidentType?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  society Society @relation(fields: [societyId], references: [id])
-  flat Flat? @relation(fields: [flatId], references: [id])
-  unit PropertyUnit? @relation("UserUnit", fields: [unitId], references: [id], onDelete: SetNull)
-  residentUnitLinks PropertyUnit[] @relation("UnitResident")
-  createdIncome Income[] @relation("IncomeCreatedBy")
-  createdExpense Expense[] @relation("ExpenseCreatedBy")
-  paymentAccounts PaymentAccount[] @relation("PaymentAccountOwner")
-  ownerPayments Payment[] @relation("PaymentOwner")
-  verifiedPayments Payment[] @relation("PaymentVerifier")
-  auditLogs AuditLog[]
-  verificationTokens VerificationToken[]
+  id                  String          @id @default(cuid())
+  email               String          @unique
+  passwordHash        String
+  name                String
+  mobile              String?
+  role                Role
+  status              RecordStatus    @default(ACTIVE)
+  approvalStatus      ApprovalStatus  @default(APPROVED)
+  emailVerified       Boolean         @default(true)
+  societyId           String
+  flatId              String?
+  profileImageUrl     String?
+  unitId              String?
+  residentType        ResidentType?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  society             Society         @relation(fields: [societyId], references: [id])
+  flat                Flat?           @relation(fields: [flatId], references: [id])
+  unit                PropertyUnit?   @relation("UserUnit", fields: [unitId], references: [id], onDelete: SetNull)
+  residentUnitLinks   PropertyUnit[]  @relation("UnitResident")
+  createdIncome       Income[]        @relation("IncomeCreatedBy")
+  createdExpense      Expense[]       @relation("ExpenseCreatedBy")
+  paymentAccounts     PaymentAccount[] @relation("PaymentAccountOwner")
+  ownerPayments       Payment[]       @relation("PaymentOwner")
+  verifiedPayments    Payment[]       @relation("PaymentVerifier")
+  auditLogs           AuditLog[]
+  verificationTokens  VerificationToken[]
   @@index([societyId, role])
   @@index([societyId, role, approvalStatus])
   @@index([unitId])
 }
 
 model VerificationToken {
-  id String @id @default(cuid())
-  userId String
-  tokenHash String @unique
-  expiresAt DateTime
-  attempts Int @default(0)
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  attempts   Int      @default(0)
   consumedAt DateTime?
-  createdAt DateTime @default(now())
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId, expiresAt])
 }
 
 model Society {
-  id String @id @default(cuid())
-  name String
-  address String?
-  city String?
-  state String?
-  pincode String?
-  logoUrl String?
-  contact String?
+  id                 String @id @default(cuid())
+  name               String
+  address            String?
+  city               String?
+  state              String?
+  pincode            String?
+  logoUrl            String?
+  contact            String?
   authorizedSignatory String?
-  reportFooter String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  users User[]
-  flats Flat[]
-  properties Property[]
-  events Event[]
-  income Income[]
-  expenses Expense[]
-  bills Bill[]
-  notices Notice[]
-  photos Photo[]
-  paymentAccounts PaymentAccount[]
-  payments Payment[]
+  reportFooter       String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  users              User[]
+  flats              Flat[]
+  properties         Property[]
+  events             Event[]
+  income             Income[]
+  expenses           Expense[]
+  bills              Bill[]
+  notices            Notice[]
+  photos             Photo[]
+  paymentAccounts    PaymentAccount[]
+  payments           Payment[]
 }
 
 model Flat {
-  id String @id @default(cuid())
-  societyId String
-  flatNumber String
-  ownerName String?
-  mobile String?
-  email String?
+  id            String @id @default(cuid())
+  societyId     String
+  flatNumber    String
+  ownerName     String?
+  mobile        String?
+  email         String?
   signupEnabled Boolean @default(false)
-  status RecordStatus @default(ACTIVE)
-  society Society @relation(fields: [societyId], references: [id])
-  users User[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status        RecordStatus @default(ACTIVE)
+  society       Society @relation(fields: [societyId], references: [id])
+  users         User[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   @@unique([societyId, flatNumber])
   @@index([societyId, status])
   @@index([societyId, signupEnabled])
 }
 
 model Property {
-  id String @id @default(cuid())
-  societyId String
-  type PropertyType
-  name String
+  id             String       @id @default(cuid())
+  societyId      String
+  type           PropertyType
+  name           String
   propertyNumber String
-  block String?
-  status RecordStatus @default(ACTIVE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  society Society @relation(fields: [societyId], references: [id])
-  units PropertyUnit[]
+  block          String?
+  status         RecordStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  society        Society      @relation(fields: [societyId], references: [id])
+  units          PropertyUnit[]
   @@unique([societyId, type, propertyNumber])
   @@index([societyId, type, status])
   @@index([societyId])
 }
 
 model PropertyUnit {
-  id String @id @default(cuid())
-  propertyId String
-  label String
-  floorNumber Int
-  floorLabel String
-  residentType ResidentType?
-  ownerName String?
-  ownerMobile String?
-  ownerEmail String?
-  signupEnabled Boolean @default(false)
+  id             String        @id @default(cuid())
+  propertyId     String
+  label          String
+  floorNumber    Int
+  floorLabel     String
+  residentType   ResidentType?
+  ownerName      String?
+  ownerMobile    String?
+  ownerEmail     String?
+  signupEnabled  Boolean       @default(false)
   residentUserId String?
-  status RecordStatus @default(ACTIVE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  residentUser User? @relation("UnitResident", fields: [residentUserId], references: [id], onDelete: SetNull)
-  users User[] @relation("UserUnit")
+  status         RecordStatus  @default(ACTIVE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  property       Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  residentUser   User?         @relation("UnitResident", fields: [residentUserId], references: [id], onDelete: SetNull)
+  users          User[]        @relation("UserUnit")
   @@unique([propertyId, label])
   @@index([propertyId, floorNumber])
   @@index([residentUserId])
@@ -149,162 +192,176 @@ model PropertyUnit {
 }
 
 model Event {
-  id String @id @default(cuid())
-  societyId String
-  title String
+  id           String @id @default(cuid())
+  societyId    String
+  title        String
   gujaratiTitle String?
-  date DateTime
-  time String?
-  location String?
-  type String?
-  description String?
-  imageUrl String?
-  status PublishStatus @default(PUBLISHED)
-  visibility String @default("OWNER")
-  society Society @relation(fields: [societyId], references: [id])
-  income Income[]
-  expenses Expense[]
-  bills Bill[]
-  photos Photo[]
-  payments Payment[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  date         DateTime
+  time         String?
+  location     String?
+  type         String?
+  description  String?
+  imageUrl     String?
+  status       PublishStatus @default(PUBLISHED)
+  visibility   String @default("OWNER")
+  society      Society @relation(fields: [societyId], references: [id])
+  income       Income[]
+  expenses     Expense[]
+  bills        Bill[]
+  photos       Photo[]
+  payments     Payment[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   @@index([societyId, date])
 }
 
 model Income {
-  id String @id @default(cuid())
-  societyId String
-  eventId String?
-  date DateTime
-  category String
-  description String?
-  amount Decimal @db.Decimal(12,2)
-  paymentMethod PaymentMethod
-  reference String?
-  createdById String
-  society Society @relation(fields: [societyId], references: [id])
-  event Event? @relation(fields: [eventId], references: [id])
-  createdBy User @relation("IncomeCreatedBy", fields: [createdById], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String @id @default(cuid())
+  societyId       String
+  eventId         String?
+  date            DateTime
+  category        String?
+  description     String?
+  receivedFrom    String?
+  amountPaise     BigInt
+  paymentMethod   PaymentMethod
+  referenceNumber String?
+  notes           String?
+  society         Society @relation(fields: [societyId], references: [id])
+  event           Event? @relation(fields: [eventId], references: [id])
+  createdById     String
+  createdBy       User @relation("IncomeCreatedBy", fields: [createdById], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   @@index([societyId, date])
-  @@index([societyId, eventId])
+  @@index([societyId, category])
 }
 
 model Expense {
-  id String @id @default(cuid())
-  societyId String
-  eventId String?
-  date DateTime
-  category String
-  description String?
-  amount Decimal @db.Decimal(12,2)
-  paymentMethod PaymentMethod
-  reference String?
-  createdById String
-  society Society @relation(fields: [societyId], references: [id])
-  event Event? @relation(fields: [eventId], references: [id])
-  createdBy User @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String @id @default(cuid())
+  societyId       String
+  eventId         String?
+  date            DateTime
+  category        String?
+  description     String?
+  paidTo          String?
+  amountPaise     BigInt
+  paymentMethod   PaymentMethod
+  billNumber      String?
+  notes           String?
+  society         Society @relation(fields: [societyId], references: [id])
+  event           Event? @relation(fields: [eventId], references: [id])
+  createdById     String
+  createdBy       User @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   @@index([societyId, date])
-  @@index([societyId, eventId])
+  @@index([societyId, category])
 }
 
 model Bill {
-  id String @id @default(cuid())
-  societyId String
-  eventId String?
-  type BillType
-  date DateTime
-  title String
-  description String?
-  amount Decimal @db.Decimal(12,2)
-  fileUrl String?
-  society Society @relation(fields: [societyId], references: [id])
-  event Event? @relation(fields: [eventId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String @id @default(cuid())
+  societyId     String
+  eventId       String?
+  type          BillType
+  fileUrl       String?
+  amountPaise   BigInt
+  vendor        String?
+  category      String?
+  date          DateTime
+  paymentMethod PaymentMethod?
+  notes         String?
+  society       Society @relation(fields: [societyId], references: [id])
+  event         Event? @relation(fields: [eventId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   @@index([societyId, date])
-  @@index([societyId, eventId])
 }
 
 model Notice {
-  id String @id @default(cuid())
-  societyId String
-  title String
-  gujaratiTitle String?
-  content String
-  status PublishStatus @default(PUBLISHED)
-  society Society @relation(fields: [societyId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  @@index([societyId, createdAt])
+  id              String @id @default(cuid())
+  societyId       String
+  title           String
+  gujaratiTitle   String?
+  content         String
+  gujaratiContent String?
+  date            DateTime @default(now())
+  important       Boolean @default(false)
+  imageUrl        String?
+  status          PublishStatus @default(DRAFT)
+  society         Society @relation(fields: [societyId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([societyId, status, date])
 }
 
 model Photo {
-  id String @id @default(cuid())
+  id        String @id @default(cuid())
   societyId String
-  eventId String?
-  title String?
-  imageUrl String
-  society Society @relation(fields: [societyId], references: [id])
-  event Event? @relation(fields: [eventId], references: [id])
+  eventId   String?
+  title     String?
+  fileUrl   String
+  altText   String?
+  albumName String?
+  society   Society @relation(fields: [societyId], references: [id])
+  event     Event? @relation(fields: [eventId], references: [id])
   createdAt DateTime @default(now())
-  @@index([societyId, createdAt])
+  @@index([societyId, eventId])
 }
 
 model PaymentAccount {
-  id String @id @default(cuid())
-  societyId String
-  ownerUserId String
-  name String
-  upiId String
-  qrCodeUrl String?
-  status RecordStatus @default(ACTIVE)
-  society Society @relation(fields: [societyId], references: [id])
-  owner User @relation("PaymentAccountOwner", fields: [ownerUserId], references: [id])
-  payments Payment[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String @id @default(cuid())
+  societyId    String
+  ownerUserId  String?
+  displayName  String
+  upiId        String?
+  qrImageUrl   String?
+  purpose      String
+  instructions String?
+  status       RecordStatus @default(ACTIVE)
+  society      Society @relation(fields: [societyId], references: [id])
+  ownerUser    User? @relation("PaymentAccountOwner", fields: [ownerUserId], references: [id])
+  payments     Payment[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   @@index([societyId, status])
 }
 
 model Payment {
-  id String @id @default(cuid())
-  societyId String
-  ownerUserId String
+  id               String @id @default(cuid())
+  societyId        String
+  eventId          String?
   paymentAccountId String
-  eventId String?
-  amount Decimal @db.Decimal(12,2)
-  method PaymentMethod
-  status PaymentStatus @default(PENDING)
-  utr String?
-  screenshotUrl String?
-  rejectionReason String?
-  verifiedById String?
-  verifiedAt DateTime?
-  expiresAt DateTime?
-  society Society @relation(fields: [societyId], references: [id])
-  owner User @relation("PaymentOwner", fields: [ownerUserId], references: [id])
-  paymentAccount PaymentAccount @relation(fields: [paymentAccountId], references: [id])
-  event Event? @relation(fields: [eventId], references: [id])
-  verifiedBy User? @relation("PaymentVerifier", fields: [verifiedById], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  @@index([societyId, status])
-  @@index([ownerUserId, status])
+  ownerUserId      String
+  amountPaise      BigInt
+  status           PaymentStatus @default(PENDING)
+  transactionId    String?
+  screenshotUrl    String?
+  notes            String?
+  initiatedAt      DateTime @default(now())
+  expiresAt        DateTime
+  verifiedAt       DateTime?
+  verifiedById     String?
+  rejectionReason  String?
+  society          Society @relation(fields: [societyId], references: [id])
+  event            Event? @relation(fields: [eventId], references: [id])
+  paymentAccount   PaymentAccount @relation(fields: [paymentAccountId], references: [id])
+  ownerUser        User @relation("PaymentOwner", fields: [ownerUserId], references: [id])
+  verifiedBy       User? @relation("PaymentVerifier", fields: [verifiedById], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  @@index([societyId, status, initiatedAt])
+  @@index([ownerUserId, createdAt])
 }
 
 model AuditLog {
-  id String @id @default(cuid())
-  userId String?
-  action String
-  entity String
-  entityId String?
-  metadata Json?
+  id        String @id @default(cuid())
+  userId    String
+  action    String
+  module    String
+  recordId  String?
+  details   String?
   createdAt DateTime @default(now())
-  user User? @relation(fields: [userId], references: [id])
+  user      User @relation(fields: [userId], references: [id])
   @@index([userId, createdAt])
 }
