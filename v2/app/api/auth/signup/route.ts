@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '@/lib/auth';
+import { appConfig } from '@/lib/config';
 
-const SOCIETY_ID = 'demo-society-v2';
 const schema = z.object({ name: z.string().trim().min(2).max(100), email: z.string().trim().email(), mobile: z.string().trim().min(10).max(15), flatNumber: z.string().trim().min(1).max(30), password: z.string().min(8).max(128) });
 const normalizeMobile = (value: string) => value.replace(/[^0-9+]/g, '');
 
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     try { body = schema.parse(await req.json()); } catch { return NextResponse.json({ error: 'Please enter valid signup details. Password must be at least 8 characters.' }, { status: 400 }); }
     const email = body.email.toLowerCase();
     const mobile = normalizeMobile(body.mobile);
-    const society = await prisma.society.findUnique({ where: { id: SOCIETY_ID } });
+    const society = await prisma.society.findUnique({ where: { id: appConfig.societyId } });
     if (!society) return NextResponse.json({ error: 'Society registration is not ready yet. Please ask the society administrator.' }, { status: 503 });
     const flat = await prisma.flat.findFirst({ where: { societyId: society.id, flatNumber: body.flatNumber, status: 'ACTIVE' } });
     if (!flat) return NextResponse.json({ error: 'This flat is not registered or is inactive. Please contact the society administrator.' }, { status: 404 });
