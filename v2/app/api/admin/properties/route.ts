@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
-import { requireOrganizer } from "@/lib/auth";
+import { prisma, requireOrganizer } from "@/lib/auth";
 
 const createSchema = z.object({
   type: z.enum(["APARTMENT", "TENAMENT"]),
@@ -16,7 +15,7 @@ export async function GET() {
     const properties = await prisma.property.findMany({
       where: { societyId: session.societyId },
       include: { units: { orderBy: [{ floorNumber: "asc" }, { label: "asc" }] } },
-      orderBy: [{ type: "asc" }, { propertyNumber: "asc" }],
+      orderBy: [{ type: "asc" }, { block: "asc" }, { propertyNumber: "asc" }],
     });
     return NextResponse.json({ properties });
   } catch (error: any) {
@@ -33,15 +32,8 @@ export async function POST(request: NextRequest) {
       where: { societyId_type_propertyNumber: { societyId: session.societyId, type: body.type, propertyNumber } },
     });
     if (existing) return NextResponse.json({ error: "Property already exists" }, { status: 409 });
-
     const property = await prisma.property.create({
-      data: {
-        societyId: session.societyId,
-        type: body.type,
-        name: body.name.trim(),
-        propertyNumber,
-        block: body.block?.trim() || null,
-      },
+      data: { societyId: session.societyId, type: body.type, name: body.name.trim(), propertyNumber, block: body.block?.trim() || null },
     });
     return NextResponse.json({ property }, { status: 201 });
   } catch (error: any) {
