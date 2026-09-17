@@ -10,6 +10,16 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  try { const s = await requireOrganizer(); const d = schema.parse(await req.json()); const row = await prisma.expense.create({ data: { ...d, societyId: s.societyId, createdById: s.id } }); return NextResponse.json({ ...row, amountPaise: row.amountPaise.toString() }, { status: 201 }); }
+  try {
+    const s = await requireOrganizer();
+    const d = schema.parse(await req.json());
+    const eventId = d.eventId?.trim() || null;
+    if (eventId) {
+      const event = await prisma.event.findFirst({ where: { id: eventId, societyId: s.societyId }, select: { id: true } });
+      if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    }
+    const row = await prisma.expense.create({ data: { ...d, eventId, societyId: s.societyId, createdById: s.id } });
+    return NextResponse.json({ ...row, amountPaise: row.amountPaise.toString() }, { status: 201 });
+  }
   catch (e) { return NextResponse.json({ error: e instanceof Error && e.message === 'FORBIDDEN' ? 'Forbidden' : 'Invalid request' }, { status: 403 }); }
 }
