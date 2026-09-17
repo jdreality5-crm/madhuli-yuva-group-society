@@ -23,13 +23,22 @@ export async function POST(req: Request) {
       where: { email: body.email.toLowerCase() },
     });
 
-    if (
-      !user ||
-      user.status !== 'ACTIVE' ||
-      (body.role && user.role !== body.role) ||
-      !(await bcrypt.compare(body.password, user.passwordHash))
-    ) {
+    if (!user || !(await bcrypt.compare(body.password, user.passwordHash)) || user.status !== 'ACTIVE' || (body.role && user.role !== body.role)) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    }
+
+    // Residents are admitted only after both email verification and Master Admin approval.
+    // Admin/organizer accounts keep their existing status-based login behavior.
+    if (user.role === 'OWNER') {
+      if (!user.emailVerified) {
+        return NextResponse.json({ error: 'Please verify your email before signing in.' }, { status: 403 });
+      }
+      if (user.approvalStatus !== 'APPROVED') {
+        if (user.approvalStatus === 'PENDING') {
+          return NextResponse.json({ error: 'Your resident account is awaiting Master Admin approval.' }, { status: 403 });
+        }
+        return NextResponse.json({ error: 'Your resident registration was not approved.' }, { status: 403 });
+      }
     }
 
     await createSession({
