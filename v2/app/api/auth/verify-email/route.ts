@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createSession, prisma } from '@/lib/auth';
 
-const schema = (await import('zod')).z.object({ email: (await import('zod')).z.string().trim().email().max(254), otp: (await import('zod')).z.string().regex(/^\d{6}$/) });
+const schema = z.object({ email: z.string().trim().email().max(254), otp: z.string().regex(/^\d{6}$/) });
 const MAX_ATTEMPTS = 5;
 const hashOtp = async (otp: string) => { const bytes = new TextEncoder().encode(otp); const digest = await crypto.subtle.digest('SHA-256', bytes); return Array.from(new Uint8Array(digest)).map(value => value.toString(16).padStart(2, '0')).join(''); };
 
 export async function POST(req: Request) {
   try {
-    let body;
+    let body: z.infer<typeof schema>;
     try { body = schema.parse(await req.json()); } catch { return NextResponse.json({ error: 'Enter the 6-digit verification code.' }, { status: 400 }); }
     const email = body.email.toLowerCase();
     const user = await prisma.user.findUnique({ where: { email } });
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
       const claimed = await tx.verificationToken.updateMany({ where: { id: token.id, userId: user.id, consumedAt: null, expiresAt: { gt: now }, attempts: { lt: MAX_ATTEMPTS }, tokenHash: token.tokenHash }, data: { consumedAt: now } });
       if (claimed.count !== 1) return null;
       const updated = await tx.user.update({ where: { id: user.id }, data: { emailVerified: true, status: user.approvalStatus === 'APPROVED' ? 'ACTIVE' : 'INACTIVE' } });
-      return { approved: updated.approvalStatus === 'APPROVED', user: updated };
+      return { approved: updated.approvalStatus === 'APPROVED' };
     });
     if (!result) return NextResponse.json({ error: 'This verification code is no longer valid. Please request a new code.' }, { status: 409 });
     if (!result.approved) return NextResponse.json({ verified: true, approvalPending: true, message: 'Email verified. Your registration is awaiting Master Admin approval.' });
