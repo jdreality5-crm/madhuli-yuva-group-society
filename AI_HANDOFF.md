@@ -140,3 +140,15 @@ Payment transaction references are now protected by a partial unique index per s
 
 ## AUTHORIZATION AUDIT (2026-09-18)
 Reviewed the main protected admin/payment/dashboard routes: queries are scoped by `session.societyId`, owner payment reads/writes are scoped by `ownerUserId`, and role guards are present for organizer/master-admin operations. Hardened the six-Sub-Admin limit with a Serializable Prisma transaction so concurrent creation attempts cannot silently exceed the configured maximum; serialization conflicts return a retryable 409.
+
+
+## Firebase action-handler verification — 2026-09-18
+- Firebase's documented email-action flow uses an oobCode and custom action-handler URL; the current app handler is /verify-email and correctly processes verifyEmail / resetPassword modes.
+- Firebase Console must have the project's email templates configured to use the deployed /verify-email custom action handler. This is an external Firebase-console configuration and cannot be verified from repository source alone.
+- Firebase REST verification implementation is aligned with the documented accounts:update + oobCode flow.
+
+## CI/deployment verification — 2026-09-18
+- Current branch HEAD: 6ed47f14ae6bf2e4293c405737db02c3dae8fbfb.
+- GitHub reports no workflow runs attached to this commit, so this repo does not currently provide a GitHub Actions deployment result for the latest changes.
+- Cloudflare Workers remains the production deployment target. Cloudflare's current documentation confirms vinext + Wrangler as the supported Next.js Workers path.
+- Do not claim the latest Firebase/security changes are production-deployed until the Cloudflare Worker version/commit is independently verified.
