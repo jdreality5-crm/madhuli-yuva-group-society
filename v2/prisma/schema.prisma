@@ -51,6 +51,12 @@ enum PaymentStatus {
   EXPIRED
 }
 
+enum BillPaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+}
+
 enum PropertyType {
   APARTMENT
   TENAMENT
@@ -275,6 +281,7 @@ model Bill {
   category      String?
   date          DateTime
   paymentMethod PaymentMethod?
+  paymentStatus BillPaymentStatus @default(UNPAID)
   notes         String?
   society       Society @relation(fields: [societyId], references: [id])
   event         Event? @relation(fields: [eventId], references: [id])
