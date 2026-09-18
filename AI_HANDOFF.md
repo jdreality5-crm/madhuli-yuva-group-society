@@ -194,3 +194,12 @@ Reviewed the main protected admin/payment/dashboard routes: queries are scoped b
 - Login sessions now carry the current permissions snapshot; `getSession()` remains DB-authoritative and reloads permissions from the User row.
 - Sub Admin profile edits use the fixed Manager/Accountant/Watcher permission presets instead of accepting arbitrary permission arrays.
 - Sensitive Sub Admin account management remains MASTER_ADMIN-only.
+
+
+## UI/UX DESIGN SYSTEM — 2026-09-18
+- Established a shared Creative Tim-inspired visual direction in UI_UX_DESIGN_SYSTEM.md using free/open-source Creative Tim references (Material Dashboard Shadcn, Soft UI Dashboard Tailwind, Material Tailwind Dashboard React).
+- Locked the existing maroon + antique gold + ivory identity; Creative Tim patterns are adapted rather than replacing the product brand.
+- Added a real Next.js root app layout at v2/app/layout.tsx so global CSS, metadata, theme color, manifest and the PWA install prompt are mounted across the application instead of only the home page.
+- Removed duplicate global CSS/PWA mounting from the home and login pages.
+- UI rollout should continue page-by-page: dashboard/auth, CRUD modules, finance/payment/reporting, then resident mobile/accessibility/performance.
+- Do not add a large UI framework merely to imitate a template; preserve Next.js/React/Vinext and prefer reusable primitives/CSS.
