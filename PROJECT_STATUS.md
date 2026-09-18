@@ -3,8 +3,9 @@
 ## Current
 - Branch: `fresh-society-v2`
 - Phase: Security hardening and production readiness
-- Current task: Full protected API/page authorization audit + E2E verification
+- Current task: Complete protected API/page authorization audit + E2E verification
 - Final stage: Not signed off
+- Current HEAD verified: `2335b0eed6e54c5f4a39b7cdf93912e6b18efb03`
 
 ## Status Matrix
 
@@ -15,20 +16,36 @@
 | Property model | Complete | Apartment + dynamic tenament floors |
 | Resident signup | Complete | Email OTP + Master Admin approval |
 | Login/session enforcement | Complete | DB revalidation implemented |
-| Profile | Complete | Mobile required, private profile image |
+| Profile | Implemented / audit | Review email/session consistency |
 | Financial isolation | Audited / continue | Continue endpoint-by-endpoint audit |
-| Payments | Implemented / audit pending | Check race/idempotency |
+| Payments | Hardened / audit | Evidence race fixed; final idempotency review pending |
+| Property unit linking | Hardened | Active/approved resident requirement + empty-unit clearing |
+| Legacy approval API | Hardened | Both approval paths now enforce verified email |
+| Storage upload | Hardened | Generic upload restricted to organizers |
 | Cloudflare Workers | Configured | vinext + Wrangler |
-| Documentation | In progress | This status system is now source of truth |
+| Documentation | Complete | Handoff/status docs are source of truth |
 | E2E testing | Pending | Required before sign-off |
-| Production sign-off | Pending | Must verify actual deployed commit |
+| Production build/typecheck | Pending | Local environment could not reach GitHub |
+| Production deployment verification | Pending | Must verify exact deployed commit |
+| Production sign-off | Pending | Final gate |
+
+## Confirmed Audit Fixes
+- Bill update now validates referenced events against the current society.
+- Resident payment evidence submission uses an atomic pending/expiry claim to prevent concurrent overwrites.
+- Losing payment screenshot uploads are cleaned up after a failed atomic claim.
+- Payment account QR images are returned through signed private-storage URLs.
+- Legacy Master Admin resident approval route now matches secure approval semantics.
+- Generic storage upload requires organizer authorization.
+- Property unit linking only accepts active, approved, email-verified resident accounts.
+- Property unit clearing safely removes resident linkage and allows empty unit fields.
+- Root README and deployment documentation now describe V2 + Cloudflare Workers rather than V1 Express/SQLite.
 
 ## Required Sequence
-1. Audit all protected APIs/pages.
+1. Audit all remaining protected APIs/pages.
 2. Fix confirmed security/authorization issues.
-3. Audit profile/session consistency.
-4. Audit property assignment edge cases.
-5. Audit payment concurrency/idempotency.
+3. Audit profile email/session consistency.
+4. Audit legacy flat/property compatibility.
+5. Complete payment idempotency/reference review.
 6. Execute E2E auth/approval/rejection scenarios.
 7. UI/UX/accessibility final pass.
 8. Production build/typecheck.
