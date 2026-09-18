@@ -59,9 +59,9 @@ const permissionLinks = [
           <div className="section-head"><div><p className="eyebrow">Overview</p><h2>Society performance</h2></div></div>
           <div className="grid stats">
             <div className="card stat-card"><div className="stat-icon" aria-hidden="true"><UiIcon name="payment" size={18}/></div><div className="stat-label">Total Income</div><div className="stat-value">{money(dashboard.stats.totalIncome)}</div><div className="stat-note">Recorded receipts</div></div>
-            <div className="card stat-card"><div className="stat-icon" aria-hidden="true><UiIcon name="report" size={18}/></div><div className="stat-label">Total Expense</div><div className="stat-value">{money(dashboard.stats.totalExpense)}</div><div className="stat-note">Recorded expenditure</div></div>
-            <div className="card stat-card"><div className="stat-icon" aria-hidden="true><UiIcon name="check" size={18}/></div><div className="stat-label">Current Balance</div><div className="stat-value">{money(dashboard.stats.balance)}</div><div className="stat-note">Income less expenses</div></div>
-            <div className="card stat-card"><div className="stat-icon" aria-hidden="true><UiIcon name="home" size={18}/></div><div className="stat-label">Active Flats</div><div className="stat-value">{dashboard.stats.flats}</div><div className="stat-note">Society records</div></div>
+            <div className="card stat-card"><div className="stat-icon" aria-hidden="true"><UiIcon name="report" size={18}/></div><div className="stat-label">Total Expense</div><div className="stat-value">{money(dashboard.stats.totalExpense)}</div><div className="stat-note">Recorded expenditure</div></div>
+            <div className="card stat-card"><div className="stat-icon" aria-hidden="true"><UiIcon name="check" size={18}/></div><div className="stat-label">Current Balance</div><div className="stat-value">{money(dashboard.stats.balance)}</div><div className="stat-note">Income less expenses</div></div>
+            <div className="card stat-card"><div className="stat-icon" aria-hidden="true"><UiIcon name="home" size={18}/></div><div className="stat-label">Active Flats</div><div className="stat-value">{dashboard.stats.flats}</div><div className="stat-note">Society records</div></div>
           </div>
         </section>}
 
