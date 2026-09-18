@@ -5,7 +5,7 @@
 - Phase: Security hardening and production readiness
 - Current task: Firebase resident-auth configuration + E2E verification, alongside remaining security audit
 - Final stage: Not signed off
-- Current implementation commit: `12b99f703c45cd15777e16ef4b693b8345ac52cb`
+- Current implementation commit: `cc68c418a17f6346fdeba23f31aff44716ca46be`
 
 ## Status Matrix
 
@@ -78,3 +78,11 @@
 - Latest branch HEAD is 6ed47f14ae6bf2e4293c405737db02c3dae8fbfb.
 - No GitHub Actions workflow run is attached to this commit; latest production deployment is therefore not claimed as verified.
 - Cloudflare Workers remains the production target.
+
+
+### Login abuse protection — 2026-09-18
+- Added database-backed failed-login tracking and a 15-minute lock after 5 failed password attempts.
+- Successful authentication clears the failure counter and lock.
+- Firebase resident invalid-password failures and legacy bcrypt failures both use the same lockout path.
+- Login abuse migration is present at v2/prisma/migrations/20260918170000_add_login_abuse_controls/migration.sql.
+- Direct production schema preparation was verified; Prisma migration deployment still needs to run through the normal Cloudflare build/deploy path.
