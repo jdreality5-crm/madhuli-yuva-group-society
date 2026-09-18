@@ -21,6 +21,18 @@ export async function PATCH(req: Request) {
     const session = await requireSession();
     const body = schema.parse(await req.json());
     if (body.email.toLowerCase() !== session.email.toLowerCase()) return NextResponse.json({error:'Email cannot be changed from Profile. Email changes require a separate verification flow.'},{status:400});
+    const current = await prisma.user.findFirst({ where: { id: session.id, societyId: session.societyId }, select: { id: true, email: true, mobile: true, emailLockedUntil: true, mobileLockedUntil: true } });
+    if (!current) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    const now = new Date();
+    const emailChanged = body.email.toLowerCase() !== current.email.toLowerCase();
+    const mobileChanged = body.mobile !== (current.mobile || '');
+    if (emailChanged) return NextResponse.json({ error:'Email cannot be changed from Profile. Email changes require a separate verification flow.' }, { status:400 });
+    if (current.emailLockedUntil && current.emailLockedUntil > now) return NextResponse.json({ error:'Email is locked until the current 15-day verification window expires.' }, { status:409 });
+    if (mobileChanged && current.mobileLockedUntil && current.mobileLockedUntil > now) return NextResponse.json({ error:'Mobile number is locked for 15 days after account activation.' }, { status:409 });
+    if (mobileChanged) {
+      const duplicate = await prisma.user.findFirst({ where: { societyId: session.societyId, mobile: body.mobile, id: { not: session.id } }, select: { id: true } });
+      if (duplicate) return NextResponse.json({ error:'This mobile number is already registered in the society.' }, { status:409 });
+    }
     const user = await prisma.user.update({ where:{id:session.id}, data:{name:body.name,mobile:body.mobile} , select:{id:true,name:true,email:true,mobile:true,role:true,profileImageUrl:true} });
     return NextResponse.json({profile:user});
   } catch(e:any) { return NextResponse.json({error:e?.name==='ZodError'?'Invalid profile details':e?.message||'Unable to update profile'},{status:e?.name==='ZodError'?400:500}); }
