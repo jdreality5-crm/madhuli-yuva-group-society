@@ -16,3 +16,13 @@
 14. Update handoff/status documentation after major work.
 15. Never claim a deployment is live until the actual deployed version has been verified.
 16. Avoid destructive schema/data changes unless explicitly required and safely migrated.
+
+
+## Professional Icon & Emoji Rule
+- Do NOT add AI-generated-looking decorative icons or emojis anywhere in the project UI.
+- Use a consistent professional icon library/style for interface actions and navigation (for example, a proper outline/edit icon for Edit, trash icon for Delete, document icon for Documents, etc.).
+- Never use text symbols or emoji as substitutes for UI icons (examples: ✓, ✕, →, 📌, 🔒).
+- Icons must be semantically appropriate, visually consistent in stroke/weight, accessible, and sized consistently.
+- Before adding a new icon, inspect the existing project icon system and reuse it when possible.
+- Decorative emoji are not part of the product visual language.
+- This rule applies across desktop, tablet, mobile, admin, resident, auth, empty states, alerts, buttons, cards, navigation, PWA UI, and future modules.
