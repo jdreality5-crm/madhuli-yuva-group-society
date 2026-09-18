@@ -84,7 +84,8 @@ export async function PATCH(req: Request) {
   } catch (e) {
     await removeStoredFile(uploadedScreenshot);
     const message = e instanceof Error ? e.message : '';
-    const status = e instanceof z.ZodError ? 400 : message === 'UNAUTHORIZED' ? 401 : message === 'SCREENSHOT_TOO_LARGE' || message === 'INVALID_SCREENSHOT' ? 400 : 500;
-    return NextResponse.json({ error: status === 400 ? 'Invalid payment screenshot/details.' : status === 401 ? 'Unauthorized' : 'Server error' }, { status });
+    const code = typeof e === 'object' && e && 'code' in e ? String((e as { code?: unknown }).code) : '';
+    const status = e instanceof z.ZodError ? 400 : message === 'UNAUTHORIZED' ? 401 : message === 'SCREENSHOT_TOO_LARGE' || message === 'INVALID_SCREENSHOT' ? 400 : code === 'P2002' ? 409 : 500;
+    return NextResponse.json({ error: status === 400 ? 'Invalid payment screenshot/details.' : status === 401 ? 'Unauthorized' : status === 409 ? 'This transaction reference has already been submitted.' : 'Server error' }, { status });
   }
 }
