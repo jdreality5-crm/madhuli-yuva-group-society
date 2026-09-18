@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma, requireSubAdminPermission } from '@/lib/auth';
 
-const schema = z.object({eventId:z.string().optional(),propertyUnitId:z.string().optional().or(z.literal('')),type:z.enum(['INVOICE','RECEIPT','OTHER']),amountPaise:z.string().regex(/^\d+$/),vendor:z.string().max(160).optional(),category:z.string().max(100).optional(),date:z.string(),paymentMethod:z.enum(['CASH','BANK_TRANSFER','UPI','CHEQUE','OTHER']).optional(),notes:z.string().max(1000).optional(),fileUrl:z.string().url().optional()});
+const schema = z.object({eventId:z.string().optional(),propertyUnitId:z.string().optional().or(z.literal('')),type:z.enum(['INVOICE','RECEIPT','OTHER']),amountPaise:z.string().regex(/^\d+$/),vendor:z.string().max(160).optional(),category:z.string().max(100).optional(),date:z.string(),paymentMethod:z.enum(['CASH','BANK_TRANSFER','UPI','CHEQUE','OTHER']).optional(),notes:z.string().max(1000).optional(),
+  paymentStatus:z.enum(['UNPAID','PENDING','PAID']).optional(),fileUrl:z.string().url().optional()});
 
 export async function GET(){try{const s=await requireSubAdminPermission('BILLS');const rows=await prisma.bill.findMany({where:{societyId:s.societyId},orderBy:{date:'desc'},include:{event:{select:{title:true}},propertyUnit:{select:{id:true,label:true,property:{select:{name:true,propertyNumber:true,block:true}}}}}});return NextResponse.json(rows.map(x=>({...x,amountPaise:x.amountPaise.toString()})));}catch(e){return NextResponse.json({error:'Forbidden'},{status:403});}}
 
