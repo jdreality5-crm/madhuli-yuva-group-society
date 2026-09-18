@@ -5,13 +5,13 @@ import { prisma, requireSubAdminPermission } from '@/lib/auth';
 const schema = z.object({ date: z.coerce.date(), eventId: z.string().optional(), category: z.string().max(100).optional(), description: z.string().max(500).optional(), paidTo: z.string().max(160).optional(), amountPaise: z.coerce.bigint().positive(), paymentMethod: z.enum(['CASH','BANK_TRANSFER','UPI','CHEQUE','OTHER']), billNumber: z.string().max(120).optional(), notes: z.string().max(1000).optional() });
 
 export async function GET(req: Request) {
-  try { const s = await requireSubAdminPermission(); const url = new URL(req.url); const rows = await prisma.expense.findMany({ where: { societyId: s.societyId, category: url.searchParams.get('category') || undefined }, orderBy: { date: 'desc' }, include: { event: { select: { id: true, title: true } } } }); return NextResponse.json(rows.map(x => ({ ...x, amountPaise: x.amountPaise.toString() }))); }
+  try { const s = await requireSubAdminPermission('EXPENSES'); const url = new URL(req.url); const rows = await prisma.expense.findMany({ where: { societyId: s.societyId, category: url.searchParams.get('category') || undefined }, orderBy: { date: 'desc' }, include: { event: { select: { id: true, title: true } } } }); return NextResponse.json(rows.map(x => ({ ...x, amountPaise: x.amountPaise.toString() }))); }
   catch (e) { return NextResponse.json({ error: e instanceof Error && e.message === 'FORBIDDEN' ? 'Forbidden' : 'Server error' }, { status: 403 }); }
 }
 
 export async function POST(req: Request) {
   try {
-    const s = await requireSubAdminPermission();
+    const s = await requireSubAdminPermission('EXPENSES');
     const d = schema.parse(await req.json());
     const eventId = d.eventId?.trim() || null;
     if (eventId) {
