@@ -18,10 +18,23 @@ const permissionLinks = [
   ['Notices', 'NOTICES', '/admin/notices'],
   ['Gallery', 'GALLERY', '/admin/gallery'],
 ] as const;
+const links = [['Owner Approvals', '/admin/owner-approvals'], ['Payment Accounts', '/admin/payment-accounts'], ['Payments', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Reports', '/reports']] as const;
+
+function roleLabel(role: Role) { return role === 'MASTER_ADMIN' ? 'Master Admin' : role === 'ORGANIZER' ? 'Sub Admin / Organizer' : 'Resident'; }
+export default function DashboardPage() {
+  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [upcoming, setUpcoming] = useState<any[]>([]);
+  const [error, setError] = useState('');
+  useEffect(() => { fetch('/api/dashboard').then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.error || 'Unable to load dashboard'); setDashboard(data); setUpcoming(data.upcomingEvents ?? []); }).catch(e => setError(e instanceof Error ? e.message : 'Unable to load dashboard')); }, []);
+  async function logout() { setLoggingOut(true); await fetch('/api/auth/logout', { method: 'POST' }); window.location.href = '/login'; }
   const notices = dashboard?.notices ?? [];
   const photos = dashboard?.photos ?? [];
   const location = [dashboard?.society?.city, dashboard?.society?.state].filter(Boolean).join(', ');
   const mobileLinks = useMemo(() => dashboard?.role === 'OWNER' ? [['Home', '/'], ['Payment', '/payments'], ['Profile', '/profile']] : [['Home', '/'], ['Programs', '/programs'], ['Notices', '/notices'], ['Bills', '/bills'], ['Gallery', '/gallery'], ['Profile', '/profile']], [dashboard?.role]);
+
+  if (error) return <main className="main"><div className="card"><h1>Dashboard</h1><p>{error}</p><a className="btn btn-primary" href="/login">Sign in</a></div></main>;
+  if (!dashboard) return <main className="main"><div className="card"><p>Loading dashboard…</p></div></main>;
 
   return <div className="app-shell">
     <header className="topbar">
@@ -29,7 +42,7 @@ const permissionLinks = [
         <div className="brand-mark">S</div>
         <div className="brand-copy">{dashboard?.society?.name || 'Society Administration'}<small>સોસાયટી ફંક્શન મેનેજમેન્ટ</small></div>
       </div>
-      <span className="role-badge"><span className="role-dot" />{roleLabel(dashboard!.role)}</span>
+      <span className="role-badge"><span className="role-dot" />{roleLabel(dashboard.role)}</span>
     </header>
 
     <div className="layout">
@@ -46,7 +59,7 @@ const permissionLinks = [
       <main className="main">
         <div className="page-title">
           <div><p className="eyebrow">Society Administration</p><h1>{dashboard?.role === 'MASTER_ADMIN' ? 'Master Admin Dashboard' : dashboard?.role === 'ORGANIZER' ? 'Organizer Dashboard' : 'મારું સોસાયટી ડેશબોર્ડ'}</h1><p>{location || 'Society overview and daily operations'}</p></div>
-          <div className="page-meta">{roleLabel(dashboard!.role)}</div>
+          <div className="page-meta">{roleLabel(dashboard.role)}</div>
         </div>
 
         {dashboard?.role === 'MASTER_ADMIN' && <section className="card control-card">
@@ -93,4 +106,5 @@ const permissionLinks = [
       {mobileLinks.map(([label, url], index) => <a className={index === 0 ? 'active' : ''} href={url} key={label}>{label}</a>)}
     </nav>
   </div>;
-}\n<style>{`.gallery-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.gallery-card{overflow:hidden;padding:0}.gallery-thumb{aspect-ratio:4/3;background:var(--soft-surface);overflow:hidden}.gallery-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}.gallery-card:hover .gallery-thumb img{transform:scale(1.03)}.gallery-copy{padding:10px 12px 12px;display:flex;flex-direction:column;gap:3px}.gallery-copy strong{color:var(--maroon);font-size:13px}.gallery-copy small{color:var(--muted);font-size:11px}@media(max-width:1000px){.gallery-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:700px){.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.gallery-grid{grid-template-columns:1fr 1fr}}`}</style>
+}
+<style>{`.gallery-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.gallery-card{overflow:hidden;padding:0}.gallery-thumb{aspect-ratio:4/3;background:var(--soft-surface);overflow:hidden}.gallery-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}.gallery-card:hover .gallery-thumb img{transform:scale(1.03)}.gallery-copy{padding:10px 12px 12px;display:flex;flex-direction:column;gap:3px}.gallery-copy strong{color:var(--maroon);font-size:13px}.gallery-copy small{color:var(--muted);font-size:11px}@media(max-width:1000px){.gallery-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:700px){.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.gallery-grid{grid-template-columns:1fr 1fr}}`}</style>
