@@ -14,7 +14,7 @@ const primaryLinks = [
 ] as const;
 
 const permissionLinks = [
-  ['Notices', 'NOTICES', '#'],
+  ['Notices', 'NOTICES', '/admin/notices'],
   ['Gallery', 'GALLERY', '#'],
 ] as const;
   const notices = dashboard?.notices ?? [];
