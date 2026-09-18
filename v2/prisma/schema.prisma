@@ -196,7 +196,8 @@ model PropertyUnit {
   updatedAt      DateTime      @updatedAt
   property       Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   residentUser   User?         @relation("UnitResident", fields: [residentUserId], references: [id], onDelete: SetNull)
-  users          User[]        @relation("UserUnit")\n  bills          Bill[]
+  users          User[]        @relation("UserUnit")
+  bills          Bill[]
   @@unique([propertyId, label])
   @@index([propertyId, floorNumber])
   @@index([residentUserId])
@@ -286,9 +287,12 @@ model Bill {
   society       Society @relation(fields: [societyId], references: [id])
   event         Event? @relation(fields: [eventId], references: [id])
   payments      Payment[]
+  propertyUnitId String?
+  propertyUnit  PropertyUnit? @relation(fields: [propertyUnitId], references: [id], onDelete: SetNull)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  @@index([societyId, date])\n  @@index([propertyUnitId, date])
+  @@index([societyId, date])
+  @@index([propertyUnitId, date])
 }
 
 model Notice {
