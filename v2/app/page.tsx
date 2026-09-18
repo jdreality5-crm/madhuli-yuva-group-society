@@ -83,7 +83,7 @@ const permissionLinks = [
 
         <section className="section">
           <div className="section-head"><div><p className="eyebrow">Community</p><h2>Gallery / ફોટો</h2></div><span className="section-subtitle">{photos.length} photos</span></div>
-          {photos.length ? <div className="grid gallery-grid">{photos.map(photo => <div className="card gallery-card" key={photo.id}><img src={photo.fileUrl} alt={photo.altText || photo.title || 'Society photo'} /></div>)}</div> : <div className="empty-state">No gallery photos available.</div>}
+          {photos.length ? <div className="grid gallery-grid">{photos.map(photo => <article className="card gallery-card" key={photo.id}><div className="gallery-thumb"><img src={photo.fileUrl} alt={photo.altText || photo.title || 'Society photo'} /></div><div className="gallery-copy"><strong>{photo.title || photo.albumName || 'Society memory'}</strong>{photo.albumName && <small>{photo.albumName}</small>}</div></article>)}</div> : <div className="empty-state">No gallery photos available.</div>}
         </section>
       </main>
     </div>
@@ -92,4 +92,4 @@ const permissionLinks = [
       {mobileLinks.map(([label, url], index) => <a className={index === 0 ? 'active' : ''} href={url} key={label}>{label}</a>)}
     </nav>
   </div>;
-}
+}\n<style>{`.gallery-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.gallery-card{overflow:hidden;padding:0}.gallery-thumb{aspect-ratio:4/3;background:var(--soft-surface);overflow:hidden}.gallery-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}.gallery-card:hover .gallery-thumb img{transform:scale(1.03)}.gallery-copy{padding:10px 12px 12px;display:flex;flex-direction:column;gap:3px}.gallery-copy strong{color:var(--maroon);font-size:13px}.gallery-copy small{color:var(--muted);font-size:11px}@media(max-width:1000px){.gallery-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:700px){.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.gallery-grid{grid-template-columns:1fr 1fr}}`}</style>
