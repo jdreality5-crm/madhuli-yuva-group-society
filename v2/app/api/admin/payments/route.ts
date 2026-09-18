@@ -16,12 +16,13 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
       include: {
         paymentAccount: { select: { displayName: true, upiId: true, purpose: true } },
+        bill: { select: { id: true, type: true, amountPaise: true, paymentStatus: true, category: true, vendor: true, date: true } },
         event: { select: { title: true, gujaratiTitle: true } },
-        ownerUser: { select: { name: true, email: true, mobile: true, flatId: true } },
+        ownerUser: { select: { name: true, email: true, mobile: true, flatId: true, unit: { select: { label: true, property: { select: { name: true, propertyNumber: true, block: true } } } } } },
         verifiedBy: { select: { name: true, role: true } },
       },
     });
-    return NextResponse.json({ payments: payments.map(p => ({ ...p, amountPaise: p.amountPaise.toString() })) });
+    return NextResponse.json({ payments: payments.map(p => ({ ...p, amountPaise: p.amountPaise.toString(), bill: p.bill ? { ...p.bill, amountPaise: p.bill.amountPaise.toString() } : null })) });
   } catch (e) {
     const status = e instanceof Error && e.message === 'FORBIDDEN' ? 403 : 500;
     return NextResponse.json({ error: status === 403 ? 'Organizer access required' : 'Server error' }, { status });
