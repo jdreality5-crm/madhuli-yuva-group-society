@@ -26,7 +26,7 @@ export default function Login() {
     <div className="login-shell auth-animate">
       <section className="login-copy auth-copy">
         <div className="login-brand"><div className="brand-mark">S</div><span>Society Administration</span></div>
-        <p className="eyebrow" style={{ marginTop: 70 }}>Saranga Flat &amp; Pramukhpark Society</p>
+        <p className="eyebrow" style={{ marginTop: 70 }}>Madhuli Yuva Group • Resident &amp; Admin Access</p>
         <h1>One secure workspace for <em>society operations.</em></h1>
         <p>Manage programs, members, notices and authorized financial operations with a clean, responsive administration experience.</p>
         <div className="auth-points"><span>Secure role-based access</span><span>Resident-friendly workspace</span></div>
@@ -47,7 +47,7 @@ export default function Login() {
           <button className="premium-btn" disabled={busy}>{busy ? 'Signing in…' : 'Sign in securely'}</button>
         </form><a href="/forgot-password" className="text-btn" style={{display:'inline-block',marginTop:14}}>Forgot password?</a>
         {role === 'OWNER' && <div className="auth-link-row"><span>New Resident?</span> <a href="/signup">Create an account</a></div>}
-        <small>Access is protected by secure session authentication. Never share your password or secret keys.</small>
+        <small>Protected sign-in with role-based access. Never share your password or secret keys.</small>
       </section>
     </div>
   </main>;
