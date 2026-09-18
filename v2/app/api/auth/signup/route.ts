@@ -77,6 +77,8 @@ export async function POST(req: Request) {
     }
 
     const existingEmail = await prisma.user.findUnique({ where: { email } });
+    const existingMobile = await prisma.user.findFirst({ where: { societyId: society.id, mobile } });
+    if (existingMobile) return NextResponse.json({ error: 'This mobile number is already registered in the society portal.' }, { status: 409 });
     if (existingEmail) return NextResponse.json({ error: 'An account with this Gmail address already exists. Please login or use password recovery.' }, { status: 409 });
 
     const firebaseUser = await firebaseSignUp(email, body.password);
