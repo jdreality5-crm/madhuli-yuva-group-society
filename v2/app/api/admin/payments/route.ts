@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { prisma, requireOrganizer } from '@/lib/auth';
+import { prisma, requireSubAdminPermission } from '@/lib/auth';
 
 const schema = z.object({
   paymentId: z.string().min(1),
@@ -10,7 +10,7 @@ const schema = z.object({
 
 export async function GET() {
   try {
-    const session = await requireOrganizer();
+    const session = await requireSubAdminPermission();
     const payments = await prisma.payment.findMany({
       where: { societyId: session.societyId },
       orderBy: { createdAt: 'desc' },
@@ -30,7 +30,7 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
-    const session = await requireOrganizer();
+    const session = await requireSubAdminPermission();
     const body = schema.parse(await req.json());
 
     const result = await prisma.$transaction(async tx => {
