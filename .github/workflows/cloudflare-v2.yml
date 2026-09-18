@@ -34,6 +34,12 @@ jobs:
         run: npm run db:generate:edge
       - name: Build Cloudflare Worker
         run: npm run build:vinext
+      - name: Sync Firebase runtime secret
+        env:
+          FIREBASE_WEB_API_KEY: ${{ secrets.FIREBASE_WEB_API_KEY }}
+        run: |
+          test -n "$FIREBASE_WEB_API_KEY"
+          printf '%s' "$FIREBASE_WEB_API_KEY" | npx wrangler secret put FIREBASE_WEB_API_KEY --name society-function-management-v2
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v4
         with:
