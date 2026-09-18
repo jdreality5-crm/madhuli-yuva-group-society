@@ -196,7 +196,7 @@ model PropertyUnit {
   updatedAt      DateTime      @updatedAt
   property       Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   residentUser   User?         @relation("UnitResident", fields: [residentUserId], references: [id], onDelete: SetNull)
-  users          User[]        @relation("UserUnit")
+  users          User[]        @relation("UserUnit")\n  bills          Bill[]
   @@unique([propertyId, label])
   @@index([propertyId, floorNumber])
   @@index([residentUserId])
