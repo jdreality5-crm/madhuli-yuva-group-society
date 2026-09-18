@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 type Role = 'MASTER_ADMIN' | 'ORGANIZER' | 'OWNER';
-type Dashboard = { role: Role; society?: { name: string; city?: string | null; state?: string | null }; stats?: { totalIncome: string; totalExpense: string; balance: string; flats: number; events: number }; upcomingEvents: any[]; notices: any[]; photos: any[] };
+type Dashboard = { role: Role; permissions?: string[]; society?: { name: string; city?: string | null; state?: string | null }; stats?: { totalIncome: string; totalExpense: string; balance: string; flats: number; events: number }; upcomingEvents: any[]; notices: any[]; photos: any[] };
 
 const money = (p?: string) => p ? `₹ ${(Number(p) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '₹ 0.00';
 
@@ -15,10 +15,19 @@ const primaryLinks = [
   ['Gallery', '#'],
 ] as const;
 
-const roleLinks = (role: Role) => role === 'MASTER_ADMIN'
+const roleLinks = (role: Role, permissions: string[] = []) => role === 'MASTER_ADMIN'
   ? [['Resident Approvals', '/admin/owner-approvals'], ['Sub Admins', '/admin/subadmins'], ['UPI Accounts', '/admin/payment-accounts'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Profile', '/profile'], ['Settings', '#']] as const
   : role === 'ORGANIZER'
-    ? [['Resident Approvals', '/admin/owner-approvals'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Profile', '/profile'], ['Settings', '#']] as const
+    ? [['Resident Approvals', '/admin/owner-approvals'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Profile', '/profile'], ['Settings', '#']].filter(([label]) => {
+        if (label === 'Payment Verification') return permissions.includes('PAYMENTS');
+        if (label === 'Income') return permissions.includes('INCOME');
+        if (label === 'Expenses') return permissions.includes('EXPENSES');
+        if (label === 'Bills') return permissions.includes('BILLS');
+        if (label === 'Reports' || label === 'Annual Reports') return permissions.includes('REPORTS');
+        if (label === 'Resident Approvals') return true;
+        return true;
+      })
+    :, '/admin/owner-approvals'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Profile', '/profile'], ['Settings', '#']] as const
     : [['Make Payment', '/payments'], ['Profile', '/profile']] as const;
 
 const roleLabel = (role: Role) => role === 'MASTER_ADMIN' ? 'Master Admin' : role === 'ORGANIZER' ? 'Sub Admin / Organizer' : 'Resident';
@@ -46,7 +55,7 @@ export default function Home() {
   if (loading) return <main className="main"><div className="card empty-state">Loading your society dashboard…</div></main>;
   if (error) return <main className="main"><div className="card" style={{ maxWidth: 560, margin: '10vh auto', textAlign: 'center' }}><div className="brand-mark" style={{ margin: '0 auto 14px' }}>S</div><h1 style={{ color: 'var(--maroon)' }}>Society Administration</h1><p style={{ color: 'var(--muted)', lineHeight: 1.7 }}>{error}</p><a className="btn btn-primary" href="/login">Continue to Login</a></div></main>;
 
-  const links = roleLinks(dashboard!.role);
+  const links = roleLinks(dashboard!.role, dashboard?.permissions);
   const upcoming = dashboard?.upcomingEvents ?? [];
   const notices = dashboard?.notices ?? [];
   const photos = dashboard?.photos ?? [];
