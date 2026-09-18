@@ -3,7 +3,7 @@
 ## Current
 - Branch: `fresh-society-v2`
 - Phase: Security hardening and production readiness
-- Current task: Continue protected API/page authorization audit + E2E verification after property-unit and profile-email hardening
+- Current task: Firebase resident-auth migration + configuration/E2E verification, alongside remaining security audit
 - Final stage: Not signed off
 - Current verified audit-fix commit: `a74276aedeca921ef7a99e853b38f250fcdb870f`
 
@@ -14,8 +14,8 @@
 | Next.js V2 app | Complete | Active app under `v2/` |
 | Prisma/PostgreSQL | Complete | Supabase PostgreSQL |
 | Property model | Complete | Apartment + dynamic tenament floors |
-| Resident signup | Complete | Email OTP + Master Admin approval |
-| Login/session enforcement | Complete | DB revalidation implemented |
+| Resident signup | Migrated | Firebase Gmail-only signup + email verification link + automatic activation; 15-day contact locks added |
+| Login/session enforcement | Migrated / audit | Residents authenticate with Firebase; app session remains DB-revalidated |
 | Profile | Implemented / audit | Review email/session consistency |
 | Financial isolation | Audited / continue | Continue endpoint-by-endpoint audit |
 | Payments | Hardened / audit | Evidence race fixed; final idempotency review pending |
@@ -43,12 +43,12 @@
 - Root README and deployment documentation now describe V2 + Cloudflare Workers rather than V1 Express/SQLite.
 
 ## Required Sequence
-1. Audit all remaining protected APIs/pages.
-2. Fix confirmed security/authorization issues.
-3. Audit profile email/session consistency.
-4. Audit legacy flat/property compatibility.
-5. Complete payment idempotency/reference review.
-6. Execute E2E auth/approval/rejection scenarios.
+1. Configure Firebase Authentication and custom email action handler.
+2. Configure Cloudflare Firebase environment secret(s).
+3. E2E-test Gmail signup → verification link → automatic activation → login.
+4. Add/verify Firebase password reset flow.
+5. Audit remaining protected APIs/pages and legacy flat compatibility.
+6. Complete payment idempotency/reference review.
 7. UI/UX/accessibility final pass.
 8. Production build/typecheck.
 9. Verify Cloudflare deployment/version.
