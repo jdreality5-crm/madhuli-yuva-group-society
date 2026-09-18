@@ -15,7 +15,7 @@ Society Management System for Pramukhpark Society + Sarang Apartment.
 Security hardening, authorization audit, E2E verification, then production readiness.
 
 ## CURRENT TASK
-Continue protected API/page authorization audit after fixing a Prisma AuditLog schema mismatch in property-unit updates, then continue E2E verification.
+Continue protected API/page authorization audit, then E2E verification. Profile login-email consistency is now protected by making the verified email read-only until a dedicated re-verification flow exists.
 
 ## NEXT TASK
 Finish remaining API/page audit, then run production typecheck/build, verify Cloudflare deployment, and complete final production sign-off.
@@ -45,6 +45,7 @@ Finish remaining API/page audit, then run production typecheck/build, verify Clo
 - Restricted generic storage upload to organizers.
 - Hardened property-unit resident linking to active/approved/email-verified residents and allowed safe empty-unit clearing.
 - Fixed property-unit audit logging to use the actual Prisma AuditLog fields (`userId`, `action`, `module`, `recordId`, `details`) so the route matches the schema.
+- Hardened profile email consistency by rejecting profile email changes and making the login email read-only in the UI.
 
 ## PENDING
 1. Complete protected API authorization/society-scope audit.
@@ -90,7 +91,7 @@ Cloudflare Workers deployment uses vinext and Wrangler. See `DEPLOYMENT.md`.
 ## KNOWN ISSUES / AUDIT TARGETS
 - Verify every protected route rather than assuming previously audited routes remain correct.
 - Property-unit PATCH had an AuditLog field mismatch; fixed in `a74276aedeca921ef7a99e853b38f250fcdb870f`.
-- Profile email changes need explicit verification of session behavior and email uniqueness semantics.
+- Profile email is now read-only and API-enforced; a separate verified email-change flow is intentionally deferred.
 - Legacy `Flat` model/routes coexist with the new `PropertyUnit` model and need compatibility review.
 - Payment transaction/reference uniqueness and repeated submission semantics need final review.
 - Production deployment corresponding to the latest commit has not yet been verified.
