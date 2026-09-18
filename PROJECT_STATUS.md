@@ -70,3 +70,11 @@
 ### Authorization audit — 2026-09-18
 - Reviewed protected admin, payment, dashboard, storage and master-admin routes for role/society scoping.
 - Hardened the maximum-6 Sub Admin creation path against concurrent requests using a Serializable transaction.
+
+
+### Firebase / deployment verification — 2026-09-18
+- Firebase custom email action handler is implemented in v2/app/verify-email/page.tsx; Firebase Console template configuration still needs explicit verification.
+- Firebase REST email verification uses the documented oobCode flow.
+- Latest branch HEAD is 6ed47f14ae6bf2e4293c405737db02c3dae8fbfb.
+- No GitHub Actions workflow run is attached to this commit; latest production deployment is therefore not claimed as verified.
+- Cloudflare Workers remains the production target.
