@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-09-18
+- Hardened file uploads with magic-byte validation for allowed image/PDF types, including payment QR images.
 - Added database-backed login abuse protection: 5 failed password attempts trigger a 15-minute lock; successful login clears the lock.
 - Added Prisma migration for login abuse tracking fields.
 - Added permanent AI continuation and project status documentation.
