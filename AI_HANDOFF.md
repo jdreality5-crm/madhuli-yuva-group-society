@@ -180,3 +180,9 @@ Reviewed the main protected admin/payment/dashboard routes: queries are scoped b
 - Legacy OTP resend endpoint was disabled with HTTP 410 because the new resident flow uses Firebase email-link verification; this removes an unauthenticated OTP-generation and account-enumeration surface.
 - Session cookie remains HttpOnly, Secure in production, SameSite=Lax, path=/, with 7-day expiry; every session request revalidates the DB user, role, society, active state, approval, and resident email verification.
 - No production sign-off yet: live E2E, build/typecheck, Firebase Console configuration, and Cloudflare deployment verification remain external verification items.
+
+
+## PROFILE CAMERA CAPTURE — 2026-09-18
+- Profile page now provides a direct `Take Photo` action using the browser camera capture hint (`capture="user"`) plus a separate gallery/file picker.
+- Existing private Supabase Storage upload, 3 MB limit, MIME checks, replacement and removal flow remains unchanged.
+- Camera behavior is platform/browser controlled; supported mobile browsers open the front-camera capture UI, while unsupported browsers fall back to normal file selection.
