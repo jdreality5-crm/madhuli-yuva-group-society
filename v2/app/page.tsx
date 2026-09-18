@@ -1,4 +1,5 @@
 'use client';
+import { UiIcon } from '@/components/UiIcon';
 import { useEffect, useMemo, useState } from 'react';
 
 type Role = 'MASTER_ADMIN' | 'ORGANIZER' | 'OWNER';
@@ -57,17 +58,17 @@ const permissionLinks = [
         {dashboard?.stats && <section className="section">
           <div className="section-head"><div><p className="eyebrow">Overview</p><h2>Society performance</h2></div></div>
           <div className="grid stats">
-            <div className="card stat-card"><div className="stat-icon" aria-hidden="true">₹</div><div className="stat-label">Total Income</div><div className="stat-value">{money(dashboard.stats.totalIncome)}</div><div className="stat-note">Recorded receipts</div></div>
-            <div className="card stat-card"><div className="stat-icon" aria-hidden="true">−</div><div className="stat-label">Total Expense</div><div className="stat-value">{money(dashboard.stats.totalExpense)}</div><div className="stat-note">Recorded expenditure</div></div>
-            <div className="card stat-card"><div className="stat-icon" aria-hidden="true">✓</div><div className="stat-label">Current Balance</div><div className="stat-value">{money(dashboard.stats.balance)}</div><div className="stat-note">Income less expenses</div></div>
-            <div className="card stat-card"><div className="stat-icon" aria-hidden="true">⌂</div><div className="stat-label">Active Flats</div><div className="stat-value">{dashboard.stats.flats}</div><div className="stat-note">Society records</div></div>
+            <div className="card stat-card"><div className="stat-icon" aria-hidden="true><UiIcon name="payment" size={18}/></div><div className="stat-label">Total Income</div><div className="stat-value">{money(dashboard.stats.totalIncome)}</div><div className="stat-note">Recorded receipts</div></div>
+            <div className="card stat-card"><div className="stat-icon" aria-hidden="true><UiIcon name="report" size={18}/></div><div className="stat-label">Total Expense</div><div className="stat-value">{money(dashboard.stats.totalExpense)}</div><div className="stat-note">Recorded expenditure</div></div>
+            <div className="card stat-card"><div className="stat-icon" aria-hidden="true><UiIcon name="check" size={18}/></div><div className="stat-label">Current Balance</div><div className="stat-value">{money(dashboard.stats.balance)}</div><div className="stat-note">Income less expenses</div></div>
+            <div className="card stat-card"><div className="stat-icon" aria-hidden="true><UiIcon name="home" size={18}/></div><div className="stat-label">Active Flats</div><div className="stat-value">{dashboard.stats.flats}</div><div className="stat-note">Society records</div></div>
           </div>
         </section>}
 
         <section className="section quick-actions">
           <div className="section-head"><div><p className="eyebrow">Quick access</p><h2>Common actions</h2></div><span className="section-subtitle">Secure workspace</span></div>
           <div className="quick-action-grid">
-            {(dashboard?.role === 'OWNER' ? [['Make a Payment','Pay society dues securely','/payments','₹'],['My Profile','Update your profile','/profile','◎']] : [['Add / Manage Residents','Manage flats and resident records','/admin/flats','⌂'],['Create Program','Plan an upcoming society program','/admin/programs','◆'],['Post Notice','Share an important society update','/admin/notices','!'],['View Reports','Review authorized financial reports','/reports','▤']]).map(([title,desc,url,icon]) => <a className="card quick-action" href={url} key={title}><span className="quick-icon">{icon}</span><span><strong>{title}</strong><small>{desc}</small></span><b aria-hidden="true">→</b></a>)}
+            {(dashboard?.role === 'OWNER' ? [['Make a Payment','Pay society dues securely','/payments','payment'],['My Profile','Update your profile','/profile','users']] : [['Add / Manage Residents','Manage flats and resident records','/admin/flats','users'],['Create Program','Plan an upcoming society program','/admin/programs','calendar'],['Post Notice','Share an important society update','/admin/notices','notice'],['View Reports','Review authorized financial reports','/reports','report']]).map(([title,desc,url,icon]) => <a className="card quick-action" href={url} key={title}><span className="quick-icon"><UiIcon name={icon as any} size={18}/></span><span><strong>{title}</strong><small>{desc}</small></span><span aria-hidden="true" className="quick-arrow"><UiIcon name="add" size={16}/></span></a>)}
           </div>
         </section>
 
