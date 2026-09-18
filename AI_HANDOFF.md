@@ -186,3 +186,11 @@ Reviewed the main protected admin/payment/dashboard routes: queries are scoped b
 - Profile page now provides a direct `Take Photo` action using the browser camera capture hint (`capture="user"`) plus a separate gallery/file picker.
 - Existing private Supabase Storage upload, 3 MB limit, MIME checks, replacement and removal flow remains unchanged.
 - Camera behavior is platform/browser controlled; supported mobile browsers open the front-camera capture UI, while unsupported browsers fall back to normal file selection.
+
+
+## Latest security hardening — Sub Admin permissions
+- Backend module APIs now enforce DB-backed Sub Admin permissions for EVENTS, NOTICES, GALLERY (where applicable), BILLS, EXPENSES, INCOME, PAYMENTS, and REPORTS.
+- MASTER_ADMIN bypasses module permission checks; ORGANIZER/Sub Admin access is limited by its stored permissions array.
+- Login sessions now carry the current permissions snapshot; `getSession()` remains DB-authoritative and reloads permissions from the User row.
+- Sub Admin profile edits use the fixed Manager/Accountant/Watcher permission presets instead of accepting arbitrary permission arrays.
+- Sensitive Sub Admin account management remains MASTER_ADMIN-only.
