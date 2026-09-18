@@ -4,7 +4,7 @@ import { prisma, requireSession } from '@/lib/auth';
 import { createSignedFileUrl, getSupabaseAdmin, STORAGE_BUCKET } from '@/lib/supabase-admin';
 
 const screenshot = z.string().trim().max(4000000).refine(v => v === '' || v.startsWith('data:image/'), 'Invalid screenshot reference');
-const createSchema = z.object({ paymentAccountId: z.string().min(1), eventId: z.string().optional().or(z.literal('')), amountPaise: z.string().regex(/^\d+$/) });
+const createSchema = z.object({ paymentAccountId: z.string().min(1), eventId: z.string().optional().or(z.literal('')), billId: z.string().optional().or(z.literal('')), amountPaise: z.string().regex(/^\d+$/) });
 const updateSchema = z.object({ transactionId: z.string().trim().min(4).max(120), screenshotUrl: screenshot.optional(), notes: z.string().trim().max(500).optional().or(z.literal('')) });
 
 async function storeScreenshot(value: string, societyId: string) {
@@ -43,12 +43,18 @@ export async function POST(req: Request) {
     const body = createSchema.parse(await req.json());
     const amountPaise = BigInt(body.amountPaise);
     if (amountPaise <= 0n) return NextResponse.json({ error: 'Amount must be greater than zero.' }, { status: 400 });
+    let billId = body.billId || null;
+    if (billId) {
+      const bill = await prisma.bill.findFirst({ where: { id: billId, societyId: session.societyId, propertyUnit: { residentUserId: session.id, property: { societyId: session.societyId } } }, select: { id: true, amountPaise: true } });
+      if (!bill) return NextResponse.json({ error: 'Bill not found.' }, { status: 404 });
+      if (bill.amountPaise !== amountPaise) return NextResponse.json({ error: 'Payment amount must match the bill amount.' }, { status: 400 });
+    }
     const account = await prisma.paymentAccount.findFirst({ where: { id: body.paymentAccountId, societyId: session.societyId, status: 'ACTIVE' } });
     if (!account) return NextResponse.json({ error: 'Payment account not found.' }, { status: 404 });
     let eventId = body.eventId || null;
     if (eventId && !(await prisma.event.findFirst({ where: { id: eventId, societyId: session.societyId } }))) eventId = null;
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    const payment = await prisma.payment.create({ data: { societyId: session.societyId, ownerUserId: session.id, paymentAccountId: account.id, eventId, amountPaise, expiresAt } });
+    const payment = await prisma.payment.create({ data: { societyId: session.societyId, ownerUserId: session.id, paymentAccountId: account.id, eventId, billId, amountPaise, expiresAt } });
     return NextResponse.json({ payment: { ...payment, amountPaise: payment.amountPaise.toString() } }, { status: 201 });
   } catch (e) { const status = e instanceof z.ZodError ? 400 : e instanceof Error && e.message === 'UNAUTHORIZED' ? 401 : 500; return NextResponse.json({ error: status === 400 ? 'Invalid payment details.' : status === 401 ? 'Unauthorized' : 'Server error' }, { status }); }
 }
