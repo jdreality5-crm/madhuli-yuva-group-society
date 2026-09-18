@@ -1,6 +1,8 @@
 # Changelog
 
 ## 2026-09-18
+- Added database-backed login abuse protection: 5 failed password attempts trigger a 15-minute lock; successful login clears the lock.
+- Added Prisma migration for login abuse tracking fields.
 - Added permanent AI continuation and project status documentation.
 - Locked Cloudflare Workers as the production deployment target.
 - Documented Next.js + vinext + Wrangler deployment architecture.
