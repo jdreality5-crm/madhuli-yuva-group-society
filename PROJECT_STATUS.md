@@ -3,9 +3,9 @@
 ## Current
 - Branch: `fresh-society-v2`
 - Phase: Security hardening and production readiness
-- Current task: Complete protected API/page authorization audit + E2E verification
+- Current task: Continue protected API/page authorization audit + E2E verification after fixing property-unit AuditLog schema mismatch
 - Final stage: Not signed off
-- Current HEAD verified: `2335b0eed6e54c5f4a39b7cdf93912e6b18efb03`
+- Current verified audit-fix commit: `a74276aedeca921ef7a99e853b38f250fcdb870f`
 
 ## Status Matrix
 
@@ -38,6 +38,7 @@
 - Generic storage upload requires organizer authorization.
 - Property unit linking only accepts active, approved, email-verified resident accounts.
 - Property unit clearing safely removes resident linkage and allows empty unit fields.
+- Property unit audit logging now matches the Prisma AuditLog schema.
 - Root README and deployment documentation now describe V2 + Cloudflare Workers rather than V1 Express/SQLite.
 
 ## Required Sequence
