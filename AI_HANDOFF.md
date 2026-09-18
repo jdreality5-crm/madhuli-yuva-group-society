@@ -15,10 +15,10 @@ Society Management System for Pramukhpark Society + Sarang Apartment.
 Security hardening, authorization audit, E2E verification, then production readiness.
 
 ## CURRENT TASK
-Perform a full security + authorization audit of all protected API routes and dashboard pages, followed by E2E authentication/signup/approval/rejection testing.
+Continue full protected API/page authorization audit and E2E verification. Initial audit pass has already found and fixed several authorization/concurrency issues.
 
 ## NEXT TASK
-After the audit: fix confirmed findings, run production build/typecheck, verify Cloudflare deployment, then complete final production sign-off.
+Finish remaining API/page audit, then run production typecheck/build, verify Cloudflare deployment, and complete final production sign-off.
 
 ## COMPLETED
 - V2 Next.js application established.
@@ -36,12 +36,20 @@ After the audit: fix confirmed findings, run production build/typecheck, verify 
 - Cross-society event validation for income/expense/bills.
 - Payment submission and admin verification/rejection flow.
 - Cloudflare Workers + vinext deployment configuration.
+- Replaced stale root V1 README with V2 source-of-truth guidance.
+- Added permanent AI handoff, status, architecture, development, security, deployment, and changelog docs.
+- Fixed cross-society event linking on bill updates.
+- Made resident payment evidence submission race-safe and cleaned losing uploaded screenshots.
+- Signed payment-account QR URLs before returning them.
+- Hardened legacy resident approval endpoint to require verified email and unlink rejected units.
+- Restricted generic storage upload to organizers.
+- Hardened property-unit resident linking to active/approved/email-verified residents and allowed safe empty-unit clearing.
 
 ## PENDING
-1. Full protected API authorization/society-scope audit.
-2. Profile email/session consistency review.
-3. Property-unit assignment and clear-state edge cases.
-4. Payment race/idempotency audit.
+1. Complete protected API authorization/society-scope audit.
+2. Complete profile email/session consistency review.
+3. Review remaining property edge cases and legacy flat compatibility.
+4. Complete payment idempotency review, including transaction/reference uniqueness expectations.
 5. E2E auth/signup/approval/rejection tests.
 6. Final UI/UX/accessibility pass.
 7. Production build/typecheck.
@@ -79,12 +87,11 @@ Prisma is the application data layer. Supabase PostgreSQL is the database. Resid
 Cloudflare Workers deployment uses vinext and Wrangler. See `DEPLOYMENT.md`.
 
 ## KNOWN ISSUES / AUDIT TARGETS
-- Root README is stale and must not be treated as V2 architecture.
 - Verify every protected route rather than assuming previously audited routes remain correct.
-- Profile email changes must not leave an unsafe/stale authenticated identity.
-- Unit clearing/reassignment must handle empty units and unlinking safely.
-- Payment mutation must be race-safe/idempotent.
-- Deployment must be verified from the actual current commit before claiming production status.
+- Profile email changes need explicit verification of session behavior and email uniqueness semantics.
+- Legacy `Flat` model/routes coexist with the new `PropertyUnit` model and need compatibility review.
+- Payment transaction/reference uniqueness and repeated submission semantics need final review.
+- Production deployment corresponding to the latest commit has not yet been verified.
 
 ## DO NOT CHANGE
 - Production architecture without explicit justification.
@@ -92,7 +99,7 @@ Cloudflare Workers deployment uses vinext and Wrangler. See `DEPLOYMENT.md`.
 - Society scope model.
 - Cloudflare Workers production target.
 - Private-storage security model.
-- Existing approval compatibility route unless there is a deliberate migration plan.
+- Existing approval compatibility routes unless there is a deliberate migration plan.
 
 ## TESTING CHECKLIST
 - Authentication and role selection.
@@ -104,12 +111,13 @@ Cloudflare Workers deployment uses vinext and Wrangler. See `DEPLOYMENT.md`.
 - Resident cannot cross society boundaries.
 - Resident cannot access admin financial APIs.
 - Organizer cannot access another society's data.
-- Payment verification is atomic and race-safe.
+- Payment evidence submission is atomic/race-safe.
+- Payment verification is atomic/race-safe.
 - Private files require authorized signed access.
 - Production build and Cloudflare deployment succeed.
 
 ## LAST VERIFIED STATE
-Repository configuration was re-checked on 2026-09-18. Cloudflare Workers configuration exists at `v2/wrangler.jsonc`; `v2/package.json` contains vinext/Wrangler/Cloudflare deployment scripts. The exact production deployment corresponding to the latest code still requires verification.
+Repository configuration and current branch were re-checked on 2026-09-18. Current branch HEAD after documentation and audit fixes is `2335b0eed6e54c5f4a39b7cdf93912e6b18efb03`. Cloudflare Workers configuration exists at `v2/wrangler.jsonc`; `v2/package.json` contains vinext/Wrangler/Cloudflare deployment scripts. A local typecheck could not be executed because the execution environment could not resolve github.com, so build status remains unverified.
 
 ## CONTINUATION RULE
 Every major implementation step must update this file and `PROJECT_STATUS.md` with CURRENT TASK, NEXT TASK, completed work, known issues, and the last verified commit.
