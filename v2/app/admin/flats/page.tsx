@@ -54,8 +54,8 @@ export default function Flats() {
   const filtered = useMemo(() => rows.filter((x) => [x.flatNumber, x.ownerName, x.mobile, x.email].some((v) => (v || '').toLowerCase().includes(query.toLowerCase()))), [rows, query]);
 
   return <div className="main">
-    <div className="page-title"><div><p className="eyebrow">SOCIETY • MEMBERS</p><h1>Flats & Owners / ફ્લેટ અને સભ્યો</h1><p>Manage flat records, registered owner details and Owner account access.</p></div><div className="stat-card card"><span className="stat-label">Registered Flats</span><strong className="stat-value">{rows.length}</strong></div></div>
-    <div className="card" style={{ marginBottom: 18 }}>
+    <div className="page-title"><div><p className="eyebrow">SOCIETY • MEMBERS</p><h1>Flats & Owners / ફ્લેટ અને સભ્યો</h1><p>Manage flat records, registered owner details and Owner account access.</p></div><div className="member-stats"><div className="stat-card card"><span className="stat-label">Registered</span><strong className="stat-value">{rows.length}</strong></div><div className="stat-card card"><span className="stat-label">Signup Ready</span><strong className="stat-value">{rows.filter(x => x.signupEnabled).length}</strong></div></div></div>
+    <div className="card member-form" style={{ marginBottom: 18 }}>
       <div className="section-head"><div><h2>{editing ? 'Edit Flat / ફ્લેટ સુધારો' : 'Register Flat / ફ્લેટ નોંધણી'}</h2><p className="section-subtitle">Owner signup requires a registered email or mobile and explicit signup access.</p></div>{editing && <button type="button" className="btn btn-secondary" onClick={cancelEdit}>Cancel Edit</button>}</div>
       <form onSubmit={save} className="form-grid">
         <div className="field"><label htmlFor="flatNumber">Flat Number</label><input id="flatNumber" className="input" required disabled={!!editing} value={form.flatNumber} onChange={(e) => setForm({ ...form, flatNumber: e.target.value })} placeholder="A-101" /></div>
@@ -68,7 +68,7 @@ export default function Flats() {
       </form>
       {error && <p className="login-error" role="alert">{error}</p>}
     </div>
-    <div className="card"><div className="section-head"><div><h2>Flat Directory</h2><p className="section-subtitle">{rows.length} registered flat{rows.length === 1 ? '' : 's'} • {rows.filter((x) => x.signupEnabled).length} signup-enabled</p></div><input className="input" style={{ maxWidth: 280 }} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search flat or owner…" aria-label="Search flats" /></div>
+    <div className="card"><div className="section-head directory-head"><div><p className="eyebrow">DIRECTORY</p><h2>Flat Directory</h2><p className="section-subtitle">{rows.length} registered flat{rows.length === 1 ? '' : 's'} • {rows.filter((x) => x.signupEnabled).length} signup-enabled</p></div><input className="input" style={{ maxWidth: 280 }} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search flat or owner…" aria-label="Search flats" /></div>
       <div className="table-wrap"><table className="table"><thead><tr><th>Flat</th><th>Owner</th><th>Mobile</th><th>Email</th><th>Status</th><th>Signup</th><th>Manage</th></tr></thead><tbody>
         {loading && <tr><td colSpan={7}>Loading flats…</td></tr>}
         {!loading && filtered.map((x) => <tr key={x.id}><td><b>{x.flatNumber}</b></td><td>{x.ownerName || '—'}</td><td>{x.mobile || '—'}</td><td>{x.email || '—'}</td><td><span className="badge">{x.status}</span></td><td><button type="button" className="btn" onClick={() => toggle(x)} aria-label={`${x.signupEnabled ? 'Disable' : 'Enable'} signup for ${x.flatNumber}`}>{x.signupEnabled ? 'Enabled' : 'Enable'}</button></td><td><button type="button" className="btn btn-secondary" onClick={() => startEdit(x)}>Edit</button></td></tr>)}
@@ -77,3 +77,6 @@ export default function Flats() {
     </div>
   </div>;
 }
+
+const flatsStyle = `.member-stats{display:flex;gap:12px}.member-stats .stat-card{min-width:120px}.member-form{border-top:3px solid #b18a3a}.directory-head{align-items:flex-end}@media(max-width:700px){.page-title{align-items:flex-start}.member-stats{width:100%}.member-stats .stat-card{flex:1;min-width:0}.directory-head{align-items:stretch}.directory-head>.input{max-width:none!important;width:100%}.table-wrap{overflow-x:auto}.table{min-width:760px}.member-form .form-grid{grid-template-columns:1fr}}`;
+if(typeof document!=="undefined"&&!document.getElementById("flats-page-style")){const s=document.createElement("style");s.id="flats-page-style";s.textContent=flatsStyle;document.head.appendChild(s)}
