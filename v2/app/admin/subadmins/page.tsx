@@ -1,8 +1,9 @@
 'use client';
 import { FormEvent, useEffect, useState } from 'react';
+import { SUBADMIN_PROFILE_TYPES, SUBADMIN_PROFILE_PERMISSIONS, type SubAdminProfileType } from '../../subadmin-profiles';
 
-type User={id:string;name:string;email:string;mobile?:string|null;status:'ACTIVE'|'INACTIVE';createdAt:string};
-const empty={name:'',email:'',mobile:'',password:''};
+type User={id:string;name:string;email:string;mobile?:string|null;status:'ACTIVE'|'INACTIVE';createdAt:string;permissions:string[]};
+const empty={name:'',email:'',mobile:'',password:'',profileType:'MANAGER' as SubAdminProfileType};
 
 export default function SubAdminsPage(){
   const [users,setUsers]=useState<User[]>([]); const [max,setMax]=useState(6); const [form,setForm]=useState(empty); const [busy,setBusy]=useState(false); const [error,setError]=useState(''); const [message,setMessage]=useState('');
@@ -17,11 +18,11 @@ export default function SubAdminsPage(){
         <label>Name<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required /></label>
         <label>Email<input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} required /></label>
         <label>Mobile<input value={form.mobile} onChange={e=>setForm({...form,mobile:e.target.value})} /></label>
-        <label>Temporary Password<input type="password" minLength={8} value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required /></label>
+        <label>Profile Role<select value={form.profileType} onChange={e=>setForm({...form,profileType:e.target.value as SubAdminProfileType})}>{SUBADMIN_PROFILE_TYPES.map(type=><option key={type} value={type}>{type.charAt(0)+type.slice(1).toLowerCase()}</option>)}</select></label><p style={{fontSize:12,color:'var(--muted)',lineHeight:1.6}}>Permissions: {SUBADMIN_PROFILE_PERMISSIONS[form.profileType].map(p=>p.replace('_',' ')).join(', ')}.</p><label>Temporary Password<input type="password" minLength={8} value={form.password} onChange={e=>setForm({...form,password:e.target.value})} required /></label>
         <button className="btn btn-primary" disabled={busy||users.length>=max}>{users.length>=max?'6 / 6 Profiles Used':busy?'Creating…':'Create Sub Admin'}</button>
       </form>
       <section className="card"><div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center'}}><h2>Sub Admins</h2><strong>{users.length} / {max}</strong></div>
-        {users.length===0?<p>No Sub Admin profiles created yet.</p>:<div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse'}}><thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>Status</th><th>Action</th></tr></thead><tbody>{users.map(u=><tr key={u.id}><td>{u.name}</td><td>{u.email}</td><td>{u.mobile||'—'}</td><td>{u.status}</td><td>{u.status==='ACTIVE'&&<button className="btn" onClick={()=>deactivate(u.id)}>Deactivate</button>}</td></tr>)}</tbody></table></div>}
+        {users.length===0?<p>No Sub Admin profiles created yet.</p>:<div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse'}}><thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>Role</th><th>Status</th><th>Action</th></tr></thead><tbody>{users.map(u=><tr key={u.id}><td>{u.name}</td><td>{u.email}</td><td>{u.mobile||'—'}</td><td>{u.permissions.includes('EXPENSES')&&u.permissions.includes('EVENTS')?'Manager':u.permissions.includes('EXPENSES')?'Accountant':'Watcher'}</td><td>{u.status}</td><td>{u.status==='ACTIVE'&&<button className="btn" onClick={()=>deactivate(u.id)}>Deactivate</button>}</td></tr>)}</tbody></table></div>}
       </section>
     </div>
   </main>
