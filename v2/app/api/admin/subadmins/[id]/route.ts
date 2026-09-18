@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { prisma, requireMasterAdmin, SUBADMIN_PERMISSIONS } from '@/lib/auth';
+import { prisma, requireMasterAdmin } from '@/lib/auth';
+import { SUBADMIN_PROFILE_TYPES, SUBADMIN_PROFILE_PERMISSIONS } from '@/app/subadmin-profiles';
 
 const schema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
@@ -9,7 +10,7 @@ const schema = z.object({
   mobile: z.string().trim().max(20).optional().or(z.literal('')),
   password: z.string().min(8).max(100).optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
-  permissions: z.array(z.enum(SUBADMIN_PERMISSIONS)).optional(),
+  profileType: z.enum(SUBADMIN_PROFILE_TYPES).optional(),
 });
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -25,7 +26,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (body.mobile !== undefined) data.mobile = body.mobile || null;
     if (body.password) data.passwordHash = await bcrypt.hash(body.password, 12);
     if (body.status) data.status = body.status;
-    if (body.permissions !== undefined) data.permissions = [...new Set(body.permissions)];
+    if (body.profileType !== undefined) data.permissions = [...SUBADMIN_PROFILE_PERMISSIONS[body.profileType]];
     if (data.email && data.email !== target.email) {
       const duplicate = await prisma.user.findUnique({ where: { email: data.email } });
       if (duplicate) return NextResponse.json({ error: 'Email already exists.' }, { status: 409 });
