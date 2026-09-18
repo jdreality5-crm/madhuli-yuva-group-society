@@ -2,7 +2,9 @@ import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
 import { prisma } from './prisma';
 
-export type SessionUser = { id: string; role: 'MASTER_ADMIN' | 'ORGANIZER' | 'OWNER'; societyId: string; email: string; name: string };
+export const SUBADMIN_PERMISSIONS = ['EVENTS', 'NOTICES', 'GALLERY', 'BILLS', 'EXPENSES', 'INCOME', 'PAYMENTS', 'REPORTS'] as const;
+export type SubAdminPermission = typeof SUBADMIN_PERMISSIONS[number];
+export type SessionUser = { id: string; role: 'MASTER_ADMIN' | 'ORGANIZER' | 'OWNER'; societyId: string; email: string; name: string; permissions: string[] };
 const secret = process.env.JWT_SECRET;
 if (!secret) throw new Error('JWT_SECRET is required');
 const key = new TextEncoder().encode(secret);
@@ -37,6 +39,7 @@ export async function getSession(): Promise<SessionUser | null> {
         status: true,
         approvalStatus: true,
         emailVerified: true,
+        permissions: true,
       },
     });
 
@@ -52,6 +55,7 @@ export async function getSession(): Promise<SessionUser | null> {
       societyId: user.societyId,
       email: user.email,
       name: user.name,
+      permissions: user.permissions,
     };
   } catch {
     return null;
@@ -62,6 +66,12 @@ export async function requireAdmin() {
   const session = await getSession();
   if (!session || !['MASTER_ADMIN', 'ORGANIZER'].includes(session.role)) throw new Error('FORBIDDEN');
   return session;
+}
+
+export async function requireSubAdminPermission(permission: SubAdminPermission) {
+  const session = await requireAdmin();
+  if (session.role === 'MASTER_ADMIN' || session.permissions.includes(permission)) return session;
+  throw new Error('FORBIDDEN_PERMISSION');
 }
 
 export async function requireOrganizer() {
