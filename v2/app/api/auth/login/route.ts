@@ -83,7 +83,7 @@ export async function POST(req: Request) {
     }
 
     await clearLoginFailures(user.id);
-    await createSession({ id: user.id, role: user.role, societyId: user.societyId, email: user.email, name: user.name });
+    await createSession({ id: user.id, role: user.role, societyId: user.societyId, email: user.email, name: user.name, permissions: user.permissions });
     return NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, societyId: user.societyId } });
   } catch (error) {
     console.error('[auth/login] server error', error);
