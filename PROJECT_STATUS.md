@@ -119,3 +119,11 @@
 - Removed duplicate global CSS import/PWA mounting from the home page and removed the page-level global CSS import from login.
 - PWA install prompting is now common to the application shell rather than being mounted only on the dashboard route.
 - Full module-by-module visual migration is intentionally the next UI phase; API behavior, auth, authorization and data scope must remain unchanged during UI work.
+
+
+### UI icon / symbol audit — 2026-09-18
+- Audited the current V2 dashboard, properties, flats, programs, notices, gallery, payments and authentication surfaces for decorative Unicode UI symbols and emoji-based controls.
+- Replaced remaining decorative controls found in resident/admin notices, resident gallery, admin programs, admin notices and admin gallery with the shared `UiIcon` SVG system.
+- Extended `UiIcon` with semantic `arrowRight`, `print`, and existing close/refresh usage where needed.
+- Existing Bills and Profile icon work remains preserved; no production data or API behavior was changed by this UI-only pass.
+- Key audited surfaces now contain no occurrences of the targeted UI-symbol set (arrow/check/cross/star/print/calendar/clock/location/plus/refresh/close characters).
