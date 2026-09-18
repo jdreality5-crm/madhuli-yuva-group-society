@@ -3,7 +3,7 @@ import { prisma, requireSubAdminPermission } from '@/lib/auth';
 
 export async function GET(req: Request) {
   try {
-    const s = await requireSubAdminPermission();
+    const s = await requireSubAdminPermission('REPORTS');
     const url = new URL(req.url); const from = url.searchParams.get('from'); const to = url.searchParams.get('to');
     const start = from ? new Date(`${from}T00:00:00`) : new Date(new Date().getFullYear(),0,1);
     const end = to ? new Date(`${to}T23:59:59.999`) : new Date();
