@@ -5,7 +5,7 @@
 - Phase: Security hardening and production readiness
 - Current task: Firebase resident-auth migration + configuration/E2E verification, alongside remaining security audit
 - Final stage: Not signed off
-- Current verified audit-fix commit: `a74276aedeca921ef7a99e853b38f250fcdb870f`
+- Current implementation commit: `12b99f703c45cd15777e16ef4b693b8345ac52cb`
 
 ## Status Matrix
 
