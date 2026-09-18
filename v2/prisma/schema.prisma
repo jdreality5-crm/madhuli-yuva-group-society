@@ -81,6 +81,7 @@ model User {
   profileImageUrl     String?
   unitId              String?
   residentType        ResidentType?
+  permissions         String[]        @default([])
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
   society             Society         @relation(fields: [societyId], references: [id])
