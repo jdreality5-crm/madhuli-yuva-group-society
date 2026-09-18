@@ -15,10 +15,10 @@ Society Management System for Pramukhpark Society + Sarang Apartment.
 Security hardening, authorization audit, E2E verification, then production readiness.
 
 ## CURRENT TASK
-Migrate resident authentication to Firebase Authentication: Gmail-only signup, Firebase email verification link, immediate activation after verification, and 15-day email/mobile contact locks. Keep admin authentication and legacy compatibility paths safe while completing the migration audit.
+Complete Firebase resident-auth configuration and live E2E verification, then continue the protected-API/security audit. Resident email verification now activates the account immediately and starts the 15-day email/mobile contact locks; the application session is still created only after password login.
 
 ## NEXT TASK
-Configure the Firebase project, verify the custom email action handler URL, add/verify Firebase environment secrets in Cloudflare, then E2E-test signup/login/password recovery and finish the remaining API/security audit.
+Configure Firebase Email/Password Auth and the custom email action handler URL (`/verify-email`), add/verify `FIREBASE_WEB_API_KEY` in Cloudflare, then E2E-test signup → verification → activation → login and password recovery. After that, continue endpoint-by-endpoint authorization and payment idempotency review.
 
 ## COMPLETED
 - V2 Next.js application established.
@@ -95,7 +95,7 @@ Cloudflare Workers deployment uses vinext and Wrangler. See `DEPLOYMENT.md`.
 - Property-unit PATCH had an AuditLog field mismatch; fixed in `a74276aedeca921ef7a99e853b38f250fcdb870f`.
 - Profile email is now read-only and API-enforced; a separate verified email-change flow is intentionally deferred.
 - Legacy `Flat` model/routes coexist with the new `PropertyUnit` model and need compatibility review.
-- Firebase Authentication configuration is code-ready but Cloudflare environment credentials and Firebase email-action-handler configuration are not yet verified.
+- Firebase Authentication configuration is code-ready. `FIREBASE_WEB_API_KEY` is now wired into the Cloudflare workflow/env example, but the actual secret, Firebase Email/Password setting, and Firebase custom email action-handler configuration are not yet verified.
 - Legacy Gmail/Resend OTP helper and resend route remain in the repository for compatibility; the new resident signup path no longer depends on them.
 - Payment transaction/reference uniqueness and repeated submission semantics need final review.
 - Production deployment corresponding to the latest commit has not yet been verified.
@@ -124,7 +124,7 @@ Cloudflare Workers deployment uses vinext and Wrangler. See `DEPLOYMENT.md`.
 - Production build and Cloudflare deployment succeed.
 
 ## LAST VERIFIED STATE
-Repository configuration and current branch were re-checked on 2026-09-18. Firebase resident-auth migration code is now present on `fresh-society-v2`, with implementation/status documentation updated through commit `1dc59efbda2dbff4f13aedeed1960e833bc2ae4b`. Cloudflare Workers configuration exists at `v2/wrangler.jsonc`; `v2/package.json` contains vinext/Wrangler/Cloudflare deployment scripts. A local typecheck could not be executed because the execution environment could not resolve github.com, so build status remains unverified.
+Repository configuration and current branch were re-checked on 2026-09-18. Firebase resident-auth migration code is present on `fresh-society-v2`; email verification now activates the matching resident immediately and sets the 15-day contact locks. Cloudflare CI now passes `FIREBASE_WEB_API_KEY`. Latest implementation commit is `2d9346a7e3a8dad5cd884cd3303e8cfec1d2929c`. A local typecheck/build could not be executed because the execution environment could not resolve github.com, and no workflow run was associated with this commit yet. Cloudflare Workers configuration exists at `v2/wrangler.jsonc`; `v2/package.json` contains vinext/Wrangler/Cloudflare deployment scripts. A local typecheck could not be executed because the execution environment could not resolve github.com, so build status remains unverified.
 
 ## CONTINUATION RULE
 Every major implementation step must update this file and `PROJECT_STATUS.md` with CURRENT TASK, NEXT TASK, completed work, known issues, and the last verified commit.
