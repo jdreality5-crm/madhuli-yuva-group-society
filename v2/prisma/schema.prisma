@@ -288,7 +288,7 @@ model Bill {
   payments      Payment[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  @@index([societyId, date])
+  @@index([societyId, date])\n  @@index([propertyUnitId, date])
 }
 
 model Notice {
