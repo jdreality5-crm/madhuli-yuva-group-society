@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { prisma, requireMasterAdmin, SUBADMIN_PERMISSIONS } from '@/lib/auth';
+import { prisma, requireMasterAdmin } from '@/lib/auth';
+import { SUBADMIN_PROFILE_TYPES, SUBADMIN_PROFILE_PERMISSIONS } from '@/app/subadmin-profiles';
 
 const MAX_SUBADMINS = 6;
 const createSchema = z.object({
@@ -9,6 +10,7 @@ const createSchema = z.object({
   email: z.string().email().transform(v => v.toLowerCase()),
   mobile: z.string().trim().max(20).optional().or(z.literal('')),
   password: z.string().min(8).max(100),
+  profileType: z.enum(SUBADMIN_PROFILE_TYPES).default('MANAGER'),
 });
 
 export async function GET() {
@@ -37,7 +39,7 @@ export async function POST(req: Request) {
         if (count >= MAX_SUBADMINS) throw new Error('MAX_SUBADMINS');
         const existing = await tx.user.findUnique({ where: { email: body.email } });
         if (existing) throw new Error('EMAIL_EXISTS');
-        const created = await tx.user.create({ data: { name: body.name, email: body.email, mobile: body.mobile || null, passwordHash, role: 'ORGANIZER', societyId: session.societyId, permissions: [...SUBADMIN_PERMISSIONS] } });
+        const created = await tx.user.create({ data: { name: body.name, email: body.email, mobile: body.mobile || null, passwordHash, role: 'ORGANIZER', societyId: session.societyId, permissions: [...SUBADMIN_PROFILE_PERMISSIONS[body.profileType]] } });
         await tx.auditLog.create({ data: { userId: session.id, action: 'CREATE', module: 'SUBADMIN', recordId: created.id, details: `Created Sub Admin ${created.email}` } });
         return created;
       }, { isolationLevel: 'Serializable' });
