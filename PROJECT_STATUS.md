@@ -65,3 +65,8 @@
 - Unique transaction reference enforced per society at DB level for non-empty `transactionId` values.
 - Existing production transaction-reference duplicates: none.
 - Payment review remains atomic: only one concurrent reviewer can claim a PENDING payment before Income creation.
+
+
+### Authorization audit — 2026-09-18
+- Reviewed protected admin, payment, dashboard, storage and master-admin routes for role/society scoping.
+- Hardened the maximum-6 Sub Admin creation path against concurrent requests using a Serializable transaction.
