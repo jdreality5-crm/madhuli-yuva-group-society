@@ -132,3 +132,7 @@ Every major implementation step must update this file and `PROJECT_STATUS.md` wi
 
 ## SECURITY AUDIT NOTE (2026-09-18)
 Profile API now enforces the 15-day mobile lock. A production duplicate-mobile check found 2 existing records sharing `9876543210`; therefore a database unique mobile constraint was intentionally NOT added yet. Existing duplicate must be reconciled before introducing a unique constraint.
+
+
+## PAYMENT SECURITY AUDIT (2026-09-18)
+Payment transaction references are now protected by a partial unique index per society (`societyId + transactionId`) for non-empty references. Existing production data had no duplicate transaction references, so the constraint was applied successfully. The resident payment PATCH also returns a conflict instead of a generic server error when a duplicate reference is submitted. Atomic payment review already claims PENDING rows before creating Income, preventing concurrent double-verification.
