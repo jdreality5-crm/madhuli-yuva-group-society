@@ -1,7 +1,5 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import './globals.css';
-import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 
 type Role = 'MASTER_ADMIN' | 'ORGANIZER' | 'OWNER';
 type Dashboard = { role: Role; society?: { name: string; city?: string | null; state?: string | null }; stats?: { totalIncome: string; totalExpense: string; balance: string; flats: number; events: number }; upcomingEvents: any[]; notices: any[]; photos: any[] };
@@ -55,7 +53,7 @@ export default function Home() {
   const location = [dashboard?.society?.city, dashboard?.society?.state].filter(Boolean).join(', ');
   const mobileLinks = useMemo(() => dashboard?.role === 'OWNER' ? [['Home', '/'], ['Make Payment', '/payments'], ['Profile', '/profile']] : [['Home', '/'], ['Properties', '/admin/properties'], ['Programs', '/admin/programs'], ['Reports', '/reports'], ['Profile', '/profile']], [dashboard?.role]);
 
-  return <><PwaInstallPrompt /><div className="app-shell">
+  return <div className="app-shell">
     <header className="topbar">
       <div className="brand">
         <div className="brand-mark">S</div>
