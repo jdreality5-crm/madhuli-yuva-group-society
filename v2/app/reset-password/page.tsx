@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import '../globals.css';
 
 export default function ResetPassword() {
   const params = useSearchParams();
@@ -16,5 +15,5 @@ export default function ResetPassword() {
 
   async function submit(e:React.FormEvent){e.preventDefault();setError('');if(!code){setError('This reset link is missing or invalid.');return;}if(password!==confirm){setError('Passwords do not match.');return;}setBusy(true);try{const r=await fetch('/api/auth/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({oobCode:code,newPassword:password})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Password reset failed.');setDone(true);window.setTimeout(()=>router.replace('/login'),1200);}catch(e){setError(e instanceof Error?e.message:'Password reset failed.')}finally{setBusy(false)}}
 
-  return <main className="login-page"><section className="login-card" style={{maxWidth:520,margin:'10vh auto'}}><p className="eyebrow">Account security</p><h2>Reset your password</h2>{done?<div className="login-success" role="status">Password updated successfully. Redirecting to sign in…</div>:<form onSubmit={submit}><div className="field"><label>New password</label><input className="input" type="password" minLength={8} autoComplete="new-password" required value={password} onChange={e=>setPassword(e.target.value)}/></div><div className="field"><label>Confirm password</label><input className="input" type="password" minLength={8} autoComplete="new-password" required value={confirm} onChange={e=>setConfirm(e.target.value)}/></div>{error&&<div className="login-error" role="alert">{error}</div>}<button className="premium-btn" disabled={busy}>{busy?'Updating…':'Update password'}</button></form>}</section></main>;
+  return <main className="login-page"><section className="login-card auth-standalone" style={{maxWidth:520,margin:'10vh auto'}}><p className="eyebrow">Account security</p><h2>Reset your password</h2>{done?<div className="login-success" role="status">Password updated successfully. Redirecting to sign in…</div>:<form onSubmit={submit}><div className="field"><label>New password</label><input className="input" type="password" minLength={8} autoComplete="new-password" required value={password} onChange={e=>setPassword(e.target.value)}/></div><div className="field"><label>Confirm password</label><input className="input" type="password" minLength={8} autoComplete="new-password" required value={confirm} onChange={e=>setConfirm(e.target.value)}/></div>{error&&<div className="login-error" role="alert">{error}</div>}<button className="premium-btn" disabled={busy}>{busy?'Updating…':'Update password'}</button></form>}</section></main>;
 }
