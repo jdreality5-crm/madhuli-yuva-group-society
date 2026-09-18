@@ -64,9 +64,12 @@ enum ResidentType {
 model User {
   id                  String          @id @default(cuid())
   email               String          @unique
-  passwordHash        String
+  passwordHash        String?
+  firebaseUid         String?         @unique
   name                String
   mobile              String?
+  emailLockedUntil    DateTime?
+  mobileLockedUntil   DateTime?
   role                Role
   status              RecordStatus    @default(ACTIVE)
   approvalStatus      ApprovalStatus  @default(APPROVED)
