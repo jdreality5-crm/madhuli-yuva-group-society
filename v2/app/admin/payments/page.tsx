@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { UiIcon } from '@/components/UiIcon';
 
 type P = {
   id: string; amountPaise: string; status: string; transactionId?: string | null;
@@ -54,14 +55,14 @@ export default function AdminPayments() {
       </div>
       <div className="payment-header-actions">
         <div className="card pending-stat"><span className="stat-label">Pending Reviews</span><strong className="stat-value">{pending.length}</strong></div>
-        <button className="btn btn-secondary" onClick={load}>↻ Refresh</button>
+        <button className="btn btn-secondary" onClick={load}><><UiIcon name="refresh" size={16}/> Refresh</></button>
       </div>
     </div>
 
     {error && <div className="login-error">{error}</div>}
 
     {loading ? <div className="card payment-empty"><h3>Loading verification queue…</h3></div> :
-      p.length === 0 ? <div className="card payment-empty"><div className="empty-icon">✓</div><h3>No payment submissions</h3><p>No resident payment proofs are waiting here.</p></div> :
+      p.length === 0 ? <div className="card payment-empty"><div className="empty-icon"><UiIcon name="check" size={20}/></div><h3>No payment submissions</h3><p>No resident payment proofs are waiting here.</p></div> :
       <div className="payment-queue">
         {p.map(v => <article className={`card payment-review-card ${v.status === 'PENDING' ? 'is-pending' : ''}`} key={v.id}>
           <div className="payment-card-head">
@@ -73,7 +74,7 @@ export default function AdminPayments() {
             <section className="payment-detail-block"><span className="detail-label">Bill</span><strong>{v.bill ? `${v.bill.type} • ${money(v.bill.amountPaise)}` : 'General society payment'}</strong><span>{v.bill?.category || v.bill?.vendor || (v.bill ? 'Linked unit bill' : 'No bill linked')}</span><span>Status: {v.bill?.paymentStatus || '—'}</span></section><section className="payment-detail-block transaction-block"><span className="detail-label">Transaction Reference</span><strong>{v.transactionId || 'Not submitted yet'}</strong><span>Receiver: {v.paymentAccount.displayName}</span>{v.paymentAccount.upiId && <span>UPI: {v.paymentAccount.upiId}</span>}</section>
             <section className="payment-proof"><span className="detail-label">Payment Proof</span>{v.screenshotUrl ? <img src={v.screenshotUrl} alt="Payment proof screenshot" /> : <div className="proof-missing">No screenshot attached</div>}</section>
           </div>
-          {v.status === 'PENDING' && v.transactionId && <div className="payment-actions"><button className="btn btn-primary" onClick={() => review(v.id, 'VERIFY')}>✓ Payment Received / Verify</button><button className="btn btn-secondary reject-btn" onClick={() => review(v.id, 'REJECT')}>Reject Payment</button></div>}
+          {v.status === 'PENDING' && v.transactionId && <div className="payment-actions"><button className="btn btn-primary" onClick={() => review(v.id, 'VERIFY')}><><UiIcon name="check" size={16}/> Payment Received / Verify</></button><button className="btn btn-secondary reject-btn" onClick={() => review(v.id, 'REJECT')}>Reject Payment</button></div>}
           {v.status !== 'PENDING' && v.verifiedBy && <div className="reviewed-note">Reviewed by {v.verifiedBy.name} · {v.verifiedBy.role}</div>}
         </article>)}
       </div>}
