@@ -10,7 +10,7 @@ export async function GET() {
       prisma.notice.findMany({ where: { societyId: session.societyId, status: 'PUBLISHED' }, orderBy: { date: 'desc' }, take: 8, select: { id: true, title: true, gujaratiTitle: true, content: true, gujaratiContent: true, date: true, important: true, imageUrl: true } }),
       prisma.photo.findMany({ where: { societyId: session.societyId }, orderBy: { createdAt: 'desc' }, take: 12, select: { id: true, title: true, fileUrl: true, altText: true, albumName: true, eventId: true } })
     ]);
-    if (session.role === 'OWNER') return NextResponse.json({ role: session.role, society, upcomingEvents, notices, photos });
+    if (session.role === 'OWNER') return NextResponse.json({ role: session.role, permissions: session.permissions, society, upcomingEvents, notices, photos });
     const [income, expense, flats, events] = await Promise.all([
       prisma.income.aggregate({ where: { societyId: session.societyId }, _sum: { amountPaise: true } }),
       prisma.expense.aggregate({ where: { societyId: session.societyId }, _sum: { amountPaise: true } }),
