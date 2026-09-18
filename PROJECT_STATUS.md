@@ -14,7 +14,7 @@
 | Next.js V2 app | Complete | Active app under `v2/` |
 | Prisma/PostgreSQL | Complete | Supabase PostgreSQL |
 | Property model | Complete | Apartment + dynamic tenament floors |
-| Resident signup | Migrated | Firebase Gmail-only signup + email verification link + automatic activation; 15-day contact locks added |
+| Resident signup | Implemented / config pending | Firebase Gmail-only signup + email verification link + automatic activation; 15-day contact locks added |
 | Login/session enforcement | Migrated / audit | Residents authenticate with Firebase; app session remains DB-revalidated |
 | Profile | Implemented / audit | Review email/session consistency |
 | Financial isolation | Audited / continue | Continue endpoint-by-endpoint audit |
@@ -24,7 +24,7 @@
 | Storage upload | Hardened | Generic upload restricted to organizers |
 | Cloudflare Workers | Configured | vinext + Wrangler |
 | Documentation | Complete | Handoff/status docs are source of truth |
-| E2E testing | Pending | Required before sign-off |
+| E2E testing | Pending | Firebase signup/login/password reset still requires live configuration and test |
 | Production build/typecheck | Pending | Local environment could not reach GitHub |
 | Production deployment verification | Pending | Must verify exact deployed commit |
 | Production sign-off | Pending | Final gate |
