@@ -34,7 +34,7 @@ export async function PATCH(req: Request) {
         if (user.unitId) await tx.propertyUnit.updateMany({ where:{id:user.unitId,residentUserId:user.id}, data:{residentUserId:null} });
         await tx.user.update({ where:{id:user.id}, data:{unitId:null,residentType:null} });
       }
-      await tx.auditLog.create({ data:{societyId:session.societyId,actorUserId:session.id,userId:session.id,action:body.action,module:'RESIDENT_APPROVAL',recordId:user.id,details:`${body.action==='APPROVE'?'Approved':'Rejected'} resident ${user.email}`} });
+      await tx.auditLog.create({ data:{userId:session.id,action:body.action,module:'RESIDENT_APPROVAL',recordId:user.id,details:`${body.action==='APPROVE'?'Approved':'Rejected'} resident ${user.email}`} });
       return { kind:'OK' as const,user:updated };
     });
     if(result.kind==='NOT_FOUND') return NextResponse.json({error:'Resident not found.'},{status:404});
