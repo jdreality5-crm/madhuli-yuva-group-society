@@ -136,3 +136,7 @@ Profile API now enforces the 15-day mobile lock. A production duplicate-mobile c
 
 ## PAYMENT SECURITY AUDIT (2026-09-18)
 Payment transaction references are now protected by a partial unique index per society (`societyId + transactionId`) for non-empty references. Existing production data had no duplicate transaction references, so the constraint was applied successfully. The resident payment PATCH also returns a conflict instead of a generic server error when a duplicate reference is submitted. Atomic payment review already claims PENDING rows before creating Income, preventing concurrent double-verification.
+
+
+## AUTHORIZATION AUDIT (2026-09-18)
+Reviewed the main protected admin/payment/dashboard routes: queries are scoped by `session.societyId`, owner payment reads/writes are scoped by `ownerUserId`, and role guards are present for organizer/master-admin operations. Hardened the six-Sub-Admin limit with a Serializable Prisma transaction so concurrent creation attempts cannot silently exceed the configured maximum; serialization conflicts return a retryable 409.
