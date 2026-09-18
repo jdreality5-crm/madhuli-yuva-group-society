@@ -20,7 +20,7 @@ const permissionLinks = [
   const notices = dashboard?.notices ?? [];
   const photos = dashboard?.photos ?? [];
   const location = [dashboard?.society?.city, dashboard?.society?.state].filter(Boolean).join(', ');
-  const mobileLinks = useMemo(() => dashboard?.role === 'OWNER' ? [['Home', '/'], ['Payment', '/payments'], ['Profile', '/profile']] : [['Home', '/'], ['Programs', '/programs'], ['Notices', '/notices'], ['Gallery', '/gallery'], ['Profile', '/profile']], [dashboard?.role]);
+  const mobileLinks = useMemo(() => dashboard?.role === 'OWNER' ? [['Home', '/'], ['Payment', '/payments'], ['Profile', '/profile']] : [['Home', '/'], ['Programs', '/programs'], ['Notices', '/notices'], ['Bills', '/bills'], ['Gallery', '/gallery'], ['Profile', '/profile']], [dashboard?.role]);
 
   return <div className="app-shell">
     <header className="topbar">
