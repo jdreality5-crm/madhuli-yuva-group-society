@@ -97,6 +97,7 @@ model User {
   @@index([societyId, role])
   @@index([societyId, role, approvalStatus])
   @@index([unitId])
+  @@index([societyId, flatId, role])
 }
 
 model VerificationToken {
