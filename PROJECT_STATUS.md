@@ -3,7 +3,7 @@
 ## Current
 - Branch: `fresh-society-v2`
 - Phase: Security hardening and production readiness
-- Current task: Firebase resident-auth migration + configuration/E2E verification, alongside remaining security audit
+- Current task: Firebase resident-auth configuration + E2E verification, alongside remaining security audit
 - Final stage: Not signed off
 - Current implementation commit: `12b99f703c45cd15777e16ef4b693b8345ac52cb`
 
@@ -14,7 +14,7 @@
 | Next.js V2 app | Complete | Active app under `v2/` |
 | Prisma/PostgreSQL | Complete | Supabase PostgreSQL |
 | Property model | Complete | Apartment + dynamic tenament floors |
-| Resident signup | Implemented / config pending | Firebase Gmail-only signup + email verification link + automatic activation; 15-day contact locks added |
+| Resident signup | Implemented / config pending | Firebase Gmail-only signup + verification link; verification now activates the matching resident and starts 15-day contact locks |
 | Login/session enforcement | Migrated / audit | Residents authenticate with Firebase; app session remains DB-revalidated |
 | Profile | Implemented / audit | Review email/session consistency |
 | Financial isolation | Audited / continue | Continue endpoint-by-endpoint audit |
@@ -43,8 +43,8 @@
 - Root README and deployment documentation now describe V2 + Cloudflare Workers rather than V1 Express/SQLite.
 
 ## Required Sequence
-1. Configure Firebase Authentication and custom email action handler.
-2. Configure Cloudflare Firebase environment secret(s).
+1. Configure Firebase Authentication and custom email action handler (`/verify-email`).
+2. Configure and verify `FIREBASE_WEB_API_KEY` in Cloudflare.
 3. E2E-test Gmail signup → verification link → automatic activation → login.
 4. Add/verify Firebase password reset flow.
 5. Audit remaining protected APIs/pages and legacy flat compatibility.
