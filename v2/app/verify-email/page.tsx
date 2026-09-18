@@ -20,5 +20,5 @@ export default function EmailActionHandler() {
       .catch(e=>{setMessage('');setError(e instanceof Error?e.message:'Email verification failed.');});
   },[params,router]);
 
-  return <main className="login-page"><section className="login-card auth-standalone" style={{maxWidth:520,margin:'10vh auto'}}><p className="eyebrow">Email action</p><h2>{error?'Action failed':'Please wait'}</h2>{message&&<div className="login-success" role="status">{message}</div>}{error&&<div className="login-error" role="alert">{error}</div>}{error&&<a className="premium-btn" href="/login" style={{display:'block',textAlign:'center',textDecoration:'none',marginTop:18}}>Return to login</a>}</section></main>;
+  return <main className="login-page"><section className="login-card auth-standalone" style={{maxWidth:520,margin:'10vh auto',borderTop:'3px solid var(--gold)'}}><p className="eyebrow">Madhuli Yuva Group • Email Verification</p><h2>{error?'Action failed':'Please wait'}</h2>{message&&<div className="login-success" role="status">{message}</div>}{error&&<div className="login-error" role="alert">{error}</div>}{error&&<a className="premium-btn" href="/login" style={{display:'block',textAlign:'center',textDecoration:'none',marginTop:18}}>Return to login</a>}</section></main>;
 }
