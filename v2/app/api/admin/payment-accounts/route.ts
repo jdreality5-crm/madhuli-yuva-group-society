@@ -5,6 +5,15 @@ import { createSignedFileUrl, getSupabaseAdmin, STORAGE_BUCKET } from '@/lib/sup
 
 const schema = z.object({ displayName: z.string().trim().min(2).max(100), upiId: z.string().trim().max(100).optional().or(z.literal('')), qrImageUrl: z.string().max(4000000).optional().or(z.literal('')), purpose: z.string().trim().min(2).max(200), instructions: z.string().trim().max(500).optional().or(z.literal('')), ownerUserId: z.string().optional().or(z.literal('')) });
 
+
+function hasValidSignature(bytes: Buffer, extension: string) {
+  if (extension === 'jpg') return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (extension === 'png') return bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]));
+  if (extension === 'webp') return bytes.length >= 12 && bytes.subarray(0, 4).toString('ascii') === 'RIFF' && bytes.subarray(8, 12).toString('ascii') === 'WEBP';
+  if (extension === 'pdf') return bytes.length >= 5 && bytes.subarray(0, 5).toString('ascii') === '%PDF-';
+  return false;
+}
+
 async function storeQr(value: string, societyId: string) {
   if (!value) return null;
   if (!value.startsWith('data:image/')) return value;
@@ -13,7 +22,8 @@ async function storeQr(value: string, societyId: string) {
   const contentType = match[1];
   const extension = match[2] === 'jpeg' ? 'jpg' : match[2];
   const buffer = Buffer.from(match[3], 'base64');
-  if (buffer.length > 5 * 1024 * 1024) throw new Error('QR_TOO_LARGE');
+  if (buffer.length === 0 || buffer.length > 5 * 1024 * 1024) throw new Error('QR_TOO_LARGE');
+  if (!hasValidSignature(buffer, extension)) throw new Error('INVALID_QR');
   const path = `${societyId}/payment-qrs/${crypto.randomUUID()}.${extension}`;
   const { error } = await getSupabaseAdmin().storage.from(STORAGE_BUCKET).upload(path, buffer, { contentType, upsert: false, cacheControl: '3600' });
   if (error) throw error;
