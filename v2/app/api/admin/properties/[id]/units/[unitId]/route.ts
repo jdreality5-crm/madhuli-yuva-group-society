@@ -40,7 +40,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       const updated = await tx.propertyUnit.update({ where: { id: unitId }, data: { residentType: residentUserId ? data.residentType : null, ownerName: residentUserId ? name : null, ownerMobile: residentUserId ? mobile : null, ownerEmail: residentUserId ? email : null, signupEnabled: data.signupEnabled, residentUserId: residentUserId || null } });
       if (previousUserId && previousUserId !== residentUserId) await tx.user.updateMany({ where: { id: previousUserId, societyId: session.societyId, unitId }, data: { unitId: null, residentType: null } });
       if (residentUserId) await tx.user.update({ where: { id: residentUserId }, data: { unitId, residentType: data.residentType } });
-      await tx.auditLog.create({ data: { societyId: session.societyId, actorUserId: session.id, action: "UPDATE", module: "PROPERTY_UNIT", recordId: unitId, details: JSON.stringify({ propertyId: id, residentType: data.residentType, residentUserId: residentUserId || null, signupEnabled: data.signupEnabled }) } });
+      await tx.auditLog.create({ data: { userId: session.id, action: "UPDATE", module: "PROPERTY_UNIT", recordId: unitId, details: JSON.stringify({ propertyId: id, residentType: data.residentType, residentUserId: residentUserId || null, signupEnabled: data.signupEnabled }) } });
       return updated;
     });
     return NextResponse.json({ unit: result });
