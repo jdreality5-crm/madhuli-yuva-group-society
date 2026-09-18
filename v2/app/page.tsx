@@ -62,7 +62,7 @@ export default function Home() {
   const notices = dashboard?.notices ?? [];
   const photos = dashboard?.photos ?? [];
   const location = [dashboard?.society?.city, dashboard?.society?.state].filter(Boolean).join(', ');
-  const mobileLinks = useMemo(() => dashboard?.role === 'OWNER' ? [['Home', '/'], ['Make Payment', '/payments'], ['Profile', '/profile']] : [['Home', '/'], ['Properties', '/admin/properties'], ['Programs', '/admin/programs'], ['Reports', '/reports'], ['Profile', '/profile']], [dashboard?.role]);
+  const mobileLinks = useMemo(() => dashboard?.role === 'OWNER' ? [['Home', '/'], ['Payment', '/payments'], ['Profile', '/profile']] : [['Home', '/'], ['Properties', '/admin/properties'], ['Programs', '/admin/programs'], ['Reports', '/reports'], ['Profile', '/profile']], [dashboard?.role]);
 
   return <div className="app-shell">
     <header className="topbar">
@@ -98,12 +98,19 @@ export default function Home() {
         {dashboard?.stats && <section className="section">
           <div className="section-head"><div><p className="eyebrow">Overview</p><h2>Society performance</h2></div></div>
           <div className="grid stats">
-            <div className="card stat-card"><div className="stat-label">Total Income</div><div className="stat-value">{money(dashboard.stats.totalIncome)}</div><div className="stat-note">Recorded receipts</div></div>
-            <div className="card stat-card"><div className="stat-label">Total Expense</div><div className="stat-value">{money(dashboard.stats.totalExpense)}</div><div className="stat-note">Recorded expenditure</div></div>
-            <div className="card stat-card"><div className="stat-label">Current Balance</div><div className="stat-value">{money(dashboard.stats.balance)}</div><div className="stat-note">Income less expenses</div></div>
-            <div className="card stat-card"><div className="stat-label">Active Flats</div><div className="stat-value">{dashboard.stats.flats}</div><div className="stat-note">Society records</div></div>
+            <div className="card stat-card"><div className="stat-icon" aria-hidden="true">₹</div><div className="stat-label">Total Income</div><div className="stat-value">{money(dashboard.stats.totalIncome)}</div><div className="stat-note">Recorded receipts</div></div>
+            <div className="card stat-card"><div className="stat-icon" aria-hidden="true">−</div><div className="stat-label">Total Expense</div><div className="stat-value">{money(dashboard.stats.totalExpense)}</div><div className="stat-note">Recorded expenditure</div></div>
+            <div className="card stat-card"><div className="stat-icon" aria-hidden="true">✓</div><div className="stat-label">Current Balance</div><div className="stat-value">{money(dashboard.stats.balance)}</div><div className="stat-note">Income less expenses</div></div>
+            <div className="card stat-card"><div className="stat-icon" aria-hidden="true">⌂</div><div className="stat-label">Active Flats</div><div className="stat-value">{dashboard.stats.flats}</div><div className="stat-note">Society records</div></div>
           </div>
         </section>}
+
+        <section className="section quick-actions">
+          <div className="section-head"><div><p className="eyebrow">Quick access</p><h2>Common actions</h2></div><span className="section-subtitle">Secure workspace</span></div>
+          <div className="quick-action-grid">
+            {(dashboard?.role === 'OWNER' ? [['Make a Payment','Pay society dues securely','/payments','₹'],['My Profile','Update your profile','/profile','◎']] : [['Add / Manage Residents','Manage flats and resident records','/admin/flats','⌂'],['Create Program','Plan an upcoming society program','/admin/programs','◆'],['Post Notice','Share an important society update','#','!'],['View Reports','Review authorized financial reports','/reports','▤']]).map(([title,desc,url,icon]) => <a className="card quick-action" href={url} key={title}><span className="quick-icon">{icon}</span><span><strong>{title}</strong><small>{desc}</small></span><b aria-hidden="true">→</b></a>)}
+          </div>
+        </section>
 
         <section className="section">
           <div className="section-head"><div><p className="eyebrow">Calendar</p><h2>Upcoming Programs / આગામી કાર્યક્રમો</h2></div><span className="section-subtitle">{upcoming.length} upcoming</span></div>
