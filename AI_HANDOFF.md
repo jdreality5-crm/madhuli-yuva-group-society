@@ -124,7 +124,7 @@ Cloudflare Workers deployment uses vinext and Wrangler. See `DEPLOYMENT.md`.
 - Production build and Cloudflare deployment succeed.
 
 ## LAST VERIFIED STATE
-Repository configuration and current branch were re-checked on 2026-09-18. Current branch HEAD before this documentation update included audit fix commit `a74276aedeca921ef7a99e853b38f250fcdb870f`; this documentation commit will advance HEAD again. Cloudflare Workers configuration exists at `v2/wrangler.jsonc`; `v2/package.json` contains vinext/Wrangler/Cloudflare deployment scripts. A local typecheck could not be executed because the execution environment could not resolve github.com, so build status remains unverified.
+Repository configuration and current branch were re-checked on 2026-09-18. Firebase resident-auth migration code is now present on `fresh-society-v2`, with implementation/status documentation updated through commit `1dc59efbda2dbff4f13aedeed1960e833bc2ae4b`. Cloudflare Workers configuration exists at `v2/wrangler.jsonc`; `v2/package.json` contains vinext/Wrangler/Cloudflare deployment scripts. A local typecheck could not be executed because the execution environment could not resolve github.com, so build status remains unverified.
 
 ## CONTINUATION RULE
 Every major implementation step must update this file and `PROJECT_STATUS.md` with CURRENT TASK, NEXT TASK, completed work, known issues, and the last verified commit.
