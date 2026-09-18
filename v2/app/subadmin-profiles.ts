@@ -1,0 +1,8 @@
+export const SUBADMIN_PROFILE_TYPES = ['MANAGER', 'ACCOUNTANT', 'WATCHER'] as const;
+export type SubAdminProfileType = typeof SUBADMIN_PROFILE_TYPES[number];
+
+export const SUBADMIN_PROFILE_PERMISSIONS: Record<SubAdminProfileType, string[]> = {
+  MANAGER: ['EVENTS', 'NOTICES', 'GALLERY', 'BILLS', 'EXPENSES', 'INCOME', 'PAYMENTS', 'REPORTS'],
+  ACCOUNTANT: ['BILLS', 'EXPENSES', 'INCOME', 'PAYMENTS', 'REPORTS'],
+  WATCHER: ['EVENTS', 'NOTICES', 'GALLERY', 'REPORTS'],
+};
