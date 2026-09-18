@@ -70,6 +70,8 @@ model User {
   mobile              String?
   emailLockedUntil    DateTime?
   mobileLockedUntil   DateTime?
+  failedLoginAttempts Int             @default(0)
+  loginLockedUntil    DateTime?
   role                Role
   status              RecordStatus    @default(ACTIVE)
   approvalStatus      ApprovalStatus  @default(APPROVED)
