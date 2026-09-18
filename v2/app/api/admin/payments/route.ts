@@ -31,7 +31,7 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
-    const session = await requireSubAdminPermission();
+    const session = await requireSubAdminPermission('PAYMENTS');
     const body = schema.parse(await req.json());
 
     const result = await prisma.$transaction(async tx => {
