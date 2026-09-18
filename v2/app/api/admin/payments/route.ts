@@ -10,7 +10,7 @@ const schema = z.object({
 
 export async function GET() {
   try {
-    const session = await requireSubAdminPermission();
+    const session = await requireSubAdminPermission('PAYMENTS');
     const payments = await prisma.payment.findMany({
       where: { societyId: session.societyId },
       orderBy: { createdAt: 'desc' },
@@ -52,6 +52,9 @@ export async function PATCH(req: Request) {
       if (claimed.count !== 1) return { error: 'Payment has already been reviewed.', status: 409 as const };
 
       if (body.action === 'VERIFY') {
+        if (payment.billId) {
+          await tx.bill.updateMany({ where: { id: payment.billId, societyId: session.societyId, paymentStatus: { not: 'PAID' } }, data: { paymentStatus: 'PAID' } });
+        }
         await tx.income.create({
           data: {
             societyId: payment.societyId,
