@@ -15,7 +15,7 @@ Society Management System for Pramukhpark Society + Sarang Apartment.
 Security hardening, authorization audit, E2E verification, then production readiness.
 
 ## CURRENT TASK
-Continue full protected API/page authorization audit and E2E verification. Initial audit pass has already found and fixed several authorization/concurrency issues.
+Continue protected API/page authorization audit after fixing a Prisma AuditLog schema mismatch in property-unit updates, then continue E2E verification.
 
 ## NEXT TASK
 Finish remaining API/page audit, then run production typecheck/build, verify Cloudflare deployment, and complete final production sign-off.
@@ -44,6 +44,7 @@ Finish remaining API/page audit, then run production typecheck/build, verify Clo
 - Hardened legacy resident approval endpoint to require verified email and unlink rejected units.
 - Restricted generic storage upload to organizers.
 - Hardened property-unit resident linking to active/approved/email-verified residents and allowed safe empty-unit clearing.
+- Fixed property-unit audit logging to use the actual Prisma AuditLog fields (`userId`, `action`, `module`, `recordId`, `details`) so the route matches the schema.
 
 ## PENDING
 1. Complete protected API authorization/society-scope audit.
@@ -88,6 +89,7 @@ Cloudflare Workers deployment uses vinext and Wrangler. See `DEPLOYMENT.md`.
 
 ## KNOWN ISSUES / AUDIT TARGETS
 - Verify every protected route rather than assuming previously audited routes remain correct.
+- Property-unit PATCH had an AuditLog field mismatch; fixed in `a74276aedeca921ef7a99e853b38f250fcdb870f`.
 - Profile email changes need explicit verification of session behavior and email uniqueness semantics.
 - Legacy `Flat` model/routes coexist with the new `PropertyUnit` model and need compatibility review.
 - Payment transaction/reference uniqueness and repeated submission semantics need final review.
@@ -117,7 +119,7 @@ Cloudflare Workers deployment uses vinext and Wrangler. See `DEPLOYMENT.md`.
 - Production build and Cloudflare deployment succeed.
 
 ## LAST VERIFIED STATE
-Repository configuration and current branch were re-checked on 2026-09-18. Current branch HEAD after documentation and audit fixes is `2335b0eed6e54c5f4a39b7cdf93912e6b18efb03`. Cloudflare Workers configuration exists at `v2/wrangler.jsonc`; `v2/package.json` contains vinext/Wrangler/Cloudflare deployment scripts. A local typecheck could not be executed because the execution environment could not resolve github.com, so build status remains unverified.
+Repository configuration and current branch were re-checked on 2026-09-18. Current branch HEAD before this documentation update included audit fix commit `a74276aedeca921ef7a99e853b38f250fcdb870f`; this documentation commit will advance HEAD again. Cloudflare Workers configuration exists at `v2/wrangler.jsonc`; `v2/package.json` contains vinext/Wrangler/Cloudflare deployment scripts. A local typecheck could not be executed because the execution environment could not resolve github.com, so build status remains unverified.
 
 ## CONTINUATION RULE
 Every major implementation step must update this file and `PROJECT_STATUS.md` with CURRENT TASK, NEXT TASK, completed work, known issues, and the last verified commit.
