@@ -27,7 +27,6 @@ export async function PATCH(req: Request) {
     const emailChanged = body.email.toLowerCase() !== current.email.toLowerCase();
     const mobileChanged = body.mobile !== (current.mobile || '');
     if (emailChanged) return NextResponse.json({ error:'Email cannot be changed from Profile. Email changes require a separate verification flow.' }, { status:400 });
-    if (current.emailLockedUntil && current.emailLockedUntil > now) return NextResponse.json({ error:'Email is locked until the current 15-day verification window expires.' }, { status:409 });
     if (mobileChanged && current.mobileLockedUntil && current.mobileLockedUntil > now) return NextResponse.json({ error:'Mobile number is locked for 15 days after account activation.' }, { status:409 });
     if (mobileChanged) {
       const duplicate = await prisma.user.findFirst({ where: { societyId: session.societyId, mobile: body.mobile, id: { not: session.id } }, select: { id: true } });
