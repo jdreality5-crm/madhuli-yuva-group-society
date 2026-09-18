@@ -171,3 +171,12 @@ Reviewed the main protected admin/payment/dashboard routes: queries are scoped b
 - Login abuse protection locks accounts after five failed attempts for 15 minutes.
 - Payment creation/evidence submission/review are society- and owner-scoped, with atomic pending-row claims and transaction-reference uniqueness.
 - Remaining E2E blockers are environment/configuration dependent: Firebase Console Email/Password + custom action handler, production `FIREBASE_WEB_API_KEY`, live Cloudflare deployment verification, and an actual browser/database test run.
+
+
+## FINAL SECURITY SURFACE PASS — 2026-09-18
+- Reviewed public health, residence-discovery, login/logout, password recovery, Firebase verification, and legacy verification endpoints.
+- Health endpoint exposes only boolean configuration/database health flags and timestamp; no secret values are returned.
+- Signup residence discovery exposes only active signup-enabled, unclaimed units needed for registration and is restricted to the configured society.
+- Legacy OTP resend endpoint was disabled with HTTP 410 because the new resident flow uses Firebase email-link verification; this removes an unauthenticated OTP-generation and account-enumeration surface.
+- Session cookie remains HttpOnly, Secure in production, SameSite=Lax, path=/, with 7-day expiry; every session request revalidates the DB user, role, society, active state, approval, and resident email verification.
+- No production sign-off yet: live E2E, build/typecheck, Firebase Console configuration, and Cloudflare deployment verification remain external verification items.
