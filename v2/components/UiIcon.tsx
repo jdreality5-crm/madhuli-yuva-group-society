@@ -1,6 +1,6 @@
 import React from 'react';
 
-type Name='dashboard'|'property'|'users'|'calendar'|'notice'|'gallery'|'payment'|'report'|'edit'|'trash'|'document'|'camera'|'refresh'|'check'|'home'|'add';
+type Name='dashboard'|'property'|'users'|'calendar'|'notice'|'gallery'|'payment'|'report'|'edit'|'trash'|'document'|'camera'|'refresh'|'check'|'home'|'add'|'close';
 export function UiIcon({name,size=18,className=''}:{name:Name;size?:number;className?:string}){
  const common={width:size,height:size,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.8,strokeLinecap:'round' as const,strokeLinejoin:'round' as const,ariaHidden:true};
  const paths:Record<Name,React.ReactNode>={
@@ -19,7 +19,8 @@ export function UiIcon({name,size=18,className=''}:{name:Name;size?:number;class
  refresh:<><path d="M20 11a8 8 0 0 0-14-4L4 9"/><path d="M4 5v4h4"/><path d="M4 13a8 8 0 0 0 14 4l2-2"/><path d="M20 19v-4h-4"/></>,
  check:<><path d="m5 12 4 4L19 7"/></>,
  home:<><path d="m3 10 9-7 9 7v10H3z"/><path d="M9 21v-6h6v6"/></>,
- add:<><path d="M12 5v14M5 12h14"/></>
+ add:<><path d="M12 5v14M5 12h14"/></>,
+ close:<><path d="m6 6 12 12M18 6 6 18"/></>
  };
  return <svg {...common} className={className}>{paths[name]}</svg>;
 }
