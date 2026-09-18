@@ -11,54 +11,12 @@ const primaryLinks = [
   ['Properties', '/admin/properties'],
   ['Flats & Owners', '/admin/flats'],
   ['Programs', '/admin/programs'],
-  ['Notices', '#'],
-  ['Gallery', '#'],
 ] as const;
 
-const roleLinks = (role: Role, permissions: string[] = []) => {
-  if (role === 'MASTER_ADMIN') {
-    return [['Resident Approvals', '/admin/owner-approvals'], ['Sub Admins', '/admin/subadmins'], ['UPI Accounts', '/admin/payment-accounts'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Profile', '/profile'], ['Settings', '#']] as const;
-  }
-  if (role === 'ORGANIZER') {
-    return [['Resident Approvals', '/admin/owner-approvals'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Profile', '/profile'], ['Settings', '#']].filter(([label]) => {
-      if (label === 'Payment Verification') return permissions.includes('PAYMENTS');
-      if (label === 'Income') return permissions.includes('INCOME');
-      if (label === 'Expenses') return permissions.includes('EXPENSES');
-      if (label === 'Bills') return permissions.includes('BILLS');
-      if (label === 'Reports' || label === 'Annual Reports') return permissions.includes('REPORTS');
-      return true;
-    });
-  }
-  return [['Make Payment', '/payments'], ['Profile', '/profile']] as const;
-}
-
-const roleLabel = (role: Role) => role === 'MASTER_ADMIN' ? 'Master Admin' : role === 'ORGANIZER' ? 'Sub Admin / Organizer' : 'Resident';
-
-export default function Home() {
-  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/dashboard')
-      .then(async response => { if (!response.ok) throw Error(); return response.json(); })
-      .then(setDashboard)
-      .catch(() => setError('Please login to continue'))
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function logout() {
-    setLoggingOut(true);
-    await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.href = '/login';
-  }
-
-  if (loading) return <main className="main"><div className="card empty-state">Loading your society dashboard…</div></main>;
-  if (error) return <main className="main"><div className="card" style={{ maxWidth: 560, margin: '10vh auto', textAlign: 'center' }}><div className="brand-mark" style={{ margin: '0 auto 14px' }}>S</div><h1 style={{ color: 'var(--maroon)' }}>Society Administration</h1><p style={{ color: 'var(--muted)', lineHeight: 1.7 }}>{error}</p><a className="btn btn-primary" href="/login">Continue to Login</a></div></main>;
-
-  const links = roleLinks(dashboard!.role, dashboard?.permissions);
-  const upcoming = dashboard?.upcomingEvents ?? [];
+const permissionLinks = [
+  ['Notices', 'NOTICES', '#'],
+  ['Gallery', 'GALLERY', '#'],
+] as const;
   const notices = dashboard?.notices ?? [];
   const photos = dashboard?.photos ?? [];
   const location = [dashboard?.society?.city, dashboard?.society?.state].filter(Boolean).join(', ');
@@ -77,6 +35,7 @@ export default function Home() {
       <aside className="sidebar">
         <div className="nav-section">Workspace</div>
         {primaryLinks.map(([label, url], index) => <a className={'nav-item ' + (index === 0 ? 'active' : '')} href={url} key={label}>{label}</a>)}
+        {dashboard?.role !== 'OWNER' && permissionLinks.filter(([, permission]) => dashboard?.role === 'MASTER_ADMIN' || dashboard?.permissions?.includes(permission)).map(([label, , url]) => <a className="nav-item" href={url} key={label}>{label}</a>)}
         <div className="nav-section">Administration</div>
         {links.map(([label, url]) => <a className="nav-item" href={url} key={label}>{label}</a>)}
         <div className="nav-spacer" />
