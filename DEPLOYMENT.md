@@ -50,3 +50,10 @@ Before sign-off:
 
 ## Legacy
 Vercel is not the production deployment target. Historical Vercel configuration should not override Cloudflare Workers architecture.
+
+
+## Current verification state — 2026-09-18
+- Production target: Cloudflare Workers (society-function-management-v2).
+- Latest branch HEAD: 6ed47f14ae6bf2e4293c405737db02c3dae8fbfb.
+- No GitHub Actions run is attached to the latest commit. Cloudflare Workers Build/deployment must be checked in Cloudflare before calling this commit deployed.
+- Firebase email verification requires the Firebase Console custom email action handler to point to the deployed /verify-email route; source code alone cannot verify that console setting.
