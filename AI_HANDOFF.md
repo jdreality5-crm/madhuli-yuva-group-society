@@ -15,7 +15,7 @@ Society Management System for Pramukhpark Society + Sarang Apartment.
 Security hardening, authorization audit, E2E verification, then production readiness.
 
 ## CURRENT TASK
-Complete Firebase resident-auth configuration and live E2E verification, then continue the protected-API/security audit. Resident email verification now activates the account immediately and starts the 15-day email/mobile contact locks; the application session is still created only after password login.
+Complete Firebase resident-auth configuration/live E2E verification and continue the protected-API/security audit. Profile updates now enforce the 15-day mobile lock while allowing normal name edits; email remains read-only in the profile API.
 
 ## NEXT TASK
 Configure Firebase Email/Password Auth and the custom email action handler URL (`/verify-email`), add/verify `FIREBASE_WEB_API_KEY` in Cloudflare, then E2E-test signup → verification → activation → login and password recovery. After that, continue endpoint-by-endpoint authorization and payment idempotency review.
@@ -128,3 +128,7 @@ Repository configuration and current branch were re-checked on 2026-09-18. Fireb
 
 ## CONTINUATION RULE
 Every major implementation step must update this file and `PROJECT_STATUS.md` with CURRENT TASK, NEXT TASK, completed work, known issues, and the last verified commit.
+
+
+## SECURITY AUDIT NOTE (2026-09-18)
+Profile API now enforces the 15-day mobile lock. A production duplicate-mobile check found 2 existing records sharing `9876543210`; therefore a database unique mobile constraint was intentionally NOT added yet. Existing duplicate must be reconciled before introducing a unique constraint.
