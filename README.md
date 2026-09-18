@@ -1,5 +1,7 @@
 # Society Management System — V2
 
+> PRODUCTION WARNING: The repository root contains historical V1 Express/SQLite files. They are legacy only and are NOT the production application. Production deployment must use v2/ and the Cloudflare Workers workflow.
+
 Production-focused society management application for **Pramukhpark Society** and **Sarang Apartment**.
 
 ## Current Source of Truth
