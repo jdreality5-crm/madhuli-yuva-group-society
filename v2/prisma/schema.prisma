@@ -278,6 +278,7 @@ model Bill {
   notes         String?
   society       Society @relation(fields: [societyId], references: [id])
   event         Event? @relation(fields: [eventId], references: [id])
+  payments      Payment[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   @@index([societyId, date])
@@ -338,6 +339,7 @@ model Payment {
   eventId         String?
   paymentAccountId String
   ownerUserId     String
+  billId          String?
   amountPaise     BigInt
   status          PaymentStatus @default(PENDING)
   transactionId   String?
@@ -352,11 +354,13 @@ model Payment {
   event           Event? @relation(fields: [eventId], references: [id])
   paymentAccount  PaymentAccount @relation(fields: [paymentAccountId], references: [id])
   ownerUser       User @relation("PaymentOwner", fields: [ownerUserId], references: [id])
+  bill            Bill? @relation(fields: [billId], references: [id], onDelete: SetNull)
   verifiedBy      User? @relation("PaymentVerifier", fields: [verifiedById], references: [id])
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   @@index([societyId, status, initiatedAt])
   @@index([ownerUserId, createdAt])
+  @@index([billId])
 }
 
 model AuditLog {
