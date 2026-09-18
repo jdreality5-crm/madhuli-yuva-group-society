@@ -15,20 +15,22 @@ const primaryLinks = [
   ['Gallery', '#'],
 ] as const;
 
-const roleLinks = (role: Role, permissions: string[] = []) => role === 'MASTER_ADMIN'
-  ? [['Resident Approvals', '/admin/owner-approvals'], ['Sub Admins', '/admin/subadmins'], ['UPI Accounts', '/admin/payment-accounts'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Profile', '/profile'], ['Settings', '#']] as const
-  : role === 'ORGANIZER'
-    ? [['Resident Approvals', '/admin/owner-approvals'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Profile', '/profile'], ['Settings', '#']].filter(([label]) => {
-        if (label === 'Payment Verification') return permissions.includes('PAYMENTS');
-        if (label === 'Income') return permissions.includes('INCOME');
-        if (label === 'Expenses') return permissions.includes('EXPENSES');
-        if (label === 'Bills') return permissions.includes('BILLS');
-        if (label === 'Reports' || label === 'Annual Reports') return permissions.includes('REPORTS');
-        if (label === 'Resident Approvals') return true;
-        return true;
-      })
-    :, '/admin/owner-approvals'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Profile', '/profile'], ['Settings', '#']] as const
-    : [['Make Payment', '/payments'], ['Profile', '/profile']] as const;
+const roleLinks = (role: Role, permissions: string[] = []) => {
+  if (role === 'MASTER_ADMIN') {
+    return [['Resident Approvals', '/admin/owner-approvals'], ['Sub Admins', '/admin/subadmins'], ['UPI Accounts', '/admin/payment-accounts'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Profile', '/profile'], ['Settings', '#']] as const;
+  }
+  if (role === 'ORGANIZER') {
+    return [['Resident Approvals', '/admin/owner-approvals'], ['Payment Verification', '/admin/payments'], ['Income', '/admin/income'], ['Expenses', '/admin/expenses'], ['Bills', '/admin/bills'], ['Reports', '/reports'], ['Annual Reports', '/annual-reports'], ['Profile', '/profile'], ['Settings', '#']].filter(([label]) => {
+      if (label === 'Payment Verification') return permissions.includes('PAYMENTS');
+      if (label === 'Income') return permissions.includes('INCOME');
+      if (label === 'Expenses') return permissions.includes('EXPENSES');
+      if (label === 'Bills') return permissions.includes('BILLS');
+      if (label === 'Reports' || label === 'Annual Reports') return permissions.includes('REPORTS');
+      return true;
+    });
+  }
+  return [['Make Payment', '/payments'], ['Profile', '/profile']] as const;
+}
 
 const roleLabel = (role: Role) => role === 'MASTER_ADMIN' ? 'Master Admin' : role === 'ORGANIZER' ? 'Sub Admin / Organizer' : 'Resident';
 
