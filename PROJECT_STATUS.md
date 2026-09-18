@@ -111,3 +111,11 @@
 - Profile page now provides a direct `Take Photo` action using the browser camera capture hint (`capture="user"`) plus a separate gallery/file picker.
 - Existing private Supabase Storage upload, 3 MB limit, MIME checks, replacement and removal flow remains unchanged.
 - Camera behavior is platform/browser controlled; supported mobile browsers open the front-camera capture UI, while unsupported browsers fall back to normal file selection.
+
+
+### UI/UX FOUNDATION — 2026-09-18
+- Added UI_UX_DESIGN_SYSTEM.md with the shared Creative Tim-inspired design rules, tokens, component language, free reference links, and rollout plan.
+- Added v2/app/layout.tsx as the real shared Next.js root layout. It now owns global CSS, app metadata, manifest reference, theme color and the PWA install prompt.
+- Removed duplicate global CSS import/PWA mounting from the home page and removed the page-level global CSS import from login.
+- PWA install prompting is now common to the application shell rather than being mounted only on the dashboard route.
+- Full module-by-module visual migration is intentionally the next UI phase; API behavior, auth, authorization and data scope must remain unchanged during UI work.
