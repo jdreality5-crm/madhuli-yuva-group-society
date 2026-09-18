@@ -15,7 +15,7 @@ const primaryLinks = [
 
 const permissionLinks = [
   ['Notices', 'NOTICES', '/admin/notices'],
-  ['Gallery', 'GALLERY', '#'],
+  ['Gallery', 'GALLERY', '/admin/gallery'],
 ] as const;
   const notices = dashboard?.notices ?? [];
   const photos = dashboard?.photos ?? [];
@@ -67,7 +67,7 @@ const permissionLinks = [
         <section className="section quick-actions">
           <div className="section-head"><div><p className="eyebrow">Quick access</p><h2>Common actions</h2></div><span className="section-subtitle">Secure workspace</span></div>
           <div className="quick-action-grid">
-            {(dashboard?.role === 'OWNER' ? [['Make a Payment','Pay society dues securely','/payments','₹'],['My Profile','Update your profile','/profile','◎']] : [['Add / Manage Residents','Manage flats and resident records','/admin/flats','⌂'],['Create Program','Plan an upcoming society program','/admin/programs','◆'],['Post Notice','Share an important society update','#','!'],['View Reports','Review authorized financial reports','/reports','▤']]).map(([title,desc,url,icon]) => <a className="card quick-action" href={url} key={title}><span className="quick-icon">{icon}</span><span><strong>{title}</strong><small>{desc}</small></span><b aria-hidden="true">→</b></a>)}
+            {(dashboard?.role === 'OWNER' ? [['Make a Payment','Pay society dues securely','/payments','₹'],['My Profile','Update your profile','/profile','◎']] : [['Add / Manage Residents','Manage flats and resident records','/admin/flats','⌂'],['Create Program','Plan an upcoming society program','/admin/programs','◆'],['Post Notice','Share an important society update','/admin/notices','!'],['View Reports','Review authorized financial reports','/reports','▤']]).map(([title,desc,url,icon]) => <a className="card quick-action" href={url} key={title}><span className="quick-icon">{icon}</span><span><strong>{title}</strong><small>{desc}</small></span><b aria-hidden="true">→</b></a>)}
           </div>
         </section>
 
