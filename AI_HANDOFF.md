@@ -15,10 +15,10 @@ Society Management System for Pramukhpark Society + Sarang Apartment.
 Security hardening, authorization audit, E2E verification, then production readiness.
 
 ## CURRENT TASK
-Continue protected API/page authorization audit, then E2E verification. Profile login-email consistency is now protected by making the verified email read-only until a dedicated re-verification flow exists.
+Migrate resident authentication to Firebase Authentication: Gmail-only signup, Firebase email verification link, immediate activation after verification, and 15-day email/mobile contact locks. Keep admin authentication and legacy compatibility paths safe while completing the migration audit.
 
 ## NEXT TASK
-Finish remaining API/page audit, then run production typecheck/build, verify Cloudflare deployment, and complete final production sign-off.
+Configure the Firebase project, verify the custom email action handler URL, add/verify Firebase environment secrets in Cloudflare, then E2E-test signup/login/password recovery and finish the remaining API/security audit.
 
 ## COMPLETED
 - V2 Next.js application established.
@@ -26,8 +26,10 @@ Finish remaining API/page audit, then run production typecheck/build, verify Clo
 - Supabase private storage integration.
 - Apartment/tenament property model.
 - Resident owner/tenant distinction.
-- Resident signup with email OTP and Master Admin approval.
-- Login approval/email verification enforcement.
+- Resident signup with Firebase Authentication, Gmail-only validation, property/unit matching, and Firebase email verification.
+- Resident account auto-activation after successful Firebase email verification; no new Master Admin approval step.
+- Firebase resident password authentication with the existing application session layer.
+- 15-day email/mobile contact lock fields added to the resident identity model.
 - Session revalidation against current DB state.
 - Profile image upload/change/remove and required mobile profile field.
 - Property setup and unit/floor management.
@@ -83,7 +85,7 @@ Not production-signed-off yet.
 - Preserve the premium maroon + antique gold + ivory UI direction and Gujarati-friendly responsive UX.
 
 ## DATABASE / AUTH
-Prisma is the application data layer. Supabase PostgreSQL is the database. Resident signup requires a pre-registered unit with matching email/mobile and signup enabled, email OTP verification, then Master Admin approval before activation.
+Prisma is the application data layer. Supabase PostgreSQL is the database. Resident signup requires a pre-registered unit with matching email/mobile and signup enabled, a @gmail.com address, Firebase email verification, then automatic activation. Firebase verification is an email link, not a 6-digit OTP. New resident registrations are automatically marked APPROVED for compatibility; legacy pending/rejected registrations remain blocked.
 
 ## DEPLOYMENT
 Cloudflare Workers deployment uses vinext and Wrangler. See `DEPLOYMENT.md`.
@@ -93,6 +95,8 @@ Cloudflare Workers deployment uses vinext and Wrangler. See `DEPLOYMENT.md`.
 - Property-unit PATCH had an AuditLog field mismatch; fixed in `a74276aedeca921ef7a99e853b38f250fcdb870f`.
 - Profile email is now read-only and API-enforced; a separate verified email-change flow is intentionally deferred.
 - Legacy `Flat` model/routes coexist with the new `PropertyUnit` model and need compatibility review.
+- Firebase Authentication configuration is code-ready but Cloudflare environment credentials and Firebase email-action-handler configuration are not yet verified.
+- Legacy Gmail/Resend OTP helper and resend route remain in the repository for compatibility; the new resident signup path no longer depends on them.
 - Payment transaction/reference uniqueness and repeated submission semantics need final review.
 - Production deployment corresponding to the latest commit has not yet been verified.
 
@@ -106,10 +110,10 @@ Cloudflare Workers deployment uses vinext and Wrangler. See `DEPLOYMENT.md`.
 
 ## TESTING CHECKLIST
 - Authentication and role selection.
-- Resident signup and OTP.
-- Pending approval cannot log in.
-- Approved + verified resident can log in.
-- Rejected resident cannot log in.
+- Resident signup and Firebase email verification.
+- New Firebase resident cannot log in before email verification.
+- Firebase-verified resident becomes ACTIVE immediately and can log in.
+- Legacy pending/rejected resident records remain blocked.
 - Deactivated/rejected existing session is revalidated.
 - Resident cannot cross society boundaries.
 - Resident cannot access admin financial APIs.
