@@ -30,8 +30,9 @@ export async function POST(req: Request) {
         if (!firebaseUser || firebaseUser.localId !== user.firebaseUid || firebaseUser.emailVerified !== true || firebaseUser.disabled === true) {
           return NextResponse.json({ error: 'Please verify your Gmail address before signing in.' }, { status: 403 });
         }
-        if (!user.emailVerified) {
-          await prisma.user.update({ where: { id: user.id }, data: { emailVerified: true } });
+        if (!user.emailVerified || user.status !== 'ACTIVE') {
+          const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
+          await prisma.user.update({ where: { id: user.id }, data: { emailVerified: true, status: 'ACTIVE', approvalStatus: 'APPROVED', emailLockedUntil: user.emailLockedUntil || lockUntil, mobileLockedUntil: user.mobileLockedUntil || lockUntil } });
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : '';
