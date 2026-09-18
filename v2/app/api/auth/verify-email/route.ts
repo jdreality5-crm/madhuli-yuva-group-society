@@ -10,14 +10,26 @@ export async function GET(req: Request) {
 
     const result = await firebaseApplyVerificationCode(oobCode);
     const email = normalizeGmail(result.email);
-    const user = await prisma.user.findUnique({ where: { email }, select: { id: true, role: true, approvalStatus: true } });
-    if (!user || user.role !== 'OWNER' || user.approvalStatus !== 'APPROVED') {
+    const user = await prisma.user.findUnique({ where: { email }, select: { id: true, role: true, approvalStatus: true, firebaseUid: true } });
+    if (!user || user.role !== 'OWNER' || user.approvalStatus !== 'APPROVED' || !user.firebaseUid || user.firebaseUid !== result.localId) {
       return NextResponse.json({ error: 'No matching resident registration was found.' }, { status: 404 });
     }
 
-    // Do not create an application session from an email action alone.
-    // The resident must still authenticate with Firebase after verification.
-    return NextResponse.json({ verified: true, email, message: 'Gmail verified. Please sign in with your password to activate your resident session.' });
+    // Email verification itself completes resident activation. The application
+    // session is still created only after a normal password login.
+    const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        status: 'ACTIVE',
+        approvalStatus: 'APPROVED',
+        emailLockedUntil: { set: lockUntil },
+        mobileLockedUntil: { set: lockUntil },
+      },
+    });
+
+    return NextResponse.json({ verified: true, email, message: 'Gmail verified and your resident account is now active. Please sign in with your password.' });
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
     if (message.includes('EXPIRED_OOB_CODE') || message.includes('INVALID_OOB_CODE')) {
