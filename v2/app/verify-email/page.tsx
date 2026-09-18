@@ -4,24 +4,22 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import '../globals.css';
 
-export default function VerifyEmailPage() {
+export default function EmailActionHandler() {
   const router = useRouter();
   const params = useSearchParams();
-  const [message, setMessage] = useState('Verifying your Gmail address…');
-  const [error, setError] = useState('');
+  const [message,setMessage]=useState('Processing your email action…');
+  const [error,setError]=useState('');
 
   useEffect(() => {
-    const code = params.get('oobCode');
-    if (!code) { setError('This verification link is missing or invalid.'); setMessage(''); return; }
-    fetch('/api/auth/verify-email?oobCode=' + encodeURIComponent(code), { method: 'GET', cache: 'no-store' })
-      .then(async response => {
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'Email verification failed.');
-        setMessage('Gmail verified successfully. Please sign in with your password to activate your account.');
-        window.setTimeout(() => router.replace('/login?verified=1'), 900);
-      })
-      .catch(error => { setMessage(''); setError(error instanceof Error ? error.message : 'Email verification failed.'); });
-  }, [params, router]);
+    const mode=params.get('mode') || 'verifyEmail';
+    const code=params.get('oobCode');
+    if (!code) { setMessage(''); setError('This email action link is missing or invalid.'); return; }
+    if (mode==='resetPassword') { router.replace('/reset-password?oobCode='+encodeURIComponent(code)); return; }
+    if (mode!=='verifyEmail') { setMessage(''); setError('Unsupported email action.'); return; }
+    fetch('/api/auth/verify-email?oobCode='+encodeURIComponent(code),{cache:'no-store'})
+      .then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Email verification failed.');setMessage(d.message||'Gmail verified.');window.setTimeout(()=>router.replace('/login?verified=1'),900);})
+      .catch(e=>{setMessage('');setError(e instanceof Error?e.message:'Email verification failed.');});
+  },[params,router]);
 
-  return <main className="login-page"><section className="login-card" style={{maxWidth:520,margin:'10vh auto'}}><p className="eyebrow">Email verification</p><h2>{error ? 'Verification failed' : 'Email verified'}</h2>{message&&<div className="login-success" role="status">{message}</div>}{error&&<div className="login-error" role="alert">{error}</div>}{error&&<a className="premium-btn" href="/signup" style={{display:'block',textAlign:'center',textDecoration:'none',marginTop:18}}>Return to signup</a>}</section></main>;
+  return <main className="login-page"><section className="login-card" style={{maxWidth:520,margin:'10vh auto'}}><p className="eyebrow">Email action</p><h2>{error?'Action failed':'Please wait'}</h2>{message&&<div className="login-success" role="status">{message}</div>}{error&&<div className="login-error" role="alert">{error}</div>}{error&&<a className="premium-btn" href="/login" style={{display:'block',textAlign:'center',textDecoration:'none',marginTop:18}}>Return to login</a>}</section></main>;
 }
