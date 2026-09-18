@@ -43,7 +43,7 @@ export async function getSession(): Promise<SessionUser | null> {
     if (!user || user.societyId !== String(payload.societyId) || user.status !== 'ACTIVE') return null;
     if (user.role !== role) return null;
 
-    // Resident sessions are invalid unless the account is fully admitted.
+    // Resident sessions are valid only for active, email-verified accounts. New residents are auto-admitted after Firebase verification; legacy pending/rejected records remain blocked.
     if (user.role === 'OWNER' && (user.approvalStatus !== 'APPROVED' || !user.emailVerified)) return null;
 
     return {
