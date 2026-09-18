@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { prisma, requireMasterAdmin } from '@/lib/auth';
+import { prisma, requireMasterAdmin, SUBADMIN_PERMISSIONS } from '@/lib/auth';
 
 const schema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
@@ -9,6 +9,7 @@ const schema = z.object({
   mobile: z.string().trim().max(20).optional().or(z.literal('')),
   password: z.string().min(8).max(100).optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
+  permissions: z.array(z.enum(SUBADMIN_PERMISSIONS)).optional(),
 });
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -18,17 +19,18 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const body = schema.parse(await req.json());
     const target = await prisma.user.findFirst({ where: { id, societyId: session.societyId, role: 'ORGANIZER' } });
     if (!target) return NextResponse.json({ error: 'Sub Admin not found.' }, { status: 404 });
-    const data: { name?: string; email?: string; mobile?: string | null; passwordHash?: string; status?: 'ACTIVE' | 'INACTIVE' } = {};
+    const data: { name?: string; email?: string; mobile?: string | null; passwordHash?: string; status?: 'ACTIVE' | 'INACTIVE'; permissions?: string[] } = {};
     if (body.name !== undefined) data.name = body.name;
     if (body.email !== undefined) data.email = body.email;
     if (body.mobile !== undefined) data.mobile = body.mobile || null;
     if (body.password) data.passwordHash = await bcrypt.hash(body.password, 12);
     if (body.status) data.status = body.status;
+    if (body.permissions !== undefined) data.permissions = [...new Set(body.permissions)];
     if (data.email && data.email !== target.email) {
       const duplicate = await prisma.user.findUnique({ where: { email: data.email } });
       if (duplicate) return NextResponse.json({ error: 'Email already exists.' }, { status: 409 });
     }
-    const user = await prisma.user.update({ where: { id }, data, select: { id: true, name: true, email: true, mobile: true, status: true, updatedAt: true } });
+    const user = await prisma.user.update({ where: { id }, data, select: { id: true, name: true, email: true, mobile: true, status: true, permissions: true, updatedAt: true } });
     await prisma.auditLog.create({ data: { userId: session.id, action: 'UPDATE', module: 'SUBADMIN', recordId: user.id, details: `Updated Sub Admin ${user.email}` } });
     return NextResponse.json({ user });
   } catch (e) {
