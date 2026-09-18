@@ -105,3 +105,9 @@
 - Completed review of public/auth/session surfaces and disabled the obsolete resident OTP resend endpoint.
 - No secrets are returned by the health endpoint; residence discovery is limited to active, signup-enabled, unclaimed units in the configured society.
 - Remaining production-readiness work is verification rather than a claimed deployment: live Firebase configuration/E2E, build/typecheck, and Cloudflare deployment/version verification.
+
+
+## PROFILE CAMERA CAPTURE — 2026-09-18
+- Profile page now provides a direct `Take Photo` action using the browser camera capture hint (`capture="user"`) plus a separate gallery/file picker.
+- Existing private Supabase Storage upload, 3 MB limit, MIME checks, replacement and removal flow remains unchanged.
+- Camera behavior is platform/browser controlled; supported mobile browsers open the front-camera capture UI, while unsupported browsers fall back to normal file selection.
