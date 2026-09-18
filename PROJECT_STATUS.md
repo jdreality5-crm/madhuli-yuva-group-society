@@ -86,3 +86,9 @@
 - Firebase resident invalid-password failures and legacy bcrypt failures both use the same lockout path.
 - Login abuse migration is present at v2/prisma/migrations/20260918170000_add_login_abuse_controls/migration.sql.
 - Direct production schema preparation was verified; Prisma migration deployment still needs to run through the normal Cloudflare build/deploy path.
+
+
+### Storage upload hardening — 2026-09-18
+- Generic organizer uploads now validate magic-byte signatures for JPG, PNG, WEBP and PDF instead of trusting MIME type alone.
+- Payment-account QR uploads now validate decoded image signatures and reject empty/mismatched content.
+- Private storage continues to use the society-scoped path and signed URLs.
