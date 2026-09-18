@@ -152,3 +152,11 @@ Reviewed the main protected admin/payment/dashboard routes: queries are scoped b
 - GitHub reports no workflow runs attached to this commit, so this repo does not currently provide a GitHub Actions deployment result for the latest changes.
 - Cloudflare Workers remains the production deployment target. Cloudflare's current documentation confirms vinext + Wrangler as the supported Next.js Workers path.
 - Do not claim the latest Firebase/security changes are production-deployed until the Cloudflare Worker version/commit is independently verified.
+
+
+## LEGACY V1 SURFACE AUDIT — 2026-09-18
+- The repository root still contains historical V1 Express/SQLite assets (server.js, root package.json, society.db, Docker/Railway configuration, and old frontend package files).
+- These files are not part of the V2 Cloudflare workflow: both V2 GitHub workflows use v2/ as their working directory, and the Cloudflare workflow deploys the V2 Worker.
+- The root V1 server has insecure legacy defaults and must not be deployed or used as the production application. It contains a fallback JWT secret, SQLite storage, permissive CORS, seeded sample credentials/data, and public uploads behavior.
+- Do not delete or migrate the historical V1 database automatically; preserve it unless an explicit archival/removal plan is requested.
+- V2 remains the sole production source of truth.
