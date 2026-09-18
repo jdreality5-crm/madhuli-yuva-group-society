@@ -20,9 +20,8 @@ export async function PATCH(req: Request) {
   try {
     const session = await requireSession();
     const body = schema.parse(await req.json());
-    const duplicate = await prisma.user.findFirst({ where:{ email:body.email.toLowerCase(), NOT:{id:session.id} } });
-    if (duplicate) return NextResponse.json({error:'Email is already in use.'},{status:409});
-    const user = await prisma.user.update({ where:{id:session.id}, data:{name:body.name,email:body.email.toLowerCase(),mobile:body.mobile} , select:{id:true,name:true,email:true,mobile:true,role:true,profileImageUrl:true} });
+    if (body.email.toLowerCase() !== session.email.toLowerCase()) return NextResponse.json({error:'Email cannot be changed from Profile. Email changes require a separate verification flow.'},{status:400});
+    const user = await prisma.user.update({ where:{id:session.id}, data:{name:body.name,mobile:body.mobile} , select:{id:true,name:true,email:true,mobile:true,role:true,profileImageUrl:true} });
     return NextResponse.json({profile:user});
   } catch(e:any) { return NextResponse.json({error:e?.name==='ZodError'?'Invalid profile details':e?.message||'Unable to update profile'},{status:e?.name==='ZodError'?400:500}); }
 }
