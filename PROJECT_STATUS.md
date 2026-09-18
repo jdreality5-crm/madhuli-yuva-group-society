@@ -99,3 +99,9 @@
 - No additional application-code change was justified by this pass.
 - Required live tests before production sign-off: unverified-login rejection; verification activation; owner/tenant unit linking; duplicate email/mobile rejection; password reset; disabled/rejected session rejection; cross-society denial; payment evidence race; concurrent payment review; private-file access.
 - Live E2E remains pending because Firebase Console configuration and current Cloudflare deployment cannot be independently verified from repository source in this environment.
+
+
+## FINAL SECURITY SURFACE PASS — 2026-09-18
+- Completed review of public/auth/session surfaces and disabled the obsolete resident OTP resend endpoint.
+- No secrets are returned by the health endpoint; residence discovery is limited to active, signup-enabled, unclaimed units in the configured society.
+- Remaining production-readiness work is verification rather than a claimed deployment: live Firebase configuration/E2E, build/typecheck, and Cloudflare deployment/version verification.
