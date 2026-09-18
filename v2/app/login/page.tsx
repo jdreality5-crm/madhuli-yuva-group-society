@@ -46,7 +46,7 @@ export default function Login() {
           <div className="field"><label htmlFor="password">Password</label><input id="password" className="input" type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></div>
           {error && <div className="login-error" role="alert">{error}</div>}
           <button className="premium-btn" disabled={busy}>{busy ? 'Signing in…' : 'Sign in securely'}</button>
-        </form>
+        </form><a href="/forgot-password" className="text-btn" style={{display:'inline-block',marginTop:14}}>Forgot password?</a>
         {role === 'OWNER' && <div className="auth-link-row"><span>New Resident?</span> <a href="/signup">Create an account</a></div>}
         <small>Access is protected by secure session authentication. Never share your password or secret keys.</small>
       </section>
