@@ -160,3 +160,14 @@ Reviewed the main protected admin/payment/dashboard routes: queries are scoped b
 - The root V1 server has insecure legacy defaults and must not be deployed or used as the production application. It contains a fallback JWT secret, SQLite storage, permissive CORS, seeded sample credentials/data, and public uploads behavior.
 - Do not delete or migrate the historical V1 database automatically; preserve it unless an explicit archival/removal plan is requested.
 - V2 remains the sole production source of truth.
+
+
+## E2E AUTH READINESS AUDIT — 2026-09-18
+- Signup path requires Firebase configuration, Gmail, pre-registered active unit/legacy flat, signupEnabled, matching registered email/mobile, and an unused residence link.
+- New resident DB accounts are created inactive/approved and linked to the unit with an atomic `residentUserId IS NULL` guard; Firebase cleanup is attempted if the DB transaction fails.
+- Verification activates only a matching OWNER/APPROVED DB user whose Firebase UID equals the verification result; session creation remains a normal login step.
+- Login revalidates DB status/role/society on every session request and requires Firebase email verification for Firebase residents.
+- Password recovery uses a generic response to reduce account enumeration and supports normalized Gmail aliases.
+- Login abuse protection locks accounts after five failed attempts for 15 minutes.
+- Payment creation/evidence submission/review are society- and owner-scoped, with atomic pending-row claims and transaction-reference uniqueness.
+- Remaining E2E blockers are environment/configuration dependent: Firebase Console Email/Password + custom action handler, production `FIREBASE_WEB_API_KEY`, live Cloudflare deployment verification, and an actual browser/database test run.
