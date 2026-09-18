@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -9,6 +9,8 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const params = useSearchParams();
+  const verified = params.get('verified') === '1';
 
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setError('');
@@ -37,6 +39,7 @@ export default function Login() {
         <p className="eyebrow">Secure access</p>
         <h2>Welcome back</h2>
         <p>Choose your role and sign in to continue.</p>
+        {verified && <div className="login-success" role="status">Gmail verified successfully. You can now sign in.</div>}
         <div className="role-switch">
           {(['MASTER_ADMIN', 'ORGANIZER', 'OWNER'] as const).map(item => <button key={item} type="button" className={role === item ? 'btn btn-primary' : 'btn btn-secondary'} onClick={() => setRole(item)}>{item === 'MASTER_ADMIN' ? 'Master Admin' : item === 'ORGANIZER' ? 'Sub Admin' : 'Resident'}</button>)}
         </div>
