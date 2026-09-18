@@ -17,8 +17,8 @@ export default function VerifyEmailPage() {
       .then(async response => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'Email verification failed.');
-        setMessage('Gmail verified successfully. Your account is now active.');
-        window.setTimeout(() => router.replace('/'), 700);
+        setMessage('Gmail verified successfully. Please sign in with your password to activate your account.');
+        window.setTimeout(() => router.replace('/login?verified=1'), 900);
       })
       .catch(error => { setMessage(''); setError(error instanceof Error ? error.message : 'Email verification failed.'); });
   }, [params, router]);
