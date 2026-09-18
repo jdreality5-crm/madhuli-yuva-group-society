@@ -21,12 +21,17 @@ async function storeScreenshot(value: string, societyId: string) {
   return path;
 }
 
+async function removeStoredFile(path: string | null) {
+  if (!path) return;
+  await getSupabaseAdmin().storage.from(STORAGE_BUCKET).remove([path]);
+}
+
 export async function GET() {
   try {
     const session = await requireSession();
     const where = session.role === 'OWNER' ? { societyId: session.societyId, ownerUserId: session.id } : { societyId: session.societyId };
     const payments = await prisma.payment.findMany({ where, orderBy: { createdAt: 'desc' }, include: { paymentAccount: { select: { displayName: true, upiId: true, purpose: true, qrImageUrl: true } }, event: { select: { id: true, title: true, gujaratiTitle: true } }, ownerUser: { select: { id: true, name: true, email: true } }, verifiedBy: { select: { id: true, name: true, role: true } } } });
-    const result = await Promise.all(payments.map(async p => ({ ...p, screenshotUrl: p.screenshotUrl ? await createSignedFileUrl(p.screenshotUrl) : null })));
+    const result = await Promise.all(payments.map(async p => ({ ...p, screenshotUrl: p.screenshotUrl ? await createSignedFileUrl(p.screenshotUrl) : null, paymentAccount: { ...p.paymentAccount, qrImageUrl: p.paymentAccount.qrImageUrl ? await createSignedFileUrl(p.paymentAccount.qrImageUrl) : null } })));
     return NextResponse.json({ payments: result });
   } catch (e) { const status = e instanceof Error && e.message === 'UNAUTHORIZED' ? 401 : 500; return NextResponse.json({ error: status === 401 ? 'Unauthorized' : 'Server error' }, { status }); }
 }
@@ -49,20 +54,35 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
+  let uploadedScreenshot: string | null = null;
   try {
     const session = await requireSession();
     if (session.role !== 'OWNER') return NextResponse.json({ error: 'Only the paying Flat Owner can submit payment evidence.' }, { status: 403 });
     const body = await req.json();
     const paymentId = String(body.paymentId || '');
     const data = updateSchema.parse(body);
-    const payment = await prisma.payment.findFirst({ where: { id: paymentId, societyId: session.societyId, ownerUserId: session.id } });
+    const payment = await prisma.payment.findFirst({ where: { id: paymentId, societyId: session.societyId, ownerUserId: session.id }, select: { id: true, status: true, expiresAt: true, screenshotUrl: true } });
     if (!payment) return NextResponse.json({ error: 'Payment not found.' }, { status: 404 });
     if (payment.status !== 'PENDING') return NextResponse.json({ error: 'This payment is no longer editable.' }, { status: 409 });
-    if (payment.expiresAt < new Date()) return NextResponse.json({ error: 'The 10-minute payment session has expired. Start a new payment.' }, { status: 409 });
-    const screenshotUrl = await storeScreenshot(data.screenshotUrl || '', session.societyId);
-    const updated = await prisma.payment.update({ where: { id: payment.id }, data: { transactionId: data.transactionId, screenshotUrl, notes: data.notes || null } });
+    const now = new Date();
+    if (payment.expiresAt < now) return NextResponse.json({ error: 'The 10-minute payment session has expired. Start a new payment.' }, { status: 409 });
+
+    uploadedScreenshot = await storeScreenshot(data.screenshotUrl || '', session.societyId);
+    const claimed = await prisma.payment.updateMany({
+      where: { id: payment.id, societyId: session.societyId, ownerUserId: session.id, status: 'PENDING', expiresAt: { gt: new Date() } },
+      data: { transactionId: data.transactionId, screenshotUrl: uploadedScreenshot, notes: data.notes || null },
+    });
+    if (claimed.count !== 1) {
+      await removeStoredFile(uploadedScreenshot);
+      uploadedScreenshot = null;
+      return NextResponse.json({ error: 'This payment was already submitted or has expired.' }, { status: 409 });
+    }
+    const updated = await prisma.payment.findUnique({ where: { id: payment.id } });
+    if (!updated) return NextResponse.json({ error: 'Payment not found.' }, { status: 404 });
+    if (payment.screenshotUrl && payment.screenshotUrl !== uploadedScreenshot) await removeStoredFile(payment.screenshotUrl);
     return NextResponse.json({ payment: { ...updated, amountPaise: updated.amountPaise.toString() } });
   } catch (e) {
+    await removeStoredFile(uploadedScreenshot);
     const message = e instanceof Error ? e.message : '';
     const status = e instanceof z.ZodError ? 400 : message === 'UNAUTHORIZED' ? 401 : message === 'SCREENSHOT_TOO_LARGE' || message === 'INVALID_SCREENSHOT' ? 400 : 500;
     return NextResponse.json({ error: status === 400 ? 'Invalid payment screenshot/details.' : status === 401 ? 'Unauthorized' : 'Server error' }, { status });
