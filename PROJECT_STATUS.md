@@ -59,3 +59,9 @@
 - Never introduce fake production data.
 - Preserve locked architecture in `AI_HANDOFF.md`.
 - Update status after meaningful implementation work.
+
+
+### Payment security audit — 2026-09-18
+- Unique transaction reference enforced per society at DB level for non-empty `transactionId` values.
+- Existing production transaction-reference duplicates: none.
+- Payment review remains atomic: only one concurrent reviewer can claim a PENDING payment before Income creation.
