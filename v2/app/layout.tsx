@@ -1,6 +1,11 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter, Noto_Sans_Gujarati, Playfair_Display } from 'next/font/google';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import './globals.css';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+const gujarati = Noto_Sans_Gujarati({ subsets: ['gujarati'], variable: '--font-gujarati', display: 'swap' });
+const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Madhuli Yuva Group',
@@ -18,5 +23,5 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="gu"><body>{children}<PwaInstallPrompt /></body></html>;
+  return <html lang="gu" className={inter.variable + ' ' + gujarati.variable + ' ' + playfair.variable}><body>{children}<PwaInstallPrompt /></body></html>;
 }
