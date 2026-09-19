@@ -62,6 +62,16 @@ export async function POST(req: Request) {
           if (!activation.claimed) {
             return NextResponse.json({ error: 'This residence has already been registered by another resident. Please contact the society administrator.' }, { status: 409 });
           }
+          // Gmail verification has succeeded and the residence is claimed by this account.
+          // Activate the DB user before creating the session so the session guard can accept it.
+          await supabaseRest('User',{id:'eq.'+user.id},{method:'PATCH',body:JSON.stringify({
+            emailVerified:true,
+            status:'ACTIVE',
+            approvalStatus:'APPROVED',
+            emailLockedUntil:user.emailLockedUntil||lockUntil,
+            mobileLockedUntil:user.mobileLockedUntil||lockUntil,
+            updatedAt:new Date().toISOString()
+          })});
         } else if (!user.emailVerified || user.status !== 'ACTIVE') {
           const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
           await supabaseRest('User',{id:'eq.'+user.id},{method:'PATCH',body:JSON.stringify({emailVerified:true,status:'ACTIVE',approvalStatus:'APPROVED',emailLockedUntil:user.emailLockedUntil||lockUntil,mobileLockedUntil:user.mobileLockedUntil||lockUntil,updatedAt:new Date().toISOString()})});
