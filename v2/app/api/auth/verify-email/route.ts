@@ -15,18 +15,18 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'No matching resident registration was found.' }, { status: 404 });
     }
 
-    // Email verification itself completes resident activation. The application
-    // session is still created only after a normal password login.
+    // Legacy/direct verification remains safe with the same activation rule as
+    // normal resident login: verify Gmail first, then atomically claim the unit.
     if (!user.unitId || user.status !== 'INACTIVE' || user.emailVerified) {
-      return NextResponse.json({ error: 'This resident verification is no longer valid. Please start signup again.' }, { status: 409 });
+      return NextResponse.json({ error: 'This resident verification is no longer valid. Please sign in again.' }, { status: 409 });
     }
 
-    const reservedUnit = await prisma.propertyUnit.findFirst({
-      where: { id: user.unitId, residentUserId: user.id, status: 'ACTIVE' },
-      select: { id: true },
+    const claimed = await prisma.propertyUnit.updateMany({
+      where: { id: user.unitId, residentUserId: null, status: 'ACTIVE' },
+      data: { residentUserId: user.id },
     });
-    if (!reservedUnit) {
-      return NextResponse.json({ error: 'This residence reservation has expired. Please start signup again.' }, { status: 409 });
+    if (claimed.count !== 1) {
+      return NextResponse.json({ error: 'This residence has already been registered by another resident. Please contact the society administrator.' }, { status: 409 });
     }
 
     const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
