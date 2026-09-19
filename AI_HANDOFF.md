@@ -203,3 +203,8 @@ Reviewed the main protected admin/payment/dashboard routes: queries are scoped b
 - Removed duplicate global CSS/PWA mounting from the home and login pages.
 - UI rollout should continue page-by-page: dashboard/auth, CRUD modules, finance/payment/reporting, then resident mobile/accessibility/performance.
 - Do not add a large UI framework merely to imitate a template; preserve Next.js/React/Vinext and prefer reusable primitives/CSS.
+
+
+## AUTH ACTION-CODE HARDENING — 2026-09-19
+- `/api/auth/verify-email` now validates Firebase's returned `requestType === VERIFY_EMAIL` and `emailVerified === true` before changing the local resident to ACTIVE.
+- This prevents a non-verification Firebase action code, including a password-reset action code, from being accepted by the verification endpoint.
