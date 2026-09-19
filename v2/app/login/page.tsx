@@ -11,7 +11,10 @@ export default function Login() {
   const router = useRouter();
   const [verified, setVerified] = useState(false);
   useEffect(() => {
-    setVerified(new URLSearchParams(window.location.search).get('verified') === '1');
+    const params = new URLSearchParams(window.location.search);
+    const isVerified = params.get('verified') === '1';
+    setVerified(isVerified);
+    if (isVerified) setRole('OWNER');
   }, []);
 
   async function submit(e: React.FormEvent) {
