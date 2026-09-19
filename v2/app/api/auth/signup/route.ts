@@ -142,14 +142,31 @@ export async function POST(req: Request) {
     stage = 'firebase_signup';
     const firebaseUser = await firebaseSignUp(email, body.password);
     try {
-      stage = 'firebase_verification_email';
-      await firebaseSendVerificationEmail(firebaseUser.idToken);
       stage = 'local_user_create';
       const result = await supabaseRpc<any>('create_resident_signup_atomic',{p_society_id:society.id,p_name:body.name,p_email:email,p_mobile:mobile,p_firebase_uid:firebaseUser.localId,p_flat_id:legacyFlatId||null,p_unit_id:unitId||null,p_resident_type:residentType||'OWNER'});
       if(result.kind==='EMAIL_EXISTS') throw new Error('EMAIL_EXISTS');
       if(result.kind==='MOBILE_EXISTS') throw new Error('MOBILE_EXISTS');
       if(result.kind==='UNIT_TAKEN'||result.kind==='FLAT_TAKEN') throw new Error('RESIDENCE_TAKEN');
       if(result.kind!=='OK') throw new Error('RESIDENT_CREATE_FAILED');
+
+      // Create the local resident record before sending the Firebase action email.
+      // If the DB write fails, Firebase cleanup invalidates the email action code,
+      // so sending the email first can produce a delivered-but-already-expired link.
+      stage = 'firebase_verification_email';
+      try {
+        await firebaseSendVerificationEmail(firebaseUser.idToken);
+      } catch (emailError) {
+        try {
+          await supabaseRest('User', {
+            id: 'eq.' + String(result.id),
+            societyId: 'eq.' + society.id,
+          }, { method: 'DELETE' });
+        } catch (cleanupError) {
+          console.error('[auth/signup] local user cleanup failed', cleanupError);
+        }
+        throw emailError;
+      }
+
       return NextResponse.json({
         verificationRequired: true,
         email,
