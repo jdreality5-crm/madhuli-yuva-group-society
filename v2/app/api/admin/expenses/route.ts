@@ -6,7 +6,7 @@ async function rest<T>(table:string,q:Record<string,string>,init?:RequestInit){c
 const schema = z.object({ date: z.coerce.date(), eventId: z.string().optional(), category: z.string().max(100).optional(), description: z.string().max(500).optional(), paidTo: z.string().max(160).optional(), amountPaise: z.coerce.bigint().positive(), paymentMethod: z.enum(['CASH','BANK_TRANSFER','UPI','CHEQUE','OTHER']), billNumber: z.string().max(120).optional(), notes: z.string().max(1000).optional() });
 
 export async function GET(req: Request) {
-  try { const s = await requireSubAdminPermission('EXPENSES'); const url = new URL(req.url); const rows = await rest<any[]>('Expense',{select:'*,Event:eventId(id,title)',societyId:'eq.'+s.societyId,...(url.searchParams.get('category')?{category:'eq.'+url.searchParams.get('category')}:{}),order:'date.desc'})); return NextResponse.json(rows.map(x => ({ ...x, amountPaise: x.amountPaise.toString() }))); }
+  try { const s = await requireSubAdminPermission('EXPENSES'); const url = new URL(req.url); const rows = await rest<any[]>('Expense',{select:'*,Event:eventId(id,title)',societyId:'eq.'+s.societyId,...(url.searchParams.get('category')?{category:'eq.'+url.searchParams.get('category')}:{}),order:'date.desc'}); return NextResponse.json(rows.map(x => ({ ...x, amountPaise: x.amountPaise.toString() }))); }
   catch (e) { return NextResponse.json({ error: e instanceof Error && e.message === 'FORBIDDEN' ? 'Forbidden' : 'Server error' }, { status: 403 }); }
 }
 
