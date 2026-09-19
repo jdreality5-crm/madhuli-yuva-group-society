@@ -102,13 +102,6 @@ export async function POST(req: Request) {
             residentType,
           },
         });
-        if (unitId) {
-          const linked = await tx.propertyUnit.updateMany({
-            where: { id: unitId, residentUserId: null },
-            data: { residentUserId: created.id, residentType: residentType || 'OWNER', ownerName: body.name, ownerMobile: mobile, ownerEmail: email },
-          });
-          if (linked.count !== 1) throw new Error('This residence was just registered by another user. Please try again.');
-        }
         return created;
       });
       return NextResponse.json({
