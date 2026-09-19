@@ -18,7 +18,6 @@ export default function Signup() {
   const selectedProperty=useMemo(()=>properties.find(p=>p.type===form.propertyType&&p.propertyNumber===form.propertyNumber),[properties,form.propertyType,form.propertyNumber]);
   const availableUnits=selectedProperty?.units || [];
   const isApartment=form.propertyType==='APARTMENT';
-  const selectedTenament=selectedProperty?.type==='TENAMENT';
 
   function update(field:keyof typeof form,value:string){setForm(c=>({...c,[field]:value}));}
   function changeType(type:'APARTMENT'|'TENAMENT'){setForm(c=>({...c,propertyType:type,propertyNumber:'',unitLabel:'',residentType:'OWNER'}));setError('');}
