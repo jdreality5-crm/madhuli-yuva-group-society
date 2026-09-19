@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { appConfig } from '@/lib/config';
 
 type PropertyRow = { id: string; type: string; name: string; propertyNumber: string; block: string | null };
-type UnitRow = { id: string; propertyId: string; label: string; floorLabel: string; residentType: 'OWNER' | 'TENANT' | null; signupEnabled: boolean };
+type UnitRow = { id: string; propertyId: string; label: string; floorLabel: string; floorNumber: number; residentType: 'OWNER' | 'TENANT' | null; signupEnabled: boolean };
 
 async function supabaseRest<T>(table: string, params: Record<string, string>) {
   const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
