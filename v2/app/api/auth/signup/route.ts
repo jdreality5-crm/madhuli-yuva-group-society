@@ -182,6 +182,10 @@ export async function POST(req: Request) {
     if (code.includes('EMAIL_EXISTS')) return NextResponse.json({ error: 'This Gmail address is already registered. Please login or use password recovery.' }, { status: 409 });
     if (code.includes('MOBILE_EXISTS')) return NextResponse.json({ error: 'This mobile number is already registered in the society portal.' }, { status: 409 });
     if (code.includes('RESIDENCE_TAKEN')) return NextResponse.json({ error: 'This residence was registered by another resident during signup.' }, { status: 409 });
+    if (code.includes('INVALID_EMAIL')) return NextResponse.json({ error: 'Please enter a valid Gmail address.' }, { status: 400 });
+    if (code.includes('WEAK_PASSWORD')) return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
+    if (code.includes('OPERATION_NOT_ALLOWED')) return NextResponse.json({ error: 'Firebase Email/Password signup is not enabled yet. Please enable Email/Password sign-in in Firebase Authentication.' }, { status: 503 });
+    if (code.includes('TOO_MANY_ATTEMPTS_TRY_LATER')) return NextResponse.json({ error: 'Firebase has temporarily limited signup attempts from this connection. Please wait a few minutes and try again.' }, { status: 429 });
     if (code.includes('INVALID_CONTINUE_URI') || code.includes('UNAUTHORIZED_DOMAIN')) return NextResponse.json({ error: 'Email verification is not configured for this website domain yet. Please contact the society administrator.' }, { status: 503 });
     return NextResponse.json({ error: `Signup service temporarily unavailable. Reference: ${debugId}` }, { status: 500 });
   }
