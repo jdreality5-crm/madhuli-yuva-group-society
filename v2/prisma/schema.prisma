@@ -190,7 +190,8 @@ model PropertyUnit {
   ownerName      String?
   ownerMobile    String?
   ownerEmail     String?
-  residentUserId String?\n  signupEnabled  Boolean       @default(false)
+  residentUserId String?
+  signupEnabled  Boolean       @default(false)
   status         RecordStatus  @default(ACTIVE)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
