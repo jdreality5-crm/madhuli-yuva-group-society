@@ -1,117 +1,13 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { prisma, requireSession } from '@/lib/auth';
-import { createSignedFileUrl, getSupabaseAdmin, STORAGE_BUCKET } from '@/lib/supabase-admin';
-
-const screenshot = z.string().trim().max(4000000).refine(v => v === '' || v.startsWith('data:image/'), 'Invalid screenshot reference');
-const createSchema = z.object({ paymentAccountId: z.string().min(1), eventId: z.string().optional().or(z.literal('')), billId: z.string().optional().or(z.literal('')), amountPaise: z.string().regex(/^\d+$/) });
-const updateSchema = z.object({ transactionId: z.string().trim().min(4).max(120), screenshotUrl: screenshot.optional(), notes: z.string().trim().max(500).optional().or(z.literal('')) });
-
-async function storeScreenshot(value: string, societyId: string) {
-  if (!value) return null;
-  const match = value.match(/^data:(image\/(jpeg|png|webp));base64,(.+)$/);
-  if (!match) throw new Error('INVALID_SCREENSHOT');
-  const contentType = match[1];
-  const extension = match[2] === 'jpeg' ? 'jpg' : match[2];
-  const buffer = Buffer.from(match[3], 'base64');
-  if (buffer.length > 5 * 1024 * 1024) throw new Error('SCREENSHOT_TOO_LARGE');
-  const path = `${societyId}/payment-screenshots/${crypto.randomUUID()}.${extension}`;
-  const { error } = await getSupabaseAdmin().storage.from(STORAGE_BUCKET).upload(path, buffer, { contentType, upsert: false, cacheControl: '3600' });
-  if (error) throw error;
-  return path;
-}
-
-async function removeStoredFile(path: string | null) {
-  if (!path) return;
-  await getSupabaseAdmin().storage.from(STORAGE_BUCKET).remove([path]);
-}
-
-export async function GET() {
-  try {
-    const session = await requireSession();
-    const where = session.role === 'OWNER' ? { societyId: session.societyId, ownerUserId: session.id } : { societyId: session.societyId };
-    const payments = await prisma.payment.findMany({ where, orderBy: { createdAt: 'desc' }, include: { paymentAccount: { select: { displayName: true, upiId: true, purpose: true, qrImageUrl: true } }, event: { select: { id: true, title: true, gujaratiTitle: true } }, ownerUser: { select: { id: true, name: true, email: true } }, verifiedBy: { select: { id: true, name: true, role: true } } } });
-    const result = await Promise.all(payments.map(async p => ({ ...p, screenshotUrl: p.screenshotUrl ? await createSignedFileUrl(p.screenshotUrl) : null, paymentAccount: { ...p.paymentAccount, qrImageUrl: p.paymentAccount.qrImageUrl ? await createSignedFileUrl(p.paymentAccount.qrImageUrl) : null } })));
-    return NextResponse.json({ payments: result });
-  } catch (e) { const status = e instanceof Error && e.message === 'UNAUTHORIZED' ? 401 : 500; return NextResponse.json({ error: status === 401 ? 'Unauthorized' : 'Server error' }, { status }); }
-}
-
-export async function POST(req: Request) {
-  try {
-    const session = await requireSession();
-    if (session.role !== 'OWNER') return NextResponse.json({ error: 'Only Flat Owners can initiate a payment.' }, { status: 403 });
-    const body = createSchema.parse(await req.json());
-    const amountPaise = BigInt(body.amountPaise);
-    if (amountPaise <= 0n) return NextResponse.json({ error: 'Amount must be greater than zero.' }, { status: 400 });
-    let billId = body.billId || null;
-    if (billId) {
-      const bill = await prisma.bill.findFirst({ where: { id: billId, societyId: session.societyId, propertyUnit: { residentUserId: session.id, property: { societyId: session.societyId } } }, select: { id: true, amountPaise: true, paymentStatus: true } });
-      if (!bill) return NextResponse.json({ error: 'Bill not found.' }, { status: 404 });
-      if (bill.amountPaise !== amountPaise) return NextResponse.json({ error: 'Payment amount must match the bill amount.' }, { status: 400 });
-      if (bill.paymentStatus === 'PAID') return NextResponse.json({ error: 'This bill has already been paid.' }, { status: 409 });
-    }
-    const account = await prisma.paymentAccount.findFirst({ where: { id: body.paymentAccountId, societyId: session.societyId, status: 'ACTIVE' } });
-    if (!account) return NextResponse.json({ error: 'Payment account not found.' }, { status: 404 });
-    let eventId = body.eventId || null;
-    if (eventId && !(await prisma.event.findFirst({ where: { id: eventId, societyId: session.societyId } }))) eventId = null;
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    const payment = await prisma.$transaction(async tx => {
-      if (billId) {
-        // Serialize all payment-session claims for this bill. Without a DB lock,
-        // two concurrent requests can both observe no active payment and create
-        // duplicate sessions before either transaction commits.
-        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${billId}, 0))`;
-        const now = new Date();
-        const activePayment = await tx.payment.findFirst({
-          where: { billId, societyId: session.societyId, status: 'PENDING', expiresAt: { gt: now } },
-          select: { id: true },
-        });
-        if (activePayment) throw new Error('BILL_PAYMENT_ALREADY_CLAIMED');
-        const claimedBill = await tx.bill.updateMany({
-          where: { id: billId, societyId: session.societyId, paymentStatus: { in: ['UNPAID', 'PENDING'] } },
-          data: { paymentStatus: 'PENDING' },
-        });
-        if (claimedBill.count !== 1) throw new Error('BILL_PAYMENT_ALREADY_CLAIMED');
-      }
-      return tx.payment.create({ data: { societyId: session.societyId, ownerUserId: session.id, paymentAccountId: account.id, eventId, billId, amountPaise, expiresAt } });
-    });
-    return NextResponse.json({ payment: { ...payment, amountPaise: payment.amountPaise.toString() } }, { status: 201 });
-  } catch (e) { const message = e instanceof Error ? e.message : ''; const status = e instanceof z.ZodError ? 400 : message === 'UNAUTHORIZED' ? 401 : message === 'BILL_PAYMENT_ALREADY_CLAIMED' ? 409 : 500; return NextResponse.json({ error: status === 400 ? 'Invalid payment details.' : status === 401 ? 'Unauthorized' : status === 409 ? 'A payment is already pending or completed for this bill.' : 'Server error' }, { status }); }
-}
-
-export async function PATCH(req: Request) {
-  let uploadedScreenshot: string | null = null;
-  try {
-    const session = await requireSession();
-    if (session.role !== 'OWNER') return NextResponse.json({ error: 'Only the paying Flat Owner can submit payment evidence.' }, { status: 403 });
-    const body = await req.json();
-    const paymentId = String(body.paymentId || '');
-    const data = updateSchema.parse(body);
-    const payment = await prisma.payment.findFirst({ where: { id: paymentId, societyId: session.societyId, ownerUserId: session.id }, select: { id: true, status: true, expiresAt: true, screenshotUrl: true } });
-    if (!payment) return NextResponse.json({ error: 'Payment not found.' }, { status: 404 });
-    if (payment.status !== 'PENDING') return NextResponse.json({ error: 'This payment is no longer editable.' }, { status: 409 });
-    const now = new Date();
-    if (payment.expiresAt < now) return NextResponse.json({ error: 'The 10-minute payment session has expired. Start a new payment.' }, { status: 409 });
-
-    uploadedScreenshot = await storeScreenshot(data.screenshotUrl || '', session.societyId);
-    const claimed = await prisma.payment.updateMany({
-      where: { id: payment.id, societyId: session.societyId, ownerUserId: session.id, status: 'PENDING', expiresAt: { gt: new Date() } },
-      data: { transactionId: data.transactionId, screenshotUrl: uploadedScreenshot, notes: data.notes || null },
-    });
-    if (claimed.count !== 1) {
-      await removeStoredFile(uploadedScreenshot);
-      uploadedScreenshot = null;
-      return NextResponse.json({ error: 'This payment was already submitted or has expired.' }, { status: 409 });
-    }
-    const updated = await prisma.payment.findUnique({ where: { id: payment.id } });
-    if (!updated) return NextResponse.json({ error: 'Payment not found.' }, { status: 404 });
-    if (payment.screenshotUrl && payment.screenshotUrl !== uploadedScreenshot) await removeStoredFile(payment.screenshotUrl);
-    return NextResponse.json({ payment: { ...updated, amountPaise: updated.amountPaise.toString() } });
-  } catch (e) {
-    await removeStoredFile(uploadedScreenshot);
-    const message = e instanceof Error ? e.message : '';
-    const code = typeof e === 'object' && e && 'code' in e ? String((e as { code?: unknown }).code) : '';
-    const status = e instanceof z.ZodError ? 400 : message === 'UNAUTHORIZED' ? 401 : message === 'SCREENSHOT_TOO_LARGE' || message === 'INVALID_SCREENSHOT' ? 400 : code === 'P2002' ? 409 : 500;
-    return NextResponse.json({ error: status === 400 ? 'Invalid payment screenshot/details.' : status === 401 ? 'Unauthorized' : status === 409 ? 'This transaction reference has already been submitted.' : 'Server error' }, { status });
-  }
-}
+import { requireSession } from '@/lib/session';
+const createSchema=z.object({paymentAccountId:z.string().min(1),eventId:z.string().optional().or(z.literal('')),billId:z.string().optional().or(z.literal('')),amountPaise:z.string().regex(/^\d+$/)});
+const updateSchema=z.object({transactionId:z.string().trim().min(4).max(120),screenshotUrl:z.string().trim().max(4000000).optional(),notes:z.string().trim().max(500).optional().or(z.literal(''))});
+async function api<T>(table:string,q:Record<string,string>,init?:RequestInit){const b=process.env.SUPABASE_URL?.trim().replace(/\/$/,'');const k=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();if(!b||!k)throw Error('CONFIG');const u=new URL(b+'/rest/v1/'+table);Object.entries(q).forEach(([x,v])=>u.searchParams.set(x,v));const r=await fetch(u,{...init,headers:{apikey:k,Authorization:'Bearer '+k,Accept:'application/json',...(init?.body?{'Content-Type':'application/json','Prefer':'return=representation'}:{}),...(init?.headers||{})},cache:'no-store'});const d=await r.json().catch(()=>null);if(!r.ok)throw Error(String(d?.message||'REST'));return d as T}
+async function rpc<T>(name:string,body:Record<string,unknown>){const b=process.env.SUPABASE_URL?.trim().replace(/\/$/,'');const k=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();if(!b||!k)throw Error('CONFIG');const r=await fetch(b+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:k,Authorization:'Bearer '+k,Accept:'application/json','Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});const d=await r.json().catch(()=>null);if(!r.ok)throw Error(String(d?.message||'RPC'));return d as T}
+async function sign(path:string|null){if(!path)return null;const b=process.env.SUPABASE_URL?.trim().replace(/\/$/,'');const k=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();const bucket=process.env.SUPABASE_STORAGE_BUCKET?.trim()||'society-files';if(!b||!k)throw Error('CONFIG');const r=await fetch(b+'/storage/v1/object/sign/'+encodeURIComponent(bucket),{method:'POST',headers:{apikey:k,Authorization:'Bearer '+k,'Content-Type':'application/json'},body:JSON.stringify({paths:[path],expiresIn:3600}),cache:'no-store'});const d=await r.json().catch(()=>null);if(!r.ok)throw Error('STORAGE');const x=Array.isArray(d)?d[0]:d;return x?.signedURL?b+'/storage/v1'+x.signedURL:null}
+async function upload(value:string,societyId:string){const m=value.match(/^data:(image\/(jpeg|png|webp));base64,(.+)$/);if(!m)throw Error('INVALID_SCREENSHOT');const bytes=Uint8Array.from(atob(m[3]),x=>x.charCodeAt(0));if(bytes.length>5*1024*1024)throw Error('SCREENSHOT_TOO_LARGE');const b=process.env.SUPABASE_URL?.trim().replace(/\/$/,'');const k=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();const bucket=process.env.SUPABASE_STORAGE_BUCKET?.trim()||'society-files';if(!b||!k)throw Error('CONFIG');const path=`${societyId}/payment-screenshots/${crypto.randomUUID()}.${m[2]==='jpeg'?'jpg':m[2]}`;const r=await fetch(b+'/storage/v1/object/'+encodeURIComponent(bucket)+'/'+path,{method:'POST',headers:{apikey:k,Authorization:'Bearer '+k,'Content-Type':m[1],'x-upsert':'false'},body:bytes,cache:'no-store'});if(!r.ok)throw Error('STORAGE');return path}
+async function remove(path:string|null){if(!path)return;const b=process.env.SUPABASE_URL?.trim().replace(/\/$/,'');const k=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();const bucket=process.env.SUPABASE_STORAGE_BUCKET?.trim()||'society-files';if(!b||!k)return;await fetch(b+'/storage/v1/object/'+encodeURIComponent(bucket),{method:'DELETE',headers:{apikey:k,Authorization:'Bearer '+k,'Content-Type':'application/json'},body:JSON.stringify({prefixes:[path]}),cache:'no-store'})}
+export async function GET(){try{const s=await requireSession();const p=await api<any[]>('Payment',{select:'*,PaymentAccount:paymentAccountId(displayName,upiId,purpose,qrImageUrl)',societyId:'eq.'+s.societyId,...(s.role==='OWNER'?{ownerUserId:'eq.'+s.id}:{}),order:'createdAt.desc'});return NextResponse.json({payments:await Promise.all(p.map(async x=>({...x,screenshotUrl:await sign(x.screenshotUrl),PaymentAccount:x.PaymentAccount?{...x.PaymentAccount,qrImageUrl:await sign(x.PaymentAccount.qrImageUrl)}:x.PaymentAccount})))})}catch(e){return NextResponse.json({error:e instanceof Error&&e.message==='UNAUTHORIZED'?'Unauthorized':'Server error'},{status:e instanceof Error&&e.message==='UNAUTHORIZED'?401:500})}}
+export async function POST(req:Request){try{const s=await requireSession();if(s.role!=='OWNER')return NextResponse.json({error:'Only Flat Owners can initiate a payment.'},{status:403});const b=createSchema.parse(await req.json());const p=await rpc<any>('create_payment_session_atomic',{p_society_id:s.societyId,p_owner_user_id:s.id,p_payment_account_id:b.paymentAccountId,p_event_id:b.eventId||null,p_bill_id:b.billId||null,p_amount_paise:b.amountPaise,p_expires_at:new Date(Date.now()+600000).toISOString()});return NextResponse.json({payment:{...p,amountPaise:String(p.amountPaise)}},{status:201})}catch(e){const m=e instanceof Error?e.message:'';const zod=e instanceof z.ZodError;const status=zod?400:m==='UNAUTHORIZED'?401:m==='PAYMENT_ACCOUNT_NOT_FOUND'?404:['BILL_NOT_FOUND','BILL_PAYMENT_ALREADY_CLAIMED'].includes(m)?409:m==='AMOUNT_MISMATCH'?400:500;return NextResponse.json({error:status===400?(m==='AMOUNT_MISMATCH'?'Payment amount must match the bill amount.':'Invalid payment details.'):status===401?'Unauthorized':status===404?'Payment account not found.':status===409?(m==='BILL_NOT_FOUND'?'Bill not found.':'A payment is already pending or completed for this bill.'):'Server error'},{status})}}
+export async function PATCH(req:Request){let path:string|null=null;try{const s=await requireSession();if(s.role!=='OWNER')return NextResponse.json({error:'Only the paying Flat Owner can submit payment evidence.'},{status:403});const b=await req.json();const d=updateSchema.parse(b);const id=String(b.paymentId||'');const rows=await api<any[]>('Payment',{select:'id,status,expiresAt,screenshotUrl',id:'eq.'+id,societyId:'eq.'+s.societyId,ownerUserId:'eq.'+s.id});const p=rows[0];if(!p)return NextResponse.json({error:'Payment not found.'},{status:404});if(p.status!=='PENDING')return NextResponse.json({error:'This payment is no longer editable.'},{status:409});if(new Date(p.expiresAt)<=new Date())return NextResponse.json({error:'The 10-minute payment session has expired. Start a new payment.'},{status:409});path=d.screenshotUrl?await upload(d.screenshotUrl,s.societyId):null;const out=await api<any[]>('Payment',{id:'eq.'+id,societyId:'eq.'+s.societyId,ownerUserId:'eq.'+s.id,status:'eq.PENDING',expiresAt:'gt.'+new Date().toISOString()},{method:'PATCH',body:JSON.stringify({transactionId:d.transactionId,screenshotUrl:path,notes:d.notes||null,updatedAt:new Date().toISOString()})});if(!out.length){await remove(path);return NextResponse.json({error:'This payment was already submitted or has expired.'},{status:409})}if(p.screenshotUrl&&p.screenshotUrl!==path)await remove(p.screenshotUrl);return NextResponse.json({payment:{...out[0],amountPaise:String(out[0].amountPaise)}})}catch(e){if(path)await remove(path);const m=e instanceof Error?e.message:'';const status=e instanceof z.ZodError||m==='INVALID_SCREENSHOT'||m==='SCREENSHOT_TOO_LARGE'?400:m==='UNAUTHORIZED'?401:500;return NextResponse.json({error:status===400?'Invalid payment screenshot/details.':status===401?'Unauthorized':'Server error'},{status})}}
