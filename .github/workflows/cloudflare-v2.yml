@@ -37,8 +37,10 @@ jobs:
       - name: Sync Firebase runtime secret
         env:
           FIREBASE_WEB_API_KEY: ${{ secrets.FIREBASE_WEB_API_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           test -n "$FIREBASE_WEB_API_KEY"
+          test -n "$CLOUDFLARE_API_TOKEN"
           printf '%s' "$FIREBASE_WEB_API_KEY" | npx wrangler secret put FIREBASE_WEB_API_KEY --name society-function-management-v2
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v4
