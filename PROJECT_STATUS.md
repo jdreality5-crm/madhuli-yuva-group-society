@@ -76,3 +76,11 @@
 - Existing transaction-reference uniqueness remains enforced by the society-scoped partial unique database index.
 - Payment-session claims are now serialized with a PostgreSQL transaction-scoped advisory lock keyed to the bill ID, closing the remaining concurrent payment-session creation race.
 - Fresh V2 build verification is still required for these latest payment changes; no green build is claimed until GitHub Actions reports it.
+
+
+### Bill authorization and payment-safety review — 2026-09-19
+- Bill PUT/DELETE now enforce the same DB-backed BILLS permission used by the bill list/create APIs; the previous organizer-only guard could bypass a Sub Admin's module restriction.
+- Bill edits now validate any reassigned PropertyUnit within the current society and allow relinking only while the bill is UNPAID.
+- Paid or pending bills cannot be edited or deleted.
+- Bills with any payment history cannot be deleted, preserving payment/audit history instead of relying on the Payment → Bill SetNull relation.
+- Fresh V2 build verification is still required for this change.
