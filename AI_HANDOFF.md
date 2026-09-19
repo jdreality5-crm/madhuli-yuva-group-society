@@ -226,3 +226,9 @@ Reviewed the main protected admin/payment/dashboard routes: queries are scoped b
 - Firebase Console Email/Password and custom `/verify-email` action-handler configuration still require external Firebase Console verification.
 - Live browser E2E for signup → verification → activation → login and password recovery remains pending.
 - Production sign-off remains pending until the live Firebase E2E path and final smoke tests are completed.
+
+
+## ACCESSIBILITY HARDENING — 2026-09-19
+- Added explicit label/input associations to resident signup residence and resident-type controls, plus password-recovery and password-reset fields.
+- This improves keyboard/screen-reader form navigation without changing validation or auth behavior.
+- CI/deployment verification for the latest accessibility commits remains pending until the push-triggered workflows complete.
