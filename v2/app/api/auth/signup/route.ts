@@ -162,6 +162,8 @@ export async function POST(req: Request) {
           flatId: legacyFlatId || null,
           unitId: unitId || null,
           residentType: residentType || null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         }),
       });
       const user = createdUsers[0];
