@@ -22,6 +22,7 @@ export default function ProfilePage() {
   const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[uploading,setUploading]=useState(false);
   const [editing,setEditing]=useState(false),[tab,setTab]=useState<Tab>("general");
   const [message,setMessage]=useState(""),[error,setError]=useState("");
+  const [currentPassword,setCurrentPassword]=useState(""),[newPassword,setNewPassword]=useState(""),[confirmPassword,setConfirmPassword]=useState(""),[passwordBusy,setPasswordBusy]=useState(false);
 
   async function load() {
     setLoading(true);setError("");
@@ -51,6 +52,18 @@ export default function ProfilePage() {
       const d=await r.json().catch(()=>({}));if(!r.ok) throw Error(d.error||"Unable to upload profile picture");
       setProfile(p=>p?{...p,profileImageUrl:d.profileImageUrl}:p);setMessage("Profile picture updated.");
     } catch(e:any){setError(e.message||"Unable to upload profile picture")} finally{setUploading(false)}
+  }
+
+  async function changePassword() {
+    setError("");setMessage("");
+    if(newPassword!==confirmPassword) return setError("New passwords do not match.");
+    if(newPassword.length<8) return setError("New password must be at least 8 characters.");
+    setPasswordBusy(true);
+    try {
+      const r=await fetch("/api/profile/password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({currentPassword,newPassword})});
+      const d=await r.json().catch(()=>({}));if(!r.ok) throw Error(d.error||"Unable to change password");
+      setCurrentPassword("");setNewPassword("");setConfirmPassword("");setMessage(d.message||"Password changed successfully.");
+    } catch(e:any){setError(e.message||"Unable to change password")} finally{setPasswordBusy(false)}
   }
 
   async function removePhoto() {
@@ -126,13 +139,15 @@ export default function ProfilePage() {
             <div className="status-row"><span>Mobile lock</span><strong>{profile.mobileLockedUntil&&new Date(profile.mobileLockedUntil)>new Date()?"Locked until "+formatDate(profile.mobileLockedUntil):"Available"}</strong></div>
             <div className="status-row"><span>Email lock</span><strong>{profile.emailLockedUntil&&new Date(profile.emailLockedUntil)>new Date()?"Locked until "+formatDate(profile.emailLockedUntil):"Available"}</strong></div>
           </div>
-          <div className="account-note"><strong>Password</strong><span>Use the Forgot Password flow from the sign-in page to change a forgotten password securely.</span><a href="/forgot-password">Open password recovery</a></div>
+          {profile.role!=="OWNER"?<div className="account-note"><strong>Change password</strong><span>For admin accounts, change your password here using your current password.</span>
+            <div className="profile-password-grid"><input className="input" type="password" placeholder="Current password" autoComplete="current-password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)}/><input className="input" type="password" placeholder="New password" autoComplete="new-password" value={newPassword} onChange={e=>setNewPassword(e.target.value)}/><input className="input" type="password" placeholder="Confirm new password" autoComplete="new-password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)}/><button className="btn btn-primary" disabled={passwordBusy||!currentPassword||!newPassword||!confirmPassword} onClick={changePassword}>{passwordBusy?"Changing…":"Change Password"}</button></div>
+          </div>:<div className="account-note"><strong>Password</strong><span>Resident passwords are managed by Firebase.</span><a href="/forgot-password">Open password recovery</a></div>}
         </div>}
       </section>
     </section>
 
     <style jsx>{`
-      .profile-page{max-width:1180px}.profile-back{text-decoration:none}.profile-alert{border-radius:12px;padding:12px 14px;margin:-8px 0 18px;font-size:12px}.profile-alert.error{background:#f9e7e7;color:#8b2635}.profile-alert.success{background:#eaf5ee;color:#24633c}
+      .profile-page{max-width:1180px}.profile-password-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}.profile-password-grid .btn{white-space:nowrap}.profile-back{text-decoration:none}.profile-alert{border-radius:12px;padding:12px 14px;margin:-8px 0 18px;font-size:12px}.profile-alert.error{background:#f9e7e7;color:#8b2635}.profile-alert.success{background:#eaf5ee;color:#24633c}
       .profile-hero{padding:0;overflow:hidden;border-top:3px solid var(--gold)}.profile-cover{height:150px;position:relative;background:radial-gradient(circle at 82% 22%,rgba(231,213,168,.26),transparent 25%),linear-gradient(115deg,#42131c,#641d2a 65%,#7a2938)}.cover-pattern{position:absolute;inset:0;background:radial-gradient(circle at 20% 70%,transparent 0 38px,rgba(231,213,168,.10) 39px 40px,transparent 41px),radial-gradient(circle at 82% 20%,transparent 0 75px,rgba(231,213,168,.08) 76px 77px,transparent 78px);opacity:.9}
       .profile-identity{display:flex;align-items:flex-end;gap:20px;padding:0 28px 20px;position:relative;margin-top:-50px}.profile-avatar-wrap{position:relative;flex:0 0 auto}.profile-avatar{width:118px;height:118px;border-radius:50%;border:5px solid #fff;background:#f1e8da;color:var(--maroon);display:grid;place-items:center;overflow:hidden;box-shadow:0 10px 28px rgba(53,21,26,.18);font-size:42px;font-weight:800}.profile-avatar img{width:100%;height:100%;object-fit:cover}.avatar-camera{position:absolute;right:4px;bottom:5px;width:31px;height:31px;border-radius:50%;background:var(--maroon);color:#fff;border:3px solid #fff;display:grid;place-items:center;cursor:pointer}
       .identity-copy{min-width:0;padding-bottom:5px}.identity-copy h2{font-family:var(--font-playfair),Georgia,serif;color:var(--maroon);font-size:26px;margin:0}.identity-copy p{font-size:12px;color:var(--muted);margin:4px 0 8px;overflow:hidden;text-overflow:ellipsis}.identity-badges{display:flex;gap:7px;flex-wrap:wrap}.identity-badge{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;background:var(--maroon);color:#fff;border-radius:999px;padding:6px 9px}.identity-badge.soft{background:var(--maroon-soft);color:var(--maroon)}
