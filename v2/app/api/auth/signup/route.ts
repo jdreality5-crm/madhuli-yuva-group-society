@@ -83,25 +83,24 @@ export async function POST(req: Request) {
     const firebaseUser = await firebaseSignUp(email, body.password);
     try {
       await firebaseSendVerificationEmail(firebaseUser.idToken);
-      const user = await prisma.$transaction(async tx => {
-        const created = await tx.user.create({
-          data: {
-            name: body.name,
-            email,
-            mobile,
-            passwordHash: null,
-            firebaseUid: firebaseUser.localId,
-            role: 'OWNER',
-            status: 'INACTIVE',
-            approvalStatus: 'APPROVED',
-            emailVerified: false,
-            societyId: society.id,
-            flatId: legacyFlatId,
-            unitId,
-            residentType,
-          },
-        });
-        return created;
+      // Signup creates exactly one local User row; a transaction wrapper is unnecessary
+      // here and can add avoidable edge-runtime transaction overhead.
+      const user = await prisma.user.create({
+        data: {
+          name: body.name,
+          email,
+          mobile,
+          passwordHash: null,
+          firebaseUid: firebaseUser.localId,
+          role: 'OWNER',
+          status: 'INACTIVE',
+          approvalStatus: 'APPROVED',
+          emailVerified: false,
+          societyId: society.id,
+          flatId: legacyFlatId,
+          unitId,
+          residentType,
+        },
       });
       return NextResponse.json({
         verificationRequired: true,
