@@ -50,13 +50,9 @@ export async function POST(req: Request) {
 
       const unit = await prisma.propertyUnit.findFirst({
         where: { propertyId: property.id, label: body.unitLabel, status: 'ACTIVE' },
-        select: { id: true, residentType: true, ownerMobile: true, ownerEmail: true, residentUserId: true, signupEnabled: true },
+        select: { id: true, residentType: true, ownerMobile: true, ownerEmail: true, residentUserId: true },
       });
       if (!unit) return NextResponse.json({ error: 'This flat/floor is not registered. Please contact the society administrator.' }, { status: 404 });
-      if (!unit.signupEnabled) return NextResponse.json({ error: 'Online signup is not enabled for this residence. Please contact the society administrator.' }, { status: 403 });
-      if (!unit.ownerEmail && !unit.ownerMobile) return NextResponse.json({ error: 'This residence is not pre-registered for online signup.' }, { status: 403 });
-      if (unit.ownerEmail && normalizeGmail(unit.ownerEmail) !== email) return NextResponse.json({ error: 'The Gmail address does not match the registered residence.' }, { status: 403 });
-      if (unit.ownerMobile && normalizeMobile(unit.ownerMobile) !== mobile) return NextResponse.json({ error: 'The mobile number does not match the registered residence.' }, { status: 403 });
       if (unit.residentUserId) return NextResponse.json({ error: 'This residence already has a registered account.' }, { status: 409 });
       unitId = unit.id;
       residentType = unit.residentType || body.residentType || 'OWNER';
