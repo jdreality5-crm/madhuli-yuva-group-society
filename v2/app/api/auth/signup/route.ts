@@ -79,7 +79,8 @@ export async function POST(req: Request) {
 
     const firebaseUser = await firebaseSignUp(email, body.password);
     try {
-      await firebaseSendVerificationEmail(firebaseUser.idToken);
+      const verificationReturnUrl = new URL('/login?verified=1', req.url).toString();
+      await firebaseSendVerificationEmail(firebaseUser.idToken, verificationReturnUrl);
       const user = await prisma.$transaction(async tx => {
         const created = await tx.user.create({
           data: {
