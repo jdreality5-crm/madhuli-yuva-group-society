@@ -152,7 +152,7 @@ export async function POST(req: Request) {
       if(result.kind!=='OK') throw new Error('RESIDENT_CREATE_FAILED');
       return NextResponse.json({
         verificationRequired: true,
-        email: user.email,
+        email,
         message: 'Account created. Firebase has sent a verification link to your Gmail address. Open that email to activate your account.',
       }, { status: 201 });
     } catch (error) {
