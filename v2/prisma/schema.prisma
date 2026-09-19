@@ -386,3 +386,31 @@ model AuditLog {
   user      User @relation(fields: [userId], references: [id])
   @@index([userId, createdAt])
 }
+
+
+enum RoleChangeStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+model RoleChangeRequest {
+  id                String           @id @default(cuid())
+  societyId         String
+  requesterId       String
+  targetUserId      String
+  fromRole          Role
+  toRole            Role
+  status            RoleChangeStatus @default(PENDING)
+  verificationHash  String?
+  expiresAt         DateTime
+  verifiedAt        DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  society           Society          @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  requester         User             @relation("RoleChangeRequester", fields: [requesterId], references: [id])
+  targetUser        User             @relation("RoleChangeTarget", fields: [targetUserId], references: [id])
+  @@index([societyId, status, createdAt])
+  @@index([targetUserId, status])
+}
