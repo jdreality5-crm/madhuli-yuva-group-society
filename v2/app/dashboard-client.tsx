@@ -18,7 +18,7 @@ type Dashboard = {
 const money = (p?: string) => p ? `₹ ${(Number(p) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '₹ 0.00';
 
 const residentNav = [
-  { section: 'My Society', items: [['Dashboard','/','home'],['Programs','/programs','calendar'],['Notices','/notices','notice'],['Gallery','/gallery','gallery']] },
+  { section: 'My Society', items: [['Dashboard','/','home'],['Properties','/properties','property'],['Programs','/programs','calendar'],['Notices','/notices','notice'],['Gallery','/gallery','gallery']] },
   { section: 'My Account', items: [['Bills','/bills','report'],['Payments','/payments','payment'],['My Profile','/profile','users']] },
 ] as const;
 
