@@ -232,3 +232,9 @@ Reviewed the main protected admin/payment/dashboard routes: queries are scoped b
 - Added explicit label/input associations to resident signup residence and resident-type controls, plus password-recovery and password-reset fields.
 - This improves keyboard/screen-reader form navigation without changing validation or auth behavior.
 - CI/deployment verification for the latest accessibility commits remains pending until the push-triggered workflows complete.
+
+
+## FORM ACCESSIBILITY HARDENING — 2026-09-19
+- Added explicit label/input associations to resident payment fields and reviewed admin bill/gallery form controls.
+- No payment, upload, authorization, or validation behavior changed.
+- Verified by V2 Build Check #494 and Cloudflare Deploy #429.

@@ -120,3 +120,10 @@
 ## Accessibility hardening — 2026-09-19
 - Added explicit `htmlFor`/input `id` associations to previously unassociated authentication form labels on signup, forgot-password, and reset-password pages.
 - No authentication or validation behavior changed.
+
+
+## Form accessibility hardening — 2026-09-19
+- Added explicit `htmlFor`/input `id` associations to payment, admin bill, and admin gallery form fields.
+- No business logic or authorization behavior changed.
+- V2 Build Check #494 and Cloudflare Deploy #429 succeeded; deployment reported 0 npm vulnerabilities.
+- Latest deployed Worker version: `9c2330db-2ec7-4b6e-990c-5cbe277edf2b`.
