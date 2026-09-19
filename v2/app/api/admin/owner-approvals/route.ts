@@ -1,34 +1,6 @@
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { prisma, requireMasterAdmin } from '@/lib/auth';
-
-const actionSchema = z.object({ id: z.string().min(1), action: z.enum(['APPROVE', 'REJECT']) });
-
-export async function GET() {
-  try {
-    const session = await requireMasterAdmin();
-    const users = await prisma.user.findMany({ where: { societyId: session.societyId, role: 'OWNER', approvalStatus: 'PENDING' }, orderBy: { createdAt: 'asc' }, select: { id:true,name:true,email:true,mobile:true,status:true,approvalStatus:true,emailVerified:true,createdAt:true,flat:{select:{id:true,flatNumber:true,ownerName:true,email:true,mobile:true}},unit:{select:{id:true,label:true,floorLabel:true,residentType:true,property:{select:{name:true,type:true,propertyNumber:true,block:true}}}} } });
-    return NextResponse.json({ users });
-  } catch (e) { const status = e instanceof Error && e.message === 'FORBIDDEN' ? 403 : 500; return NextResponse.json({ error: status === 403 ? 'Master Admin access required' : 'Server error' }, { status }); }
-}
-
-export async function PATCH(req: Request) {
-  try {
-    const session = await requireMasterAdmin();
-    const body = actionSchema.parse(await req.json());
-    const result = await prisma.$transaction(async tx => {
-      const user = await tx.user.findFirst({ where:{id:body.id,societyId:session.societyId,role:'OWNER'}, select:{id:true,email:true,approvalStatus:true,emailVerified:true,unitId:true} });
-      if (!user) return { kind:'NOT_FOUND' as const };
-      if (user.approvalStatus !== 'PENDING') return { kind:'ALREADY_PROCESSED' as const };
-      if (body.action === 'APPROVE' && !user.emailVerified) return { kind:'EMAIL_NOT_VERIFIED' as const };
-      const updated = await tx.user.update({ where:{id:user.id}, data:{approvalStatus:body.action==='APPROVE'?'APPROVED':'REJECTED',status:body.action==='APPROVE'?'ACTIVE':'INACTIVE'}, select:{id:true,email:true,approvalStatus:true,status:true,emailVerified:true} });
-      if (body.action === 'REJECT' && user.unitId) { await tx.propertyUnit.updateMany({ where:{id:user.unitId,residentUserId:user.id}, data:{residentUserId:null} }); await tx.user.update({ where:{id:user.id}, data:{unitId:null,residentType:null} }); }
-      await tx.auditLog.create({ data:{userId:session.id,action:body.action,module:'RESIDENT_APPROVAL',recordId:user.id,details:`${body.action==='APPROVE'?'Approved':'Rejected'} resident ${user.email}`} });
-      return { kind:'OK' as const,user:updated };
-    });
-    if(result.kind==='NOT_FOUND') return NextResponse.json({error:'Resident not found.'},{status:404});
-    if(result.kind==='ALREADY_PROCESSED') return NextResponse.json({error:'Resident approval request has already been processed.'},{status:409});
-    if(result.kind==='EMAIL_NOT_VERIFIED') return NextResponse.json({error:'Resident must verify their email before approval.'},{status:409});
-    return NextResponse.json({user:result.user});
-  } catch(e){const status=e instanceof z.ZodError?400:e instanceof Error&&e.message==='FORBIDDEN'?403:500;return NextResponse.json({error:status===400?'Invalid approval request.':status===403?'Master Admin access required':'Server error'},{status});}
-}
+import { NextResponse } from 'next/server'; import { z } from 'zod'; import { requireMasterAdmin } from '@/lib/session';
+async function rest<T>(table:string,q:Record<string,string>={},init?:RequestInit){const b=process.env.SUPABASE_URL?.trim().replace(/\/$/,'');const k=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();if(!b||!k)throw Error('CONFIG');const u=new URL(b+'/rest/v1/'+table);Object.entries(q).forEach(([a,v])=>u.searchParams.set(a,v));const res=await fetch(u,{...init,headers:{apikey:k,Authorization:'Bearer '+k,Accept:'application/json',...(init?.body?{'Content-Type':'application/json','Prefer':'return=representation'}:{}),...(init?.headers||{})},cache:'no-store'});const d=await res.json().catch(()=>null);if(!res.ok)throw Error('REST');return d as T}
+async function rpc<T>(name:string,body:Record<string,unknown>){const b=process.env.SUPABASE_URL?.trim().replace(/\/$/,'');const k=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();if(!b||!k)throw Error('CONFIG');const res=await fetch(b+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:k,Authorization:'Bearer '+k,Accept:'application/json','Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});const d=await res.json().catch(()=>null);if(!res.ok)throw Error('RPC');return d as T}
+const actionSchema=z.object({id:z.string().min(1),action:z.enum(['APPROVE','REJECT'])});
+export async function GET(){try{const s=await requireMasterAdmin();const users=await rest<any[]>('User',{select:'id,name,email,mobile,status,approvalStatus,emailVerified,createdAt,unitId,flatId',societyId:'eq.'+s.societyId,role:'eq.OWNER',approvalStatus:'eq.PENDING',order:'createdAt.asc'});return NextResponse.json({users})}catch(e){const st=e instanceof Error&&e.message==='FORBIDDEN'?403:500;return NextResponse.json({error:st===403?'Master Admin access required':'Server error'},{status:st})}}
+export async function PATCH(req:Request){try{const s=await requireMasterAdmin();const d=actionSchema.parse(await req.json());const result=await rpc<any>('review_owner_approval_atomic',{p_user_id:d.id,p_society_id:s.societyId,p_action:d.action,p_reviewer_id:s.id});if(result?.kind==='NOT_FOUND')return NextResponse.json({error:'Resident not found.'},{status:404});if(result?.kind==='ALREADY_PROCESSED')return NextResponse.json({error:'Resident approval request has already been processed.'},{status:409});if(result?.kind==='EMAIL_NOT_VERIFIED')return NextResponse.json({error:'Resident must verify their email before approval.'},{status:409});if(result?.kind!=='OK')return NextResponse.json({error:'Approval failed.'},{status:500});return NextResponse.json({user:result.user})}catch(e){const st=e instanceof z.ZodError?400:e instanceof Error&&e.message==='FORBIDDEN'?403:500;return NextResponse.json({error:st===400?'Invalid approval request.':st===403?'Master Admin access required':'Server error'},{status:st})}}
