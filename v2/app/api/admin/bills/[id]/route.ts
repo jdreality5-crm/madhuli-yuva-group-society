@@ -28,7 +28,7 @@ export async function PUT(req:Request,{params}:{params:Promise<{id:string}>}){
       const unit=await prisma.propertyUnit.findFirst({where:{id:propertyUnitId,property:{societyId:s.societyId}},select:{id:true}});
       if(!unit)return NextResponse.json({error:'Property unit not found'},{status:404});
     }
-    const row=await prisma.bill.update({where:{id},data:{type:d.type,amountPaise:BigInt(d.amountPaise),vendor:d.vendor,category:d.category,date:new Date(d.date),paymentMethod:d.paymentMethod,notes:d.notes,fileUrl:eventId===undefined?fileUrl:fileUrl,eventId,propertyUnitId}});
+    const row=await prisma.bill.update({where:{id},data:{type:d.type,amountPaise:BigInt(d.amountPaise),vendor:d.vendor,category:d.category,date:new Date(d.date),paymentMethod:d.paymentMethod,notes:d.notes,fileUrl,eventId,propertyUnitId}});
     return NextResponse.json({...row,amountPaise:row.amountPaise.toString()});
   }catch{return NextResponse.json({error:'Invalid request'},{status:400});}
 }
