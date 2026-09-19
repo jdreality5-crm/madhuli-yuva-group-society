@@ -11,7 +11,7 @@ async function loadProperties() {
       where: { societyId: appConfig.societyId, status: 'ACTIVE' },
       include: {
         units: {
-          where: { status: 'ACTIVE', signupEnabled: true, residentUserId: null },
+          where: { status: 'ACTIVE', residentUserId: null },
           select: { id: true, label: true, floorLabel: true, residentType: true, signupEnabled: true },
           orderBy: [{ floorNumber: 'asc' }, { label: 'asc' }],
         },
@@ -36,7 +36,6 @@ async function loadProperties() {
           AND "status"::text = 'ACTIVE'
       )
         AND "status"::text = 'ACTIVE'
-        AND "signupEnabled" = true
         AND "residentUserId" IS NULL
       ORDER BY "floorNumber" ASC, "label" ASC
     `;
