@@ -5,7 +5,7 @@
 - Phase: Security hardening and production readiness
 - Current task: Firebase configuration readiness and live configuration gate
 - Final stage: Not signed off
-- Current implementation commit: `89229d7f8e3efe65615c9e986827cd1ebe0b5435`
+- Current implementation commit: `e94cfc8225eaf47c6cc8a15e5794894ad7b3de37`
 
 ## Status Matrix
 
@@ -58,3 +58,8 @@
 - V2 Build Check workflow is `.github/workflows/v2-build.yml` and runs on pushes to `fresh-society-v2`.
 - This status update intentionally triggers the V2 Build Check without changing application behavior.
 - Firebase/Cloudflare live configuration has not been changed in this step.
+
+
+### Auth hardening update — 2026-09-19
+- `/api/auth/verify-email` now requires Firebase to confirm the consumed action code is specifically a `VERIFY_EMAIL` action and that Firebase reports the email as verified before activating the resident account. A password-reset action code can no longer be used through this endpoint to trigger resident activation.
+- Firebase/Cloudflare external configuration remains the only live-auth gate: the Firebase Console action-handler configuration and `FIREBASE_WEB_API_KEY` secret are still required before E2E/deployment verification.
