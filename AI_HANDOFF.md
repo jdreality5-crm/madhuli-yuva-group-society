@@ -238,3 +238,10 @@ Reviewed the main protected admin/payment/dashboard routes: queries are scoped b
 - Added explicit label/input associations to resident payment fields and reviewed admin bill/gallery form controls.
 - No payment, upload, authorization, or validation behavior changed.
 - Verified by V2 Build Check #494 and Cloudflare Deploy #429.
+
+
+## ATOMIC RESIDENT LOGIN ACTIVATION — 2026-09-19
+- Firebase resident login now claims the PropertyUnit and activates the User inside one Prisma transaction when completing first verified login.
+- A failed activation cannot leave the residence claimed while the account remains inactive.
+- Commit: `c00682a72bd0b93d3f1d632fbbb3e71133c4f651`.
+- GitHub Actions has not yet reported a workflow run for this commit, so build/deployment status remains unverified.
