@@ -4,6 +4,7 @@ import { SUBADMIN_PROFILE_TYPES, SUBADMIN_PROFILE_PERMISSIONS, type SubAdminProf
 
 type User={id:string;name:string;email:string;mobile?:string|null;status:'ACTIVE'|'INACTIVE';createdAt:string;permissions:string[]};
 const empty={name:'',email:'',mobile:'',password:'',profileType:'MANAGER' as SubAdminProfileType};
+type EditUser = typeof empty & {id:string;status:'ACTIVE'|'INACTIVE'};
 
 function profileTypeOf(u:User):SubAdminProfileType{
   if(u.permissions.includes('EXPENSES')&&u.permissions.includes('EVENTS')) return 'MANAGER';
@@ -12,7 +13,7 @@ function profileTypeOf(u:User):SubAdminProfileType{
 }
 
 export default function SubAdminsPage(){
-  const [users,setUsers]=useState<User[]>([]); const [max,setMax]=useState(6); const [form,setForm]=useState(empty); const [edit,setEdit]=useState<(typeof empty)&{id:string}|null>(null); const [busy,setBusy]=useState(false); const [error,setError]=useState(''); const [message,setMessage]=useState('');
+  const [users,setUsers]=useState<User[]>([]); const [max,setMax]=useState(6); const [form,setForm]=useState(empty); const [edit,setEdit]=useState<EditUser|null>(null); const [busy,setBusy]=useState(false); const [error,setError]=useState(''); const [message,setMessage]=useState('');
   async function load(){const r=await fetch('/api/admin/subadmins'); if(r.ok){const d=await r.json();setUsers(d.users);setMax(d.max)} else setError('Master Admin access required.');}
   useEffect(()=>{load()},[]);
   async function create(e:FormEvent){e.preventDefault();setBusy(true);setError('');setMessage('');try{const r=await fetch('/api/admin/subadmins',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(form)});const d=await r.json();if(!r.ok)throw new Error(d.error||'Could not create profile');setForm(empty);setMessage('Sub Admin profile created successfully.');await load()}catch(e){setError(e instanceof Error?e.message:'Something went wrong')}finally{setBusy(false)}}
