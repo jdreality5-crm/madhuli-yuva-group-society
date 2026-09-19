@@ -21,25 +21,33 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'This resident verification is no longer valid. Please sign in again.' }, { status: 409 });
     }
 
-    const claimed = await prisma.propertyUnit.updateMany({
-      where: { id: user.unitId, residentUserId: null, status: 'ACTIVE' },
-      data: { residentUserId: user.id },
+    const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
+    const activation = await prisma.$transaction(async tx => {
+      const claimed = await tx.propertyUnit.updateMany({
+        where: { id: user.unitId, residentUserId: null, status: 'ACTIVE' },
+        data: {
+          residentUserId: user.id,
+          residentType: 'OWNER',
+        },
+      });
+      if (claimed.count !== 1) return { claimed: false };
+
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          emailVerified: true,
+          status: 'ACTIVE',
+          approvalStatus: 'APPROVED',
+          emailLockedUntil: { set: lockUntil },
+          mobileLockedUntil: { set: lockUntil },
+        },
+      });
+      return { claimed: true };
     });
-    if (claimed.count !== 1) {
+
+    if (!activation.claimed) {
       return NextResponse.json({ error: 'This residence has already been registered by another resident. Please contact the society administrator.' }, { status: 409 });
     }
-
-    const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        emailVerified: true,
-        status: 'ACTIVE',
-        approvalStatus: 'APPROVED',
-        emailLockedUntil: { set: lockUntil },
-        mobileLockedUntil: { set: lockUntil },
-      },
-    });
 
     return NextResponse.json({ verified: true, email, message: 'Gmail verified and your resident account is now active. Please sign in with your password.' });
   } catch (error) {
