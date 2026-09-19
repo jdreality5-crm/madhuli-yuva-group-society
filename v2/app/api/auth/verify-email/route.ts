@@ -9,9 +9,6 @@ export async function GET(req: Request) {
     if (!oobCode) return NextResponse.json({ error: 'Verification link is missing or invalid.' }, { status: 400 });
 
     const result = await firebaseApplyVerificationCode(oobCode);
-    if (result.requestType !== 'VERIFY_EMAIL' || result.emailVerified !== true) {
-      return NextResponse.json({ error: 'This link is not a valid Gmail verification link.' }, { status: 400 });
-    }
     const email = normalizeGmail(result.email);
     const user = await prisma.user.findUnique({ where: { email }, select: { id: true, role: true, approvalStatus: true, firebaseUid: true } });
     if (!user || user.role !== 'OWNER' || user.approvalStatus !== 'APPROVED' || !user.firebaseUid || user.firebaseUid !== result.localId) {
