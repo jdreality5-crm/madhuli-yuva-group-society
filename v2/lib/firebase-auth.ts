@@ -31,10 +31,10 @@ export async function firebaseSendVerificationEmail(idToken: string) { return fi
 export async function firebaseApplyVerificationCode(oobCode: string) { return firebaseRequest<{ localId: string; email: string; requestType: string; emailVerified?: boolean }>('update', { oobCode }); }
 export async function firebaseDeleteUser(idToken: string) { return firebaseRequest<{ localId: string }>('delete', { idToken }); }
 export function firebaseAuthConfigured() { return Boolean(process.env.FIREBASE_WEB_API_KEY?.trim()); }
-export function isGmailAddress(email: string) { return /^[^@\\s]+@gmail\\.com$/i.test(email.trim()); }
+export function isGmailAddress(email: string) { return /^[^@\s]+@gmail\.com$/i.test(email.trim()); }
 export function normalizeGmail(email: string) {
   const value = email.trim().toLowerCase();
   if (!isGmailAddress(value)) return value;
   const [local, domain] = value.split('@');
-  return local.replace(/\\./g, '').split('+')[0] + '@' + domain;
+  return local.replace(/\./g, '').split('+')[0] + '@' + domain;
 }
