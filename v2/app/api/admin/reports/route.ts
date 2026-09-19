@@ -1,19 +1,3 @@
-import { NextResponse } from 'next/server';
-import { prisma, requireSubAdminPermission } from '@/lib/auth';
-
-export async function GET(req: Request) {
-  try {
-    const s = await requireSubAdminPermission('REPORTS');
-    const url = new URL(req.url); const from = url.searchParams.get('from'); const to = url.searchParams.get('to');
-    const start = from ? new Date(`${from}T00:00:00`) : new Date(new Date().getFullYear(),0,1);
-    const end = to ? new Date(`${to}T23:59:59.999`) : new Date();
-    const where = { societyId: s.societyId, date: { gte: start, lte: end } };
-    const [income, expenses] = await Promise.all([
-      prisma.income.findMany({ where, orderBy:{date:'desc'}, include:{event:{select:{title:true}}} }),
-      prisma.expense.findMany({ where, orderBy:{date:'desc'}, include:{event:{select:{title:true}}} })
-    ]);
-    const incomeTotal=income.reduce((a,x)=>a+x.amountPaise,0n), expenseTotal=expenses.reduce((a,x)=>a+x.amountPaise,0n);
-    const byCategory=(rows:any[])=>Object.entries(rows.reduce((m,x)=>{const k=x.category||'Other';m[k]=(m[k]||0n)+x.amountPaise;return m},{} as Record<string,bigint>)).map(([category,amount])=>({category,amount:(amount as bigint).toString()}));
-    return NextResponse.json({from:start.toISOString(),to:end.toISOString(),summary:{income:incomeTotal.toString(),expense:expenseTotal.toString(),balance:(incomeTotal-expenseTotal).toString()},income:income.map(x=>({...x,amountPaise:x.amountPaise.toString()})),expenses:expenses.map(x=>({...x,amountPaise:x.amountPaise.toString()})),incomeByCategory:byCategory(income),expenseByCategory:byCategory(expenses)});
-  } catch(e){return NextResponse.json({error:e instanceof Error&&e.message==='FORBIDDEN'?'Forbidden':'Server error'},{status:403});}
-}
+import{NextResponse}from'next/server';import{requireSubAdminPermission}from'@/lib/session';
+async function rest<T>(table:string,q:Record<string,string>){const b=process.env.SUPABASE_URL?.trim().replace(/\/$/,'');const k=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();if(!b||!k)throw Error('CONFIG');const u=new URL(b+'/rest/v1/'+table);Object.entries(q).forEach(([a,v])=>u.searchParams.set(a,v));const r=await fetch(u,{headers:{apikey:k,Authorization:'Bearer '+k,Accept:'application/json'},cache:'no-store'});const d=await r.json().catch(()=>null);if(!r.ok)throw Error('REST');return d as T}
+export async function GET(req:Request){try{const s=await requireSubAdminPermission('REPORTS');const u=new URL(req.url),from=u.searchParams.get('from'),to=u.searchParams.get('to');const start=from?new Date(`${from}T00:00:00`):new Date(new Date().getFullYear(),0,1),end=to?new Date(`${to}T23:59:59.999`):new Date();const range=`gte.${start.toISOString()},lte.${end.toISOString()}`;const[income,expenses]=await Promise.all([rest<any[]>('Income',{select:'*,Event:eventId(id,title)',societyId:'eq.'+s.societyId,date:range,order:'date.desc'}),rest<any[]>('Expense',{select:'*,Event:eventId(id,title)',societyId:'eq.'+s.societyId,date:range,order:'date.desc'})]);const sum=(rows:any[])=>rows.reduce((a,x)=>a+BigInt(x.amountPaise),0n),it=sum(income),et=sum(expenses);const cats=(rows:any[])=>{const m=new Map<string,bigint>();for(const x of rows){const k=x.category||'Other';m.set(k,(m.get(k)||0n)+BigInt(x.amountPaise))}return [...m].map(([category,amount])=>({category,amount:amount.toString()}))};return NextResponse.json({from:start.toISOString(),to:end.toISOString(),summary:{income:it.toString(),expense:et.toString(),balance:(it-et).toString()},income:income.map(x=>({...x,amountPaise:String(x.amountPaise)})),expenses:expenses.map(x=>({...x,amountPaise:String(x.amountPaise)})),incomeByCategory:cats(income),expenseByCategory:cats(expenses)})}catch(e){const status=e instanceof Error&&e.message==='FORBIDDEN'?403:500;return NextResponse.json({error:status===403?'Forbidden':'Server error'},{status})}}
