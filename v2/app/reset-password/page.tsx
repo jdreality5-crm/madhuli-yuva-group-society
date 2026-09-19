@@ -1,17 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function ResetPassword() {
-  const params = useSearchParams();
   const router = useRouter();
-  const code = params.get('oobCode') || '';
+  const [code,setCode]=useState('');
   const [password,setPassword]=useState('');
   const [confirm,setConfirm]=useState('');
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
   const [done,setDone]=useState(false);
+  useEffect(()=>{
+    const query=new URLSearchParams(window.location.search);
+    setCode(query.get('oobCode')||'');
+  },[]);
 
   async function submit(e:React.FormEvent){e.preventDefault();setError('');if(!code){setError('This reset link is missing or invalid.');return;}if(password!==confirm){setError('Passwords do not match.');return;}setBusy(true);try{const r=await fetch('/api/auth/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({oobCode:code,newPassword:password})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Password reset failed.');setDone(true);window.setTimeout(()=>router.replace('/login'),1200);}catch(e){setError(e instanceof Error?e.message:'Password reset failed.')}finally{setBusy(false)}}
 
