@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       const bill = await prisma.bill.findFirst({ where: { id: billId, societyId: session.societyId, propertyUnit: { residentUserId: session.id, property: { societyId: session.societyId } } }, select: { id: true, amountPaise: true, paymentStatus: true } });
       if (!bill) return NextResponse.json({ error: 'Bill not found.' }, { status: 404 });
       if (bill.amountPaise !== amountPaise) return NextResponse.json({ error: 'Payment amount must match the bill amount.' }, { status: 400 });
-      if (bill.paymentStatus === 'PAID' || bill.paymentStatus === 'PENDING') return NextResponse.json({ error: bill.paymentStatus === 'PAID' ? 'This bill has already been paid.' : 'A payment is already pending for this bill.' }, { status: 409 });
+      if (bill.paymentStatus === 'PAID') return NextResponse.json({ error: 'This bill has already been paid.' }, { status: 409 });
     }
     const account = await prisma.paymentAccount.findFirst({ where: { id: body.paymentAccountId, societyId: session.societyId, status: 'ACTIVE' } });
     if (!account) return NextResponse.json({ error: 'Payment account not found.' }, { status: 404 });
@@ -57,8 +57,14 @@ export async function POST(req: Request) {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
     const payment = await prisma.$transaction(async tx => {
       if (billId) {
+        const now = new Date();
+        const activePayment = await tx.payment.findFirst({
+          where: { billId, societyId: session.societyId, status: 'PENDING', expiresAt: { gt: now } },
+          select: { id: true },
+        });
+        if (activePayment) throw new Error('BILL_PAYMENT_ALREADY_CLAIMED');
         const claimedBill = await tx.bill.updateMany({
-          where: { id: billId, societyId: session.societyId, paymentStatus: 'UNPAID' },
+          where: { id: billId, societyId: session.societyId, paymentStatus: { in: ['UNPAID', 'PENDING'] } },
           data: { paymentStatus: 'PENDING' },
         });
         if (claimedBill.count !== 1) throw new Error('BILL_PAYMENT_ALREADY_CLAIMED');
