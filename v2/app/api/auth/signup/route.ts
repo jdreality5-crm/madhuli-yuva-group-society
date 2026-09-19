@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { appConfig } from '@/lib/config';
-import { prisma } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import { firebaseAuthConfigured, firebaseDeleteUser, firebaseSendVerificationEmail, firebaseSignUp, isGmailAddress, normalizeGmail } from '@/lib/firebase-auth';
 
 const schema = z.object({
