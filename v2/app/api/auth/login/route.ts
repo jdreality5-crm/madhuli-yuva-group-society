@@ -58,6 +58,15 @@ export async function POST(req: Request) {
         if (!firebaseUser || firebaseUser.localId !== user.firebaseUid || firebaseUser.emailVerified !== true || firebaseUser.disabled === true) {
           return NextResponse.json({ error: 'Please verify your Gmail address before signing in.' }, { status: 403 });
         }
+        if (user.unitId && !user.emailVerified) {
+          const linked = await prisma.propertyUnit.updateMany({
+            where: { id: user.unitId, residentUserId: null, status: 'ACTIVE' },
+            data: { residentUserId: user.id, residentType: user.residentType || 'OWNER', ownerName: user.name, ownerMobile: user.mobile, ownerEmail: user.email },
+          });
+          if (linked.count !== 1) {
+            return NextResponse.json({ error: 'This residence has already been registered by another resident. Please contact the society administrator.' }, { status: 409 });
+          }
+        }
         if (!user.emailVerified || user.status !== 'ACTIVE') {
           const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
           await prisma.user.update({ where: { id: user.id }, data: { emailVerified: true, status: 'ACTIVE', approvalStatus: 'APPROVED', emailLockedUntil: user.emailLockedUntil || lockUntil, mobileLockedUntil: user.mobileLockedUntil || lockUntil } });
