@@ -57,6 +57,10 @@ export async function POST(req: Request) {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
     const payment = await prisma.$transaction(async tx => {
       if (billId) {
+        // Serialize all payment-session claims for this bill. Without a DB lock,
+        // two concurrent requests can both observe no active payment and create
+        // duplicate sessions before either transaction commits.
+        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${billId}, 0))`;
         const now = new Date();
         const activePayment = await tx.payment.findFirst({
           where: { billId, societyId: session.societyId, status: 'PENDING', expiresAt: { gt: now } },
