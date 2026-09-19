@@ -5,7 +5,7 @@
 - Phase: Security hardening and production readiness
 - Current task: Security hardening and production verification
 - Final stage: Not signed off
-- Current implementation commit: `d08b5a5c9463bd6216783c9e46c8718ff8ad6c09`
+- Current implementation commit: `f31185f89e15699cbf71750c146c9b48b476af27`
 
 ## Status Matrix
 
@@ -96,3 +96,22 @@
 - The current Properties UI was calling `/api/admin/properties/setup`, but that route was missing from the V2 API tree. Restored the organizer-protected setup endpoint with an idempotent transaction for Sarang Apartment (A/B/C, 26 units each) and Pramukhpark Society (27 tenaments).
 - Apartment units are created without invented floor assignments (`floorLabel: Flat`); Pramukhpark floors remain dynamic and are added separately.
 - V2 Build Check #480 passed and Cloudflare Deploy #415 succeeded for the fix.
+
+
+## Dependency security hardening — 2026-09-19
+- Added a `deepmerge-ts` `^8.0.1` package override after CI identified the vulnerable transitive dependency.
+- V2 Build Check #484 passed with `npm install` reporting **0 vulnerabilities**.
+- Cloudflare Deploy #419 succeeded for commit `f31185f89e15699cbf71750c146c9b48b476af27`.
+- Exact deployed Cloudflare Worker version: `bffbeabc-87b9-45be-8276-530e5ca0cbfa`.
+
+## Protected API final pass — 2026-09-19
+- Reviewed the V2 API route surface under `v2/app/api`.
+- Administrative routes use DB-backed role/module guards and reviewed routes are society scoped.
+- Resident dashboard/notices/programs/profile routes require authenticated sessions; resident financial/payment access remains owner/unit scoped.
+- Public health and residence-discovery routes remain intentionally unauthenticated with restricted response/data scope.
+- No new authorization defect found in this pass.
+
+## Current external verification gate
+- Firebase Console Email/Password + custom `/verify-email` action-handler configuration still needs external console verification.
+- Live browser E2E signup → Firebase verification → activation → login and password recovery remains pending.
+- Production sign-off remains pending until live E2E and final smoke tests are completed.
