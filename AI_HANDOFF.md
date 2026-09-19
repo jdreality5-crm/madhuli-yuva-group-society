@@ -205,6 +205,24 @@ Reviewed the main protected admin/payment/dashboard routes: queries are scoped b
 - Do not add a large UI framework merely to imitate a template; preserve Next.js/React/Vinext and prefer reusable primitives/CSS.
 
 
-## AUTH ACTION-CODE HARDENING — 2026-09-19
-- `/api/auth/verify-email` now validates Firebase's returned `requestType === VERIFY_EMAIL` and `emailVerified === true` before changing the local resident to ACTIVE.
-- This prevents a non-verification Firebase action code, including a password-reset action code, from being accepted by the verification endpoint.
+## AUTH ACTION-CODE REVIEW — 2026-09-19
+- The temporary response-field check for `requestType === VERIFY_EMAIL` and `emailVerified === true` was reverted after checking Firebase's documented `accounts:update` response shape; those fields are not documented as required response fields for this flow.
+- The current verification handler uses Firebase's `accounts:update` + `oobCode` flow, then validates the matching local OWNER, APPROVED record and Firebase UID before activation.
+
+## DEPENDENCY SECURITY HARDENING — 2026-09-19
+- Added a `deepmerge-ts` `^8.0.1` package override after CI dependency audit identified the vulnerable transitive version.
+- V2 Build Check #484 passed with `npm install` reporting **0 vulnerabilities**.
+- Cloudflare Deploy #419 passed for the same commit and deployed Worker version `bffbeabc-87b9-45be-8276-530e5ca0cbfa`.
+- Current verified implementation commit: `f31185f89e15699cbf71750c146c9b48b476af27`.
+
+## FINAL PROTECTED-API PASS — 2026-09-19
+- Reviewed the V2 API route surface under `v2/app/api`.
+- Administrative routes use DB-backed role/module guards (`requireMasterAdmin`, `requireOrganizer`, or `requireSubAdminPermission`) and society scoping was present across the reviewed admin financial/property/content routes.
+- Resident dashboard/notices/programs/profile routes require an authenticated session; resident bills and payments remain owner/unit scoped.
+- Public health and residence-discovery routes remain intentionally unauthenticated with restricted response/data scope.
+- No new authorization defect was found in this pass.
+
+## CURRENT EXTERNAL VERIFICATION GATE
+- Firebase Console Email/Password and custom `/verify-email` action-handler configuration still require external Firebase Console verification.
+- Live browser E2E for signup → verification → activation → login and password recovery remains pending.
+- Production sign-off remains pending until the live Firebase E2E path and final smoke tests are completed.
