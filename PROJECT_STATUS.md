@@ -3,9 +3,9 @@
 ## Current
 - Branch: `fresh-society-v2`
 - Phase: Security hardening and production readiness
-- Current task: Firebase resident-auth configuration + E2E verification, alongside remaining security audit
+- Current task: Internal V2 build verification before Firebase/Cloudflare live configuration
 - Final stage: Not signed off
-- Current implementation commit: `cc68c418a17f6346fdeba23f31aff44716ca46be`
+- Current implementation commit: `74a0ca901c278c00938926deb00460ab81cbeb27`
 
 ## Status Matrix
 
@@ -14,43 +14,30 @@
 | Next.js V2 app | Complete | Active app under `v2/` |
 | Prisma/PostgreSQL | Complete | Supabase PostgreSQL |
 | Property model | Complete | Apartment + dynamic tenament floors |
-| Resident signup | Implemented / config pending | Firebase Gmail-only signup + verification link; verification now activates the matching resident and starts 15-day contact locks |
+| Resident signup | Implemented / config pending | Firebase Gmail-only signup + verification link; verification activates the matching resident and starts 15-day contact locks |
 | Login/session enforcement | Migrated / audit | Residents authenticate with Firebase; app session remains DB-revalidated |
 | Profile | Implemented / audit | Review email/session consistency |
 | Financial isolation | Audited / continue | Continue endpoint-by-endpoint audit |
 | Payments | Hardened / audit | Evidence race fixed; final idempotency review pending |
 | Property unit linking | Hardened | Active/approved resident requirement + empty-unit clearing |
-| Legacy approval API | Hardened | Both approval paths now enforce verified email |
+| Legacy approval API | Hardened | Both approval paths enforce verified email |
 | Storage upload | Hardened | Generic upload restricted to organizers |
 | Cloudflare Workers | Configured | vinext + Wrangler |
 | Documentation | Complete | Handoff/status docs are source of truth |
-| E2E testing | Pending | Firebase signup/login/password reset still requires live configuration and test |
-| Production build/typecheck | Pending | Local environment could not reach GitHub |
+| E2E testing | Pending | Firebase signup/login/password reset requires live configuration and test |
+| Production build/typecheck | Verification in progress | V2 Build Check triggered by latest branch update |
 | Production deployment verification | Pending | Must verify exact deployed commit |
 | Production sign-off | Pending | Final gate |
 
-## Confirmed Audit Fixes
-- Bill update now validates referenced events against the current society.
-- Resident payment evidence submission uses an atomic pending/expiry claim to prevent concurrent overwrites.
-- Losing payment screenshot uploads are cleaned up after a failed atomic claim.
-- Payment account QR images are returned through signed private-storage URLs.
-- Legacy Master Admin resident approval route now matches secure approval semantics.
-- Generic storage upload requires organizer authorization.
-- Property unit linking only accepts active, approved, email-verified resident accounts.
-- Property unit clearing safely removes resident linkage and allows empty unit fields.
-- Property unit audit logging now matches the Prisma AuditLog schema.
-- Profile login email is read-only and API-enforced until a dedicated email re-verification flow is implemented.
-- Root README and deployment documentation now describe V2 + Cloudflare Workers rather than V1 Express/SQLite.
-
 ## Required Sequence
-1. Configure Firebase Authentication and custom email action handler (`/verify-email`).
-2. Configure and verify `FIREBASE_WEB_API_KEY` in Cloudflare.
-3. E2E-test Gmail signup → verification link → automatic activation → login.
-4. Add/verify Firebase password reset flow.
-5. Audit remaining protected APIs/pages and legacy flat compatibility.
-6. Complete payment idempotency/reference review.
-7. UI/UX/accessibility final pass.
-8. Production build/typecheck.
+1. Internal V2 build/typecheck verification.
+2. Configure Firebase Authentication and custom email action handler (`/verify-email`).
+3. Configure and verify `FIREBASE_WEB_API_KEY` in Cloudflare.
+4. E2E-test Gmail signup → verification link → automatic activation → login.
+5. Verify Firebase password reset flow.
+6. Audit remaining protected APIs/pages and legacy flat compatibility.
+7. Complete payment idempotency/reference review.
+8. UI/UX/accessibility final pass.
 9. Verify Cloudflare deployment/version.
 10. Final sign-off and update handoff.
 
@@ -58,72 +45,11 @@
 - Never claim deployment without checking the actual deployed version.
 - Never introduce fake production data.
 - Preserve locked architecture in `AI_HANDOFF.md`.
+- Cloudflare Workers is the V2 production target; Vercel is not part of the V2 deployment path.
 - Update status after meaningful implementation work.
 
-
-### Payment security audit — 2026-09-18
-- Unique transaction reference enforced per society at DB level for non-empty `transactionId` values.
-- Existing production transaction-reference duplicates: none.
-- Payment review remains atomic: only one concurrent reviewer can claim a PENDING payment before Income creation.
-
-
-### Authorization audit — 2026-09-18
-- Reviewed protected admin, payment, dashboard, storage and master-admin routes for role/society scoping.
-- Hardened the maximum-6 Sub Admin creation path against concurrent requests using a Serializable transaction.
-
-
-### Firebase / deployment verification — 2026-09-18
-- Firebase custom email action handler is implemented in v2/app/verify-email/page.tsx; Firebase Console template configuration still needs explicit verification.
-- Firebase REST email verification uses the documented oobCode flow.
-- Latest branch HEAD is 6ed47f14ae6bf2e4293c405737db02c3dae8fbfb.
-- No GitHub Actions workflow run is attached to this commit; latest production deployment is therefore not claimed as verified.
-- Cloudflare Workers remains the production target.
-
-
-### Login abuse protection — 2026-09-18
-- Added database-backed failed-login tracking and a 15-minute lock after 5 failed password attempts.
-- Successful authentication clears the failure counter and lock.
-- Firebase resident invalid-password failures and legacy bcrypt failures both use the same lockout path.
-- Login abuse migration is present at v2/prisma/migrations/20260918170000_add_login_abuse_controls/migration.sql.
-- Direct production schema preparation was verified; Prisma migration deployment still needs to run through the normal Cloudflare build/deploy path.
-
-
-### Storage upload hardening — 2026-09-18
-- Generic organizer uploads now validate magic-byte signatures for JPG, PNG, WEBP and PDF instead of trusting MIME type alone.
-- Payment-account QR uploads now validate decoded image signatures and reject empty/mismatched content.
-- Private storage continues to use the society-scoped path and signed URLs.
-
-
-## E2E READINESS AUDIT — 2026-09-18
-- Static authorization/auth-flow review completed for resident signup, Firebase verification, login, password recovery, resident sessions, and payment submission/review.
-- No additional application-code change was justified by this pass.
-- Required live tests before production sign-off: unverified-login rejection; verification activation; owner/tenant unit linking; duplicate email/mobile rejection; password reset; disabled/rejected session rejection; cross-society denial; payment evidence race; concurrent payment review; private-file access.
-- Live E2E remains pending because Firebase Console configuration and current Cloudflare deployment cannot be independently verified from repository source in this environment.
-
-
-## FINAL SECURITY SURFACE PASS — 2026-09-18
-- Completed review of public/auth/session surfaces and disabled the obsolete resident OTP resend endpoint.
-- No secrets are returned by the health endpoint; residence discovery is limited to active, signup-enabled, unclaimed units in the configured society.
-- Remaining production-readiness work is verification rather than a claimed deployment: live Firebase configuration/E2E, build/typecheck, and Cloudflare deployment/version verification.
-
-
-## PROFILE CAMERA CAPTURE — 2026-09-18
-- Profile page now provides a direct `Take Photo` action using the browser camera capture hint (`capture="user"`) plus a separate gallery/file picker.
-- Existing private Supabase Storage upload, 3 MB limit, MIME checks, replacement and removal flow remains unchanged.
-- Camera behavior is platform/browser controlled; supported mobile browsers open the front-camera capture UI, while unsupported browsers fall back to normal file selection.
-
-
-### UI/UX FOUNDATION — 2026-09-18
-- Added UI_UX_DESIGN_SYSTEM.md with the shared Creative Tim-inspired design rules, tokens, component language, free reference links, and rollout plan.
-- Added v2/app/layout.tsx as the real shared Next.js root layout. It now owns global CSS, app metadata, manifest reference, theme color and the PWA install prompt.
-- Removed duplicate global CSS import/PWA mounting from the home page and removed the page-level global CSS import from login.
-- PWA install prompting is now common to the application shell rather than being mounted only on the dashboard route.
-- Full module-by-module visual migration is intentionally the next UI phase; API behavior, auth, authorization and data scope must remain unchanged during UI work.
-
-
-### UI icon / symbol audit — 2026-09-18
-- Audited the current V2 dashboard, properties, flats, programs, notices, gallery, payments and authentication surfaces for decorative Unicode UI symbols and emoji-based controls.
-- Replaced remaining decorative controls found in resident/admin notices, resident gallery, admin programs, admin notices and admin gallery with the shared `UiIcon` SVG system.
-- Extended `UiIcon` with semantic `arrowRight`, `print`, and existing close/refresh usage where needed.
-- Existing Bills and Profile icon work remains preserved; no production data or API behavior was changed by this UI-only pass.
-- Key audited surfaces now contain no occurrences of the targeted UI-symbol set (arrow/check/cross/star/print/calendar/clock/location/plus/refresh/close characters).
+### Internal verification — 2026-09-19
+- Prisma schema formatting and Bill → PropertyUnit relation were repaired in commit `74a0ca901c278c00938926deb00460ab81cbeb27`.
+- V2 Build Check workflow is `.github/workflows/v2-build.yml` and runs on pushes to `fresh-society-v2`.
+- This status update intentionally triggers the V2 Build Check without changing application behavior.
+- Firebase/Cloudflare live configuration has not been changed in this step.
