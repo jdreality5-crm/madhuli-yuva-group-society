@@ -18,7 +18,7 @@ export default function Signup() {
   const apartmentBlocks=useMemo(()=>properties.filter(p=>p.type==='APARTMENT'),[properties]);
   const tenaments=useMemo(()=>properties.filter(p=>p.type==='TENAMENT').sort((a,b)=>Number(a.propertyNumber)-Number(b.propertyNumber)),[properties]);
   const selectedProperty=useMemo(()=>properties.find(p=>p.type===form.propertyType&&p.propertyNumber===form.propertyNumber),[properties,form.propertyType,form.propertyNumber]);
-  const availableUnits=selectedProperty?.units.filter(u=>u.signupEnabled) || [];
+  const availableUnits=selectedProperty?.units || [];
 
   function update(field:keyof typeof form,value:string){setForm(c=>({...c,[field]:value}));}
   function changeType(type:'APARTMENT'|'TENAMENT'){setForm(c=>({...c,propertyType:type,propertyNumber:'',unitLabel:'',residentType:'OWNER'}));setError('');}
