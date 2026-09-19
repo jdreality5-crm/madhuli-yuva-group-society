@@ -115,3 +115,8 @@
 - Firebase Console Email/Password + custom `/verify-email` action-handler configuration still needs external console verification.
 - Live browser E2E signup → Firebase verification → activation → login and password recovery remains pending.
 - Production sign-off remains pending until live E2E and final smoke tests are completed.
+
+
+## Accessibility hardening — 2026-09-19
+- Added explicit `htmlFor`/input `id` associations to previously unassociated authentication form labels on signup, forgot-password, and reset-password pages.
+- No authentication or validation behavior changed.
