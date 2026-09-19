@@ -54,8 +54,11 @@ export async function POST(req: Request) {
         }
         if (user.unitId && !user.emailVerified) {
           const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
-          const linked = await supabaseRest<Array<{id:string}>>('PropertyUnit',{id:'eq.'+user.unitId,residentUserId:'is.null',status:'eq.ACTIVE',select:'id',limit:'1'},{method:'PATCH',body:JSON.stringify({residentUserId:user.id,residentType:user.residentType||'OWNER',ownerName:user.name,ownerMobile:user.mobile,ownerEmail:user.email})});
-        const activation={claimed:linked.length===1};
+          const currentUnit = await supabaseRest<Array<{id:string;residentUserId:string|null}>>('PropertyUnit',{id:'eq.'+user.unitId,status:'eq.ACTIVE',select:'id,residentUserId',limit:'1'});
+          if (currentUnit.length !== 1) return NextResponse.json({ error: 'This residence is no longer available. Please contact the society administrator.' }, { status: 409 });
+          const alreadyClaimedByUser = currentUnit[0].residentUserId === user.id;
+          const linked = alreadyClaimedByUser ? currentUnit : await supabaseRest<Array<{id:string}>>('PropertyUnit',{id:'eq.'+user.unitId,residentUserId:'is.null',status:'eq.ACTIVE',select:'id',limit:'1'},{method:'PATCH',body:JSON.stringify({residentUserId:user.id,residentType:user.residentType||'OWNER',ownerName:user.name,ownerMobile:user.mobile,ownerEmail:user.email})});
+          const activation={claimed:linked.length===1};
           if (!activation.claimed) {
             return NextResponse.json({ error: 'This residence has already been registered by another resident. Please contact the society administrator.' }, { status: 409 });
           }
