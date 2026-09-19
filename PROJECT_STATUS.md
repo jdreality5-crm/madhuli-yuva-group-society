@@ -69,3 +69,9 @@
 - Resident bills, dashboard, notices, and programs APIs are society-scoped and require an authenticated session; resident bills are additionally limited to units linked to the resident.
 - Generic storage upload is organizer-only and validates file size, declared MIME type, and file signature before private-bucket upload.
 - No new authorization defect was found in this pass; legacy Flat compatibility and payment idempotency/reference review remain open audit items.
+
+### Payment idempotency review — 2026-09-19
+- Bill-linked payment initiation now claims the bill's payment state transactionally, preventing concurrent duplicate payment sessions for the same bill.
+- Expired pending bill sessions can be restarted safely; rejected bill payments release the bill back to UNPAID, while verified payments move it to PAID.
+- Existing transaction-reference uniqueness remains enforced by the society-scoped partial unique database index.
+- Fresh V2 build verification is still required for these latest payment changes; no green build is claimed until GitHub Actions reports it.
