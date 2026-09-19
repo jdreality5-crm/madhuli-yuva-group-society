@@ -15,7 +15,7 @@ export async function GET() {
       },
       orderBy: [{ type: 'asc' }, { block: 'asc' }, { propertyNumber: 'asc' }],
     });
-    return NextResponse.json({ properties: properties.map(({ id, type, name, propertyNumber, block, units }) => ({ id, type, name, propertyNumber, block, units })) });
+    return NextResponse.json({ properties: properties.map(({ id, type, name, propertyNumber, block, units }) => ({ id, type, name, propertyNumber, block, units })) }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
   } catch (error) {
     console.error('[auth/residences] server error', error);
     return NextResponse.json({ error: 'Unable to load signup residences' }, { status: 500 });
