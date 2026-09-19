@@ -211,8 +211,12 @@ export default function DashboardPage() {
 
     <nav className="mobile-nav" aria-label="Mobile navigation">
       {(isResident
-        ? [['Home','/','home'],['Programs','/programs','calendar'],['Notices','/notices','notice'],['Bills','/bills','report'],['Profile','/profile','users']]
-        : [['Home','/','home'],['Programs','/admin/programs','calendar'],['Notices','/admin/notices','notice'],['Reports','/reports','report'],['Profile','/profile','users']]
+        ? [['Home','/','home'],['Properties','/properties','property'],['Programs','/programs','calendar'],['Bills','/bills','report'],['Profile','/profile','users']]
+        : [
+            ...adminPrimary,
+            ...adminPermission.filter(([,permission]) => can(permission)).map(([label,_permission,url,icon]) => [label,url,icon] as const),
+            ...(dashboard.role === 'MASTER_ADMIN' ? masterOnlyLinks : [])
+          ]
       ).map(([label,url,icon]) => <a className={pathname === url ? 'active' : ''} href={url} key={label}><UiIcon name={icon as any} size={16}/><span>{label}</span></a>)}
     </nav>
 
