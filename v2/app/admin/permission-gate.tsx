@@ -20,7 +20,7 @@ export default function AdminPermissionGate({ children }: { children: React.Reac
   useEffect(() => {
     let active = true;
     setAllowed(null);
-    fetch('/api/dashboard', { cache: 'no-store' })
+    fetch('/api/session', { cache: 'no-store' })
       .then(async response => {
         const data = await response.json().catch(() => null);
         if (!response.ok || !data) throw new Error('UNAUTHORIZED');
