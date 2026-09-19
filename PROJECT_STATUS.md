@@ -60,6 +60,7 @@
 - Firebase/Cloudflare live configuration has not been changed in this step.
 
 
-### Auth hardening update — 2026-09-19
-- `/api/auth/verify-email` now requires Firebase to confirm the consumed action code is specifically a `VERIFY_EMAIL` action and that Firebase reports the email as verified before activating the resident account. A password-reset action code can no longer be used through this endpoint to trigger resident activation.
-- Firebase/Cloudflare external configuration remains the only live-auth gate: the Firebase Console action-handler configuration and `FIREBASE_WEB_API_KEY` secret are still required before E2E/deployment verification.
+### Auth verification review — 2026-09-19
+- Firebase's official REST documentation was checked against the verification handler. The `accounts:update` email-verification response contains the Firebase user identity/email fields but does not document `requestType` or `emailVerified` in the response; the temporary extra response-field check was therefore reverted to avoid breaking legitimate verification links.
+- The verification endpoint continues to use Firebase's dedicated `accounts:update` flow with the `oobCode`, then matches the returned `localId` and normalized Gmail against the pre-registered local resident before activation.
+- Firebase/Cloudflare external configuration remains the live-auth gate.
