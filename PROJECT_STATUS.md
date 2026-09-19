@@ -5,7 +5,7 @@
 - Phase: Security hardening and production readiness
 - Current task: Firebase configuration readiness and live configuration gate
 - Final stage: Not signed off
-- Current implementation commit: `4a6ff214613ba303f29886490e42bf5639ca9976`
+- Current implementation commit: `eb66b14bc7ea52ca322072774a8342c026ef415f`
 
 ## Status Matrix
 
@@ -18,14 +18,14 @@
 | Login/session enforcement | Migrated / audit | Residents authenticate with Firebase; app session remains DB-revalidated |
 | Profile | Implemented / audit | Review email/session consistency |
 | Financial isolation | Audited / continue | Continue endpoint-by-endpoint audit |
-| Payments | Hardened / audit | Evidence race fixed; final idempotency review pending |
+| Payments | Hardened / build verification pending | Payment-session race protection, expiry restart, rejection release, and transaction-reference uniqueness reviewed |
 | Property unit linking | Hardened | Active/approved resident requirement + empty-unit clearing |
 | Legacy approval API | Hardened | Both approval paths enforce verified email |
 | Storage upload | Hardened | Generic upload restricted to organizers |
 | Cloudflare Workers | Configured | vinext + Wrangler |
 | Documentation | Complete | Handoff/status docs are source of truth |
 | E2E testing | Pending | Firebase signup/login/password reset requires live configuration and test |
-| Production build/typecheck | Previously verified | V2 Build Check #454 passed on commit `89229d7f8e3efe65615c9e986827cd1ebe0b5435`; latest auth/doc commits still need a fresh run |
+| Production build/typecheck | Previously verified | V2 Build Check #454 passed on commit `89229d7f8e3efe65615c9e986827cd1ebe0b5435`; latest payment hardening still needs a fresh run |
 | Production deployment verification | Blocked | Cloudflare Deploy #389 built successfully but stopped because `FIREBASE_WEB_API_KEY` GitHub Secret is not configured |
 | Production sign-off | Pending | Final gate |
 
@@ -74,4 +74,5 @@
 - Bill-linked payment initiation now claims the bill's payment state transactionally, preventing concurrent duplicate payment sessions for the same bill.
 - Expired pending bill sessions can be restarted safely; rejected bill payments release the bill back to UNPAID, while verified payments move it to PAID.
 - Existing transaction-reference uniqueness remains enforced by the society-scoped partial unique database index.
+- Payment-session claims are now serialized with a PostgreSQL transaction-scoped advisory lock keyed to the bill ID, closing the remaining concurrent payment-session creation race.
 - Fresh V2 build verification is still required for these latest payment changes; no green build is claimed until GitHub Actions reports it.
