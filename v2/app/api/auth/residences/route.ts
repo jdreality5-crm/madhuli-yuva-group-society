@@ -35,14 +35,27 @@ export async function GET() {
     });
 
     const propertyIds = properties.map((property) => property.id);
+    const reservationCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const pendingUsers = await supabaseRest<Array<{ id: string }>>('User', {
+      select: 'id',
+      status: 'eq.INACTIVE',
+      emailVerified: 'eq.false',
+      createdAt: 'gte.' + reservationCutoff,
+    });
+    const pendingIds = pendingUsers.map((user) => user.id);
+    const unitParams: Record<string, string> = {
+      select: 'id,propertyId,label,floorLabel,residentType,signupEnabled',
+      propertyId: 'in.(' + propertyIds.join(',') + ')',
+      status: 'eq.ACTIVE',
+      order: 'floorNumber.asc,label.asc',
+    };
+    if (pendingIds.length) {
+      unitParams.or = 'residentUserId.is.null,residentUserId.not.in.(' + pendingIds.join(',') + ')';
+    } else {
+      unitParams.residentUserId = 'is.null';
+    }
     const units = propertyIds.length
-      ? await supabaseRest<UnitRow[]>('PropertyUnit', {
-          select: 'id,propertyId,label,floorLabel,residentType,signupEnabled',
-          propertyId: 'in.(' + propertyIds.join(',') + ')',
-          status: 'eq.ACTIVE',
-          residentUserId: 'is.null',
-          order: 'floorNumber.asc,label.asc',
-        })
+      ? await supabaseRest<UnitRow[]>('PropertyUnit', unitParams)
       : [];
 
     return NextResponse.json(
