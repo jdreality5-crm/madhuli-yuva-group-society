@@ -18,7 +18,7 @@ export async function PUT(req:Request,{params}:{params:Promise<{id:string}>}){
     if(exists.paymentStatus!=='UNPAID')return NextResponse.json({error:'Paid or pending bills cannot be edited'},{status:409});
     const eventId=d.eventId?.trim()||null;
     const propertyUnitId=d.propertyUnitId?.trim()||null;
-    const fileUrl=d.fileUrl?.trim()||null;
+    const fileUrl=d.fileUrl?.trim() || undefined;
     if(!isSocietyFilePath(fileUrl,s.societyId))return NextResponse.json({error:'Invalid document path'},{status:400});
     if(eventId){
       const event=await prisma.event.findFirst({where:{id:eventId,societyId:s.societyId},select:{id:true}});
