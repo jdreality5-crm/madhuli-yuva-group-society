@@ -52,10 +52,14 @@ export async function PATCH(req: Request) {
 
       if (claimed.count !== 1) return { error: 'Payment has already been reviewed.', status: 409 as const };
 
+      if (payment.billId) {
+        await tx.bill.updateMany({
+          where: { id: payment.billId, societyId: session.societyId, paymentStatus: { not: 'PAID' } },
+          data: { paymentStatus: body.action === 'VERIFY' ? 'PAID' : 'UNPAID' },
+        });
+      }
+
       if (body.action === 'VERIFY') {
-        if (payment.billId) {
-          await tx.bill.updateMany({ where: { id: payment.billId, societyId: session.societyId, paymentStatus: { not: 'PAID' } }, data: { paymentStatus: 'PAID' } });
-        }
         await tx.income.create({
           data: {
             societyId: payment.societyId,
