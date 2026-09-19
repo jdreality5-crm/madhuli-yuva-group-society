@@ -2,7 +2,11 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma, requireSubAdminPermission } from '@/lib/auth';
 
-const schema=z.object({eventId:z.string().optional().or(z.literal('')),propertyUnitId:z.string().optional().or(z.literal('')),type:z.enum(['INVOICE','RECEIPT','OTHER']),amountPaise:z.string().regex(/^\d+$/),vendor:z.string().max(160).optional(),category:z.string().max(100).optional(),date:z.string(),paymentMethod:z.enum(['CASH','BANK_TRANSFER','UPI','CHEQUE','OTHER']).optional(),notes:z.string().max(1000).optional(),fileUrl:z.string().url().optional().or(z.literal(''))});
+const schema=z.object({eventId:z.string().optional().or(z.literal('')),propertyUnitId:z.string().optional().or(z.literal('')),type:z.enum(['INVOICE','RECEIPT','OTHER']),amountPaise:z.string().regex(/^\d+$/),vendor:z.string().max(160).optional(),category:z.string().max(100).optional(),date:z.string(),paymentMethod:z.enum(['CASH','BANK_TRANSFER','UPI','CHEQUE','OTHER']).optional(),notes:z.string().max(1000).optional(),fileUrl:z.string().max(500).optional().or(z.literal(''))});
+
+function isSocietyFilePath(value:string|undefined,societyId:string){
+  return !value || (value.startsWith(`${societyId}/`) && !value.includes('://') && !value.includes('\\') && !value.includes('..'));
+}
 
 export async function PUT(req:Request,{params}:{params:Promise<{id:string}>}){
   try{
@@ -14,6 +18,8 @@ export async function PUT(req:Request,{params}:{params:Promise<{id:string}>}){
     if(exists.paymentStatus!=='UNPAID')return NextResponse.json({error:'Paid or pending bills cannot be edited'},{status:409});
     const eventId=d.eventId?.trim()||null;
     const propertyUnitId=d.propertyUnitId?.trim()||null;
+    const fileUrl=d.fileUrl?.trim()||null;
+    if(!isSocietyFilePath(fileUrl,s.societyId))return NextResponse.json({error:'Invalid document path'},{status:400});
     if(eventId){
       const event=await prisma.event.findFirst({where:{id:eventId,societyId:s.societyId},select:{id:true}});
       if(!event)return NextResponse.json({error:'Event not found'},{status:404});
@@ -22,7 +28,7 @@ export async function PUT(req:Request,{params}:{params:Promise<{id:string}>}){
       const unit=await prisma.propertyUnit.findFirst({where:{id:propertyUnitId,property:{societyId:s.societyId}},select:{id:true}});
       if(!unit)return NextResponse.json({error:'Property unit not found'},{status:404});
     }
-    const row=await prisma.bill.update({where:{id},data:{type:d.type,amountPaise:BigInt(d.amountPaise),vendor:d.vendor,category:d.category,date:new Date(d.date),paymentMethod:d.paymentMethod,notes:d.notes,fileUrl:d.fileUrl||null,eventId,propertyUnitId}});
+    const row=await prisma.bill.update({where:{id},data:{type:d.type,amountPaise:BigInt(d.amountPaise),vendor:d.vendor,category:d.category,date:new Date(d.date),paymentMethod:d.paymentMethod,notes:d.notes,fileUrl:eventId===undefined?fileUrl:fileUrl,eventId,propertyUnitId}});
     return NextResponse.json({...row,amountPaise:row.amountPaise.toString()});
   }catch{return NextResponse.json({error:'Invalid request'},{status:400});}
 }
