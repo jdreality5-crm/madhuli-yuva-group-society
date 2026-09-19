@@ -1,16 +1,4 @@
 import { NextResponse } from 'next/server';
-import { prisma, requireSession } from '@/lib/auth';
-
-export async function GET() {
-  try {
-    const session = await requireSession();
-    const notices = await prisma.notice.findMany({
-      where: { societyId: session.societyId, status: 'PUBLISHED' },
-      orderBy: [{ important: 'desc' }, { date: 'desc' }],
-    });
-    return NextResponse.json(notices);
-  } catch (e) {
-    const unauthorized = e instanceof Error && e.message === 'UNAUTHORIZED';
-    return NextResponse.json({ error: unauthorized ? 'Unauthorized' : 'Forbidden' }, { status: unauthorized ? 401 : 403 });
-  }
-}
+import { requireSession } from '@/lib/session';
+async function rest<T>(table:string,params:Record<string,string>):Promise<T>{const base=process.env.SUPABASE_URL?.trim().replace(/\/$/,'');const key=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();if(!base||!key)throw new Error('CONFIG');const u=new URL(base+'/rest/v1/'+table);Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));const r=await fetch(u,{headers:{apikey:key,Authorization:'Bearer '+key,Accept:'application/json'},cache:'no-store'});const d=await r.json().catch(()=>null);if(!r.ok)throw new Error('REST');return d as T}
+export async function GET(){try{const s=await requireSession();const notices=await rest<unknown[]>('Notice',{select:'*',societyId:'eq.'+s.societyId,status:'eq.PUBLISHED',order:'important.desc,date.desc'});return NextResponse.json(notices)}catch(e){const u=e instanceof Error&&e.message==='UNAUTHORIZED';return NextResponse.json({error:u?'Unauthorized':'Forbidden'},{status:u?401:403})}}
