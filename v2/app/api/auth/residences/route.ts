@@ -1,84 +1,61 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { prisma } from '@/lib/auth';
 import { appConfig } from '@/lib/config';
 
 type PropertyRow = { id: string; type: string; name: string; propertyNumber: string; block: string | null };
 type UnitRow = { id: string; propertyId: string; label: string; floorLabel: string; residentType: 'OWNER' | 'TENANT' | null; signupEnabled: boolean };
 
-function supabaseAdmin() {
-  const url = process.env.SUPABASE_URL?.trim();
+async function supabaseRest<T>(table: string, params: Record<string, string>) {
+  const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if (!url || !key) throw new Error('Supabase server configuration is missing');
-  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
-}
-
-async function loadFromSupabase() {
-  const client = supabaseAdmin();
-  const { data: properties, error: propertyError } = await client
-    .from('Property')
-    .select('id,type,name,propertyNumber,block')
-    .eq('societyId', appConfig.societyId)
-    .eq('status', 'ACTIVE')
-    .order('type', { ascending: true })
-    .order('block', { ascending: true, nullsFirst: true })
-    .order('propertyNumber', { ascending: true });
-
-  if (propertyError) throw propertyError;
-
-  const propertyIds = (properties || []).map((property) => property.id);
-  if (!propertyIds.length) return [];
-
-  const { data: units, error: unitError } = await client
-    .from('PropertyUnit')
-    .select('id,propertyId,label,floorLabel,residentType,signupEnabled')
-    .in('propertyId', propertyIds)
-    .eq('status', 'ACTIVE')
-    .is('residentUserId', null)
-    .order('floorNumber', { ascending: true })
-    .order('label', { ascending: true });
-
-  if (unitError) throw unitError;
-
-  return (properties || []).map((property) => ({
-    id: property.id,
-    type: String(property.type).toUpperCase(),
-    name: property.name,
-    propertyNumber: property.propertyNumber,
-    block: property.block ? String(property.block).toUpperCase() : null,
-    units: (units || []).filter((unit) => unit.propertyId === property.id),
-  }));
+  if (!base || !key) throw new Error('Supabase server configuration is missing');
+  const url = new URL(base + '/rest/v1/' + table);
+  Object.entries(params).forEach(([name, value]) => url.searchParams.set(name, value));
+  const response = await fetch(url.toString(), {
+    headers: {
+      apikey: key,
+      Authorization: 'Bearer ' + key,
+      Accept: 'application/json',
+    },
+    cache: 'no-store',
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error('Supabase ' + table + ' request failed (' + response.status + ')' + (detail ? ': ' + detail.slice(0, 300) : ''));
+  }
+  return response.json() as Promise<T>;
 }
 
 export async function GET() {
   try {
-    let properties;
-    try {
-      properties = await loadFromSupabase();
-    } catch (supabaseError) {
-      console.error('[auth/residences] Supabase read failed; trying Prisma', supabaseError);
-      const rows = await prisma.property.findMany({
-        where: { societyId: appConfig.societyId, status: 'ACTIVE' },
-        select: { id: true, type: true, name: true, propertyNumber: true, block: true },
-        orderBy: [{ type: 'asc' }, { block: 'asc' }, { propertyNumber: 'asc' }],
-      });
-      const units = rows.length
-        ? await prisma.propertyUnit.findMany({
-            where: { propertyId: { in: rows.map((row) => row.id) }, status: 'ACTIVE', residentUserId: null },
-            select: { id: true, propertyId: true, label: true, floorLabel: true, residentType: true, signupEnabled: true },
-            orderBy: [{ floorNumber: 'asc' }, { label: 'asc' }],
-          })
-        : [];
-      properties = rows.map((property) => ({
-        ...property,
-        type: String(property.type).toUpperCase(),
-        block: property.block ? String(property.block).toUpperCase() : null,
-        units: units.filter((unit) => unit.propertyId === property.id),
-      }));
-    }
+    const properties = await supabaseRest<PropertyRow[]>('Property', {
+      select: 'id,type,name,propertyNumber,block',
+      societyId: 'eq.' + appConfig.societyId,
+      status: 'eq.ACTIVE',
+      order: 'type.asc,block.asc.nullslast,propertyNumber.asc',
+    });
+
+    const propertyIds = properties.map((property) => property.id);
+    const units = propertyIds.length
+      ? await supabaseRest<UnitRow[]>('PropertyUnit', {
+          select: 'id,propertyId,label,floorLabel,residentType,signupEnabled',
+          propertyId: 'in.(' + propertyIds.join(',') + ')',
+          status: 'eq.ACTIVE',
+          residentUserId: 'is.null',
+          order: 'floorNumber.asc,label.asc',
+        })
+      : [];
 
     return NextResponse.json(
-      { properties },
+      {
+        properties: properties.map((property) => ({
+          id: property.id,
+          type: String(property.type).toUpperCase(),
+          name: property.name,
+          propertyNumber: property.propertyNumber,
+          block: property.block ? String(property.block).toUpperCase() : null,
+          units: units.filter((unit) => unit.propertyId === property.id),
+        })),
+      },
       { headers: { 'Cache-Control': 'no-store, max-age=0' } },
     );
   } catch (error) {
