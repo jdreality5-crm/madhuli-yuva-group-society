@@ -49,19 +49,21 @@ async function requireOrganizer(){
 export async function GET(){
   try{
     const session=await requireOrganizer();
-    const [properties,units]=await Promise.all([
-      supabaseRest<PropertyRow[]>("Property",{
-        select:"*",
-        societyId:"eq."+session.societyId,
-        status:"eq.ACTIVE",
-        order:"type.asc,block.asc,propertyNumber.asc"
-      }),
-      supabaseRest<UnitRow[]>("PropertyUnit",{
-        select:"*",
-        status:"eq.ACTIVE",
-        order:"floorNumber.asc,label.asc"
-      })
-    ]);
+    const properties=await supabaseRest<PropertyRow[]>("Property",{
+      select:"*",
+      societyId:"eq."+session.societyId,
+      status:"eq.ACTIVE",
+      order:"type.asc,block.asc,propertyNumber.asc"
+    });
+    const propertyIds=properties.map(property=>property.id);
+    const units=propertyIds.length
+      ? await supabaseRest<UnitRow[]>("PropertyUnit",{
+          select:"*",
+          status:"eq.ACTIVE",
+          propertyId:"in.("+propertyIds.join(",")+")",
+          order:"floorNumber.asc,label.asc"
+        })
+      : [];
     const byProperty=new Map<string,UnitRow[]>();
     for(const unit of units){
       const list=byProperty.get(unit.propertyId)||[];
