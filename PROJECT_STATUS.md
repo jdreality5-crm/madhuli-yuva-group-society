@@ -127,3 +127,10 @@
 - No business logic or authorization behavior changed.
 - V2 Build Check #494 and Cloudflare Deploy #429 succeeded; deployment reported 0 npm vulnerabilities.
 - Latest deployed Worker version: `9c2330db-2ec7-4b6e-990c-5cbe277edf2b`.
+
+
+### Atomic resident login activation — 2026-09-19
+- Firebase resident login activation was made transactional, matching the earlier email-verification transaction hardening.
+- Residence claim and user activation now succeed or roll back together.
+- Commit: `c00682a72bd0b93d3f1d632fbbb3e71133c4f651`.
+- GitHub Actions has not yet reported a workflow run for this commit, so build/deployment status remains unverified.
