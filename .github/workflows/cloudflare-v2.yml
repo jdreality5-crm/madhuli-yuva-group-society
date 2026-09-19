@@ -34,14 +34,34 @@ jobs:
         run: npm run db:generate:edge
       - name: Build Cloudflare Worker
         run: npm run build:vinext
-      - name: Sync Firebase runtime secret
+      - name: Prepare Worker runtime secrets
         env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MASTER_ADMIN_PASSWORD: ${{ secrets.MASTER_ADMIN_PASSWORD }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_STORAGE_BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
           FIREBASE_WEB_API_KEY: ${{ secrets.FIREBASE_WEB_API_KEY }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
         run: |
-          test -n "$FIREBASE_WEB_API_KEY"
-          test -n "$CLOUDFLARE_API_TOKEN"
-          printf '%s' "$FIREBASE_WEB_API_KEY" | npx wrangler secret put FIREBASE_WEB_API_KEY --name society-function-management-v2
+          node <<'NODE'
+          const fs = require('fs');
+          const keys = [
+            'DATABASE_URL',
+            'JWT_SECRET',
+            'MASTER_ADMIN_PASSWORD',
+            'SUPABASE_URL',
+            'SUPABASE_SERVICE_ROLE_KEY',
+            'SUPABASE_STORAGE_BUCKET',
+            'FIREBASE_WEB_API_KEY',
+            'RESEND_API_KEY',
+            'EMAIL_FROM',
+          ];
+          const secrets = Object.fromEntries(keys.map((key) => [key, process.env[key] || '']));
+          fs.writeFileSync('/tmp/worker-secrets.json', JSON.stringify(secrets));
+          NODE
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v4
         with:
@@ -49,4 +69,4 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: v2
           wranglerVersion: "4"
-          command: deploy
+          command: deploy --secrets-file /tmp/worker-secrets.json
