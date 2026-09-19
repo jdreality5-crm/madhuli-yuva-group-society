@@ -1,19 +1,4 @@
-import { NextResponse } from 'next/server';
-import { requireSubAdminPermission, prisma } from '@/lib/auth';
-
+import {NextResponse} from 'next/server';import {requireSubAdminPermission} from '@/lib/session';
+async function rest<T>(table:string,q:Record<string,string>={}){const b=process.env.SUPABASE_URL?.trim().replace(/\/$/,'');const k=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();if(!b||!k)throw Error('CONFIG');const u=new URL(b+'/rest/v1/'+table);Object.entries(q).forEach(([a,v])=>u.searchParams.set(a,v));const r=await fetch(u,{headers:{apikey:k,Authorization:'Bearer '+k,Accept:'application/json'},cache:'no-store'});const d=await r.json().catch(()=>null);if(!r.ok)throw Error('REST');return d as T}
 const esc=(v:unknown)=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]!));
-
-export async function GET(req:Request){
-  try{
-    const session=await requireSubAdminPermission('NOTICES');
-    const id=new URL(req.url).searchParams.get('id');
-    if(!id) return NextResponse.json({error:'Notice id is required'},{status:400});
-    const notice=await prisma.notice.findFirst({where:{id,societyId:session.societyId}});
-    if(!notice) return NextResponse.json({error:'Notice not found'},{status:404});
-    const title=notice.gujaratiTitle||notice.title;
-    const content=notice.gujaratiContent||notice.content;
-    const html=`<!doctype html><html lang="gu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>
-@page{size:A4;margin:0}*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff}body{font-family:'Noto Sans Gujarati','Nirmala UI',Arial,sans-serif;color:#292523}.paper{width:210mm;min-height:297mm;position:relative;background:url('/letterhead.jpg') center/100% 100% no-repeat;margin:0 auto}.content{position:absolute;left:14%;right:14%;top:27%;bottom:13%;padding:7mm 9mm;background:rgba(255,255,255,.97);overflow:hidden}.date{text-align:right;font-family:Arial,sans-serif;font-size:11px;color:#746b65}.heading{text-align:center;color:#641d2a;font-size:22px;font-weight:800;margin:7mm 0 5mm}.body{white-space:pre-wrap;font-size:14px;line-height:2;color:#292523}.important{display:inline-block;background:#e7d5a8;color:#641d2a;border-radius:999px;padding:3px 8px;font:700 10px Arial,sans-serif;margin-bottom:4mm}@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}.paper{break-after:page}}</style></head><body><main class="paper"><section class="content"><div class="date">તારીખ: ${new Date(notice.date).toLocaleDateString('en-IN')}</div>${notice.important?'<div class="important">IMPORTANT / અગત્યની સૂચના</div>':''}<h1 class="heading">${esc(title)}</h1><div class="body">${esc(content)}</div></section></main><script>window.addEventListener('load',()=>setTimeout(()=>window.print(),250))</script></body></html>`;
-    return new NextResponse(html,{headers:{'Content-Type':'text/html; charset=utf-8','Content-Disposition:' : 'inline'}});
-  }catch{return NextResponse.json({error:'Forbidden'},{status:403})}
-}
+export async function GET(req:Request){try{const s=await requireSubAdminPermission('NOTICES');const id=new URL(req.url).searchParams.get('id');if(!id)return NextResponse.json({error:'Notice id is required'},{status:400});const rows=await rest<any[]>('Notice',{select:'*',id:'eq.'+id,societyId:'eq.'+s.societyId,limit:'1'});if(!rows[0])return NextResponse.json({error:'Notice not found'},{status:404});const n=rows[0];const html='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(n.title)+'</title><style>body{font-family:Arial,sans-serif;padding:40px;max-width:900px;margin:auto}h1{margin-bottom:8px}.meta{color:#666;margin-bottom:24px}.important{font-weight:700}.content{white-space:pre-wrap;line-height:1.7}</style></head><body><h1>'+esc(n.title)+'</h1><div class="meta">'+esc(n.date||'')+(n.important?' · IMPORTANT':'')+'</div><div class="content">'+esc(n.content)+'</div></body></html>';return new NextResponse(html,{headers:{'Content-Type':'text/html; charset=utf-8'}})}catch(e){const m=e instanceof Error?e.message:'';return NextResponse.json({error:m==='UNAUTHORIZED'?'Unauthorized':m==='FORBIDDEN'?'Forbidden':'Server error'},{status:m==='UNAUTHORIZED'?401:m==='FORBIDDEN'?403:500})}}
