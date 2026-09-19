@@ -40,7 +40,62 @@ export default function DashboardPage() {
   const location = [dashboard?.society?.city, dashboard?.society?.state].filter(Boolean).join(', ');
   const mobileLinks = useMemo(() => dashboard?.role === 'OWNER' ? [['Home', '/'], ['Payment', '/payments'], ['Profile', '/profile']] : [['Home', '/'], ['Programs', '/programs'], ['Notices', '/notices'], ['Bills', '/bills'], ['Gallery', '/gallery'], ['Profile', '/profile']], [dashboard?.role]);
 
-  if (error) return <main className="main"><div className="card"><h1>Dashboard</h1><p>{error}</p><a className="btn btn-primary" href="/login">Sign in</a></div></main>;
+  if (error) return <main className="main dashboard-main">
+        {dashboard.role === 'OWNER' ? (
+          <>
+            <section className="resident-welcome">
+              <div className="welcome-copy">
+                <p className="eyebrow">MY SOCIETY • RESIDENT</p>
+                <h1>મારું સોસાયટી ડેશબોર્ડ</h1>
+                <p className="welcome-sub">{dashboard.society?.name || 'Your society'} માં આપનું સ્વાગત છે.<br />{location || 'તમારી સોસાયટીની નવીનતમ માહિતી અહીં જુઓ.'}</p>
+              </div>
+              <div className="welcome-mark"><span>સ</span><small>માધુલી<br />યુવા ગ્રુપ</small></div>
+            </section>
+
+            <section className="dashboard-section first-section">
+              <div className="section-head"><div><p className="eyebrow">QUICK ACCESS</p><h2>આજે શું કરવું છે?</h2></div><span className="section-subtitle">તમારા માટે</span></div>
+              <div className="resident-actions">
+                <a className="resident-action action-primary" href="/payments"><span className="action-icon"><UiIcon name="payment" size={18}/></span><span><strong>Make a Payment</strong><small>સોસાયટી પેમેન્ટ કરો</small></span><UiIcon name="arrowRight" size={17}/></a>
+                <a className="resident-action" href="/bills"><span className="action-icon"><UiIcon name="report" size={18}/></span><span><strong>My Bills</strong><small>તમારા બિલ જુઓ</small></span><UiIcon name="arrowRight" size={17}/></a>
+                <a className="resident-action" href="/programs"><span className="action-icon"><UiIcon name="calendar" size={18}/></span><span><strong>Programs</strong><small>આગામી કાર્યક્રમો</small></span><UiIcon name="arrowRight" size={17}/></a>
+                <a className="resident-action" href="/profile"><span className="action-icon"><UiIcon name="users" size={18}/></span><span><strong>My Profile</strong><small>તમારી માહિતી</small></span><UiIcon name="arrowRight" size={17}/></a>
+              </div>
+            </section>
+
+            <section className="resident-content-grid">
+              <div className="dashboard-panel">
+                <div className="section-head"><div><p className="eyebrow">CALENDAR</p><h2>આગામી કાર્યક્રમો</h2></div><a className="section-link" href="/programs">બધા જુઓ <UiIcon name="arrowRight" size={14}/></a></div>
+                {upcoming.length ? <div className="resident-event-list">{upcoming.slice(0,4).map(event => <a className="resident-event" href="/programs" key={event.id}><div className="event-date-box"><strong>{new Date(event.date).toLocaleDateString('en-IN',{day:'2-digit'})}</strong><span>{new Date(event.date).toLocaleDateString('en-IN',{month:'short'})}</span></div><div className="resident-event-copy"><strong>{event.gujaratiTitle || event.title}</strong><span>{event.time || 'સમય ટૂંક સમયમાં જાહેર થશે'} · {event.location || 'Society premises'}</span></div><UiIcon name="arrowRight" size={15}/></a>)}</div> : <div className="resident-empty"><span className="empty-icon"><UiIcon name="calendar" size={20}/></span><strong>હાલ કોઈ આગામી કાર્યક્રમ નથી</strong><span>નવા કાર્યક્રમો અહીં દેખાશે.</span></div>}
+              </div>
+              <div className="dashboard-panel">
+                <div className="section-head"><div><p className="eyebrow">COMMUNICATION</p><h2>મહત્વપૂર્ણ સૂચનાઓ</h2></div><a className="section-link" href="/notices">બધી જુઓ <UiIcon name="arrowRight" size={14}/></a></div>
+                {notices.length ? <div className="resident-notice-list">{notices.slice(0,4).map(notice => <a className="resident-notice" href="/notices" key={notice.id}><span className={notice.important ? 'notice-dot important' : 'notice-dot'} /><span className="resident-notice-copy"><strong>{notice.gujaratiTitle || notice.title}</strong><small>{new Date(notice.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}</small></span><UiIcon name="arrowRight" size={14}/></a>)}</div> : <div className="resident-empty"><span className="empty-icon"><UiIcon name="notice" size={20}/></span><strong>કોઈ નવી સૂચના નથી</strong><span>નવી જાહેર સૂચનાઓ અહીં દેખાશે.</span></div>}
+              </div>
+            </section>
+
+            <section className="dashboard-panel gallery-panel">
+              <div className="section-head"><div><p className="eyebrow">COMMUNITY</p><h2>સોસાયટી ગેલેરી</h2></div><a className="section-link" href="/gallery">બધી ફોટો જુઓ <UiIcon name="arrowRight" size={14}/></a></div>
+              {photos.length ? <div className="dashboard-gallery">{photos.slice(0,6).map(photo => <a className="dashboard-gallery-tile" href="/gallery" key={photo.id}><img src={photo.fileUrl} alt={photo.altText || photo.title || 'Society photo'}/><span>{photo.title || photo.albumName || 'Society memory'}</span></a>)}</div> : <div className="resident-empty gallery-empty"><span className="empty-icon"><UiIcon name="gallery" size={20}/></span><strong>ગેલેરીમાં હજુ કોઈ ફોટો નથી</strong><span>સોસાયટીના કાર્યક્રમોના ફોટા અહીં શેર થશે.</span></div>}
+            </section>
+          </>
+        ) : (
+          <>
+            <div className="page-title"><div><p className="eyebrow">SOCIETY ADMINISTRATION</p><h1>{dashboard.role === 'MASTER_ADMIN' ? 'Master Admin Dashboard' : 'Organizer Dashboard'}</h1><p>{location || 'Society overview and daily operations'}</p></div><div className="page-meta">{roleLabel(dashboard.role)}</div></div>
+            {dashboard.role === 'MASTER_ADMIN' && <section className="card control-card"><div className="section-head"><div><p className="eyebrow">MASTER CONTROL</p><h2>Society administration at a glance</h2></div><span className="badge">Up to 6 Sub Admins</span></div><p className="admin-description">Manage organizers, financial operations, programs and society records from one secure workspace.</p><a className="btn btn-primary" href="/admin/subadmins">Manage Sub Admins</a></section>}
+            {dashboard.stats && <section className="section"><div className="section-head"><div><p className="eyebrow">OVERVIEW</p><h2>Society performance</h2></div></div><div className="grid stats">
+              <div className="card stat-card"><div className="stat-icon"><UiIcon name="payment" size={18}/></div><div className="stat-label">Total Income</div><div className="stat-value">{money(dashboard.stats.totalIncome)}</div><div className="stat-note">Recorded receipts</div></div>
+              <div className="card stat-card"><div className="stat-icon"><UiIcon name="report" size={18}/></div><div className="stat-label">Total Expense</div><div className="stat-value">{money(dashboard.stats.totalExpense)}</div><div className="stat-note">Recorded expenditure</div></div>
+              <div className="card stat-card"><div className="stat-icon"><UiIcon name="check" size={18}/></div><div className="stat-label">Current Balance</div><div className="stat-value">{money(dashboard.stats.balance)}</div><div className="stat-note">Income less expenses</div></div>
+              <div className="card stat-card"><div className="stat-icon"><UiIcon name="home" size={18}/></div><div className="stat-label">Active Flats</div><div className="stat-value">{dashboard.stats.flats}</div><div className="stat-note">Society records</div></div>
+            </div></section>}
+            <section className="section"><div className="section-head"><div><p className="eyebrow">QUICK ACCESS</p><h2>Common actions</h2></div><span className="section-subtitle">Secure workspace</span></div><div className="quick-action-grid">
+              {[['Add / Manage Residents','Manage flats and resident records','/admin/flats','users'],['Create Program','Plan an upcoming society program','/admin/programs','calendar'],['Post Notice','Share an important society update','/admin/notices','notice'],['View Reports','Review authorized financial reports','/reports','report']].map(([title,desc,url,icon]) => <a className="card quick-action" href={url} key={title}><span className="quick-icon"><UiIcon name={icon as any} size={18}/></span><span><strong>{title}</strong><small>{desc}</small></span><span className="quick-arrow"><UiIcon name="arrowRight" size={16}/></span></a>)}
+            </div></section>
+            <section className="section"><div className="section-head"><div><p className="eyebrow">CALENDAR</p><h2>Upcoming Programs / આગામી કાર્યક્રમો</h2></div><span className="section-subtitle">{upcoming.length} upcoming</span></div>{upcoming.length ? <div className="grid event-grid">{upcoming.map(event => <article className="card event-card" key={event.id}><div className="event-date">{new Date(event.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div><strong>{event.gujaratiTitle || event.title}</strong><div className="event-meta">{event.time || 'Time to be announced'}<br />{event.location || 'Society premises'}</div></article>)}</div> : <div className="empty-state">No upcoming programs scheduled.</div>}</section>
+            <section className="section"><div className="section-head"><div><p className="eyebrow">COMMUNICATION</p><h2>Notices / સૂચનાઓ</h2></div></div>{notices.length ? <div className="grid">{notices.map(notice => <article className="card notice" key={notice.id}><strong>{notice.gujaratiTitle || notice.title}</strong><p>{notice.gujaratiContent || notice.content}</p></article>)}</div> : <div className="empty-state">No published notices available.</div>}</section>
+          </>
+        )}
+      </main>;
   if (!dashboard) return <main className="main"><div className="card"><p>Loading dashboard…</p></div></main>;
 
   return <div className="app-shell">
