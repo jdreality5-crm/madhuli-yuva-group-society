@@ -42,7 +42,8 @@ export async function POST(req: Request) {
 
     const email = normalizeGmail(body.email);
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || user.status !== 'ACTIVE' || (body.role && user.role !== body.role)) {
+    const isFirebaseResident = user?.role === 'OWNER' && Boolean(user.firebaseUid);
+    if (!user || (user.status !== 'ACTIVE' && !isFirebaseResident) || (body.role && user.role !== body.role)) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
     if (user.loginLockedUntil && user.loginLockedUntil > new Date()) {
