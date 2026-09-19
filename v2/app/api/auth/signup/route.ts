@@ -18,7 +18,7 @@ const schema = z.object({
 const normalizeMobile = (value: string) => value.replace(/[^0-9+]/g, '');
 
 async function supabaseRest<T>(table: string, params: Record<string, string>, init?: RequestInit): Promise<T> {
-  const base = process.env.SUPABASE_URL?.trim().replace(/\\/$/, '');
+  const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!base || !key) throw new Error('SUPABASE server configuration is missing');
   const url = new URL(base + '/rest/v1/' + table);
