@@ -38,6 +38,7 @@ export async function GET() {
     const reservationCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const pendingUsers = await supabaseRest<Array<{ id: string }>>('User', {
       select: 'id',
+      societyId: 'eq.' + appConfig.societyId,
       status: 'eq.INACTIVE',
       emailVerified: 'eq.false',
       createdAt: 'gte.' + reservationCutoff,
