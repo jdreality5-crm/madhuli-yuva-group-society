@@ -90,3 +90,9 @@
 - This keeps resident bill downloads on the existing signed private-storage path and prevents a client from attaching an unrelated external document URL through the bill API.
 - V2 Build Check #477 passed after this hardening.
 - Cloudflare Deploy #412 succeeded for the resulting branch head.
+
+### Legacy property compatibility review — 2026-09-19
+- Reviewed the legacy `Flat` admin route alongside the current `Property`/`PropertyUnit` model. The legacy route remains organizer-protected and society-scoped and is retained for route compatibility; no new cross-society authorization defect was found.
+- The current Properties UI was calling `/api/admin/properties/setup`, but that route was missing from the V2 API tree. Restored the organizer-protected setup endpoint with an idempotent transaction for Sarang Apartment (A/B/C, 26 units each) and Pramukhpark Society (27 tenaments).
+- Apartment units are created without invented floor assignments (`floorLabel: Flat`); Pramukhpark floors remain dynamic and are added separately.
+- V2 Build Check #480 passed and Cloudflare Deploy #415 succeeded for the fix.
