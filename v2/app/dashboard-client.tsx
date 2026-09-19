@@ -26,21 +26,23 @@ const adminPrimary = [
   ['Dashboard','/','home'],
   ['Properties','/admin/properties','property'],
   ['Flats & Owners','/admin/flats','users'],
-  ['Programs','/admin/programs','calendar'],
 ] as const;
 
 const adminPermission = [
+  ['Programs','EVENTS','/admin/programs','calendar'],
   ['Notices','NOTICES','/admin/notices','notice'],
   ['Gallery','GALLERY','/admin/gallery','gallery'],
+  ['Bills','BILLS','/admin/bills','report'],
+  ['Payments','PAYMENTS','/admin/payments','payment'],
+  ['Income','INCOME','/admin/income','report'],
+  ['Expenses','EXPENSES','/admin/expenses','report'],
+  ['Reports','REPORTS','/reports','report'],
 ] as const;
 
-const adminLinks = [
+const masterOnlyLinks = [
   ['Owner Approvals','/admin/owner-approvals','check'],
   ['Payment Accounts','/admin/payment-accounts','payment'],
-  ['Payments','/admin/payments','payment'],
-  ['Income','/admin/income','report'],
-  ['Expenses','/admin/expenses','report'],
-  ['Reports','/reports','report'],
+  ['Sub Admins','/admin/subadmins','users'],
 ] as const;
 
 const dashboardStyles = String.raw`.gallery-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.gallery-card{overflow:hidden;padding:0}.gallery-thumb{aspect-ratio:4/3;background:var(--soft-surface);overflow:hidden}.gallery-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}.gallery-card:hover .gallery-thumb img{transform:scale(1.03)}.gallery-copy{padding:10px 12px 12px;display:flex;flex-direction:column;gap:3px}.gallery-copy strong{color:var(--maroon);font-size:13px}.gallery-copy small{color:var(--muted);font-size:11px}@media(max-width:1000px){.gallery-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:700px){.gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.gallery-grid{grid-template-columns:1fr 1fr}}
@@ -100,6 +102,7 @@ export default function DashboardPage() {
   }
 
   const isResident = dashboard.role === 'OWNER';
+  const can = (permission: string) => dashboard.role === 'MASTER_ADMIN' || dashboard.permissions?.includes(permission);
   const upcoming = dashboard.upcomingEvents ?? [];
   const notices = dashboard.notices ?? [];
   const photos = dashboard.photos ?? [];
@@ -135,13 +138,13 @@ export default function DashboardPage() {
               <span className="nav-icon"><UiIcon name={icon as any} size={15}/></span><span>{label}</span>
             </a>
           ))}
-          {adminPermission.filter(([,permission]) => dashboard.role === 'MASTER_ADMIN' || dashboard.permissions?.includes(permission)).map(([label,permission,url,icon]) => (
+          {adminPermission.filter(([,permission]) => can(permission)).map(([label,permission,url,icon]) => (
             <a className={`nav-item ${pathname === url ? 'active' : ''}`} href={url} key={permission}>
               <span className="nav-icon"><UiIcon name={icon as any} size={15}/></span><span>{label}</span>
             </a>
           ))}
-          <div className="nav-section">Administration</div>
-          {adminLinks.map(([label,url,icon]) => (
+          {dashboard.role === 'MASTER_ADMIN' && <div className="nav-section">Administration</div>}
+          {dashboard.role === 'MASTER_ADMIN' && masterOnlyLinks.map(([label,url,icon]) => (
             <a className={`nav-item ${pathname === url ? 'active' : ''}`} href={url} key={label}>
               <span className="nav-icon"><UiIcon name={icon as any} size={15}/></span><span>{label}</span>
             </a>
@@ -198,7 +201,7 @@ export default function DashboardPage() {
             <div className="card stat-card"><div className="stat-icon"><UiIcon name="home" size={18}/></div><div className="stat-label">Active Flats</div><div className="stat-value">{dashboard.stats.flats}</div><div className="stat-note">Society records</div></div>
           </div></section>}
           <section className="section"><div className="section-head"><div><p className="eyebrow">QUICK ACCESS</p><h2>Common actions</h2></div><span className="section-subtitle">Secure workspace</span></div><div className="quick-action-grid">
-            {[['Add / Manage Residents','Manage flats and resident records','/admin/flats','users'],['Create Program','Plan an upcoming society program','/admin/programs','calendar'],['Post Notice','Share an important society update','/admin/notices','notice'],['View Reports','Review authorized financial reports','/reports','report']].map(([title,desc,url,icon]) => <a className="card quick-action" href={url} key={title}><span className="quick-icon"><UiIcon name={icon as any} size={18}/></span><span><strong>{title}</strong><small>{desc}</small></span><span className="quick-arrow"><UiIcon name="arrowRight" size={16}/></span></a>)}
+            {[['Add / Manage Residents','Manage flats and resident records','/admin/flats','users',true],['Create Program','Plan an upcoming society program','/admin/programs','calendar',can('EVENTS')],['Post Notice','Share an important society update','/admin/notices','notice',can('NOTICES')],['View Reports','Review authorized financial reports','/reports','report',can('REPORTS')]].filter(([, , , , allowed]) => allowed).map(([title,desc,url,icon]) => <a className="card quick-action" href={url as string} key={title as string}><span className="quick-icon"><UiIcon name={icon as any} size={18}/></span><span><strong>{title}</strong><small>{desc}</small></span><span className="quick-arrow"><UiIcon name="arrowRight" size={16}/></span></a>)}
           </div></section>
           <section className="section"><div className="section-head"><div><p className="eyebrow">CALENDAR</p><h2>Upcoming Programs / આગામી કાર્યક્રમો</h2></div><span className="section-subtitle">{upcoming.length} upcoming</span></div>{upcoming.length ? <div className="grid event-grid">{upcoming.map(event => <article className="card event-card" key={event.id}><div className="event-date">{new Date(event.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div><strong>{event.gujaratiTitle || event.title}</strong><div className="event-meta">{event.time || 'Time to be announced'}<br/>{event.location || 'Society premises'}</div></article>)}</div> : <div className="empty-state">No upcoming programs scheduled.</div>}</section>
           <section className="section"><div className="section-head"><div><p className="eyebrow">COMMUNICATION</p><h2>Notices / સૂચનાઓ</h2></div></div>{notices.length ? <div className="grid">{notices.map(notice => <article className="card notice" key={notice.id}><strong>{notice.gujaratiTitle || notice.title}</strong><p>{notice.gujaratiContent || notice.content}</p></article>)}</div> : <div className="empty-state">No published notices available.</div>}</section>
