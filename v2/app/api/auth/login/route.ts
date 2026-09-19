@@ -1,32 +1,26 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { createSession, prisma } from '@/lib/auth';
+import { cookies } from 'next/headers';
+import { SignJWT } from 'jose';
 import { firebaseAuthConfigured, firebaseLookup, firebaseSignIn, normalizeGmail } from '@/lib/firebase-auth';
 
 
 const LOGIN_MAX_FAILURES = 5;
 const LOGIN_LOCK_MINUTES = 15;
 
-async function recordLoginFailure(userId: string) {
-  const now = new Date();
-  await prisma.user.updateMany({
-    where: { id: userId, status: 'ACTIVE', OR: [{ loginLockedUntil: null }, { loginLockedUntil: { lte: now } }] },
-    data: { failedLoginAttempts: { increment: 1 } },
-  });
-  const current = await prisma.user.findUnique({ where: { id: userId }, select: { failedLoginAttempts: true, loginLockedUntil: true } });
-  if (current && current.failedLoginAttempts >= LOGIN_MAX_FAILURES && (!current.loginLockedUntil || current.loginLockedUntil <= now)) {
-    const lockedUntil = new Date(now.getTime() + LOGIN_LOCK_MINUTES * 60 * 1000);
-    await prisma.user.updateMany({
-      where: { id: userId, failedLoginAttempts: { gte: LOGIN_MAX_FAILURES }, OR: [{ loginLockedUntil: null }, { loginLockedUntil: { lte: now } }] },
-      data: { loginLockedUntil: lockedUntil },
-    });
-  }
+async function supabaseRest<T>(table: string, params: Record<string,string>, init?: RequestInit): Promise<T> {
+  const base=process.env.SUPABASE_URL?.trim().replace(/\/$/,''); const key=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if(!base||!key) throw new Error('SUPABASE server configuration is missing');
+  const url=new URL(base+'/rest/v1/'+table); Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
+  const res=await fetch(url.toString(),{...init,headers:{apikey:key,Authorization:'Bearer '+key,Accept:'application/json',...(init?.body?{'Content-Type':'application/json',Prefer:'return=representation'}:{}),...(init?.headers||{})},cache:'no-store'});
+  const data=await res.json().catch(()=>null); if(!res.ok) throw new Error('Supabase '+table+' request failed'); return data as T;
 }
-
-async function clearLoginFailures(userId: string) {
-  await prisma.user.update({ where: { id: userId }, data: { failedLoginAttempts: 0, loginLockedUntil: null } });
-}
+type LoginUser={id:string;email:string;name:string;role:'MASTER_ADMIN'|'ORGANIZER'|'OWNER';societyId:string;status:string;approvalStatus:string;emailVerified:boolean;firebaseUid?:string|null;unitId?:string|null;residentType?:string|null;mobile?:string|null;permissions:string[];loginLockedUntil?:string|null;failedLoginAttempts:number;emailLockedUntil?:string|null;mobileLockedUntil?:string|null};
+async function getUserByEmail(email:string){const rows=await supabaseRest<LoginUser[]>('User',{select:'id,email,name,role,societyId,status,approvalStatus,emailVerified,firebaseUid,unitId,residentType,mobile,permissions,loginLockedUntil,failedLoginAttempts,emailLockedUntil,mobileLockedUntil',email:'eq.'+email,limit:'1'});return rows[0]||null;}
+async function recordLoginFailure(user:LoginUser){const attempts=(user.failedLoginAttempts||0)+1;const data:any={failedLoginAttempts:attempts,updatedAt:new Date().toISOString()};if(attempts>=LOGIN_MAX_FAILURES)data.loginLockedUntil=new Date(Date.now()+LOGIN_LOCK_MINUTES*60*1000).toISOString();await supabaseRest('User',{id:'eq.'+user.id,status:'eq.ACTIVE'},{method:'PATCH',body:JSON.stringify(data)});}
+async function clearLoginFailures(userId:string){await supabaseRest('User',{id:'eq.'+userId},{method:'PATCH',body:JSON.stringify({failedLoginAttempts:0,loginLockedUntil:null,updatedAt:new Date().toISOString()})});}
+async function createEdgeSession(user:LoginUser){const secret=process.env.JWT_SECRET?.trim();if(!secret)throw new Error('JWT_SECRET is required');const token=await new SignJWT({id:user.id,role:user.role,societyId:user.societyId,email:user.email,name:user.name,permissions:user.permissions||[]}).setProtectedHeader({alg:'HS256'}).setIssuedAt().setExpirationTime('7d').sign(new TextEncoder().encode(secret));(await cookies()).set('society_session',token,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax',path:'/',maxAge:604800});}
 
 const schema = z.object({
   email: z.string().trim().email(),
@@ -41,7 +35,7 @@ export async function POST(req: Request) {
     catch { return NextResponse.json({ error: 'Invalid email, password, or role.' }, { status: 400 }); }
 
     const email = normalizeGmail(body.email);
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await getUserByEmail(email);
     const isFirebaseResident = user?.role === 'OWNER' && Boolean(user.firebaseUid);
     if (!user || (user.status !== 'ACTIVE' && !isFirebaseResident) || (body.role && user.role !== body.role)) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
@@ -60,39 +54,14 @@ export async function POST(req: Request) {
         }
         if (user.unitId && !user.emailVerified) {
           const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
-          const activation = await prisma.$transaction(async (tx) => {
-            const linked = await tx.propertyUnit.updateMany({
-              where: { id: user.unitId!, residentUserId: null, status: 'ACTIVE' },
-              data: { residentUserId: user.id, residentType: user.residentType || 'OWNER', ownerName: user.name, ownerMobile: user.mobile, ownerEmail: user.email },
-            });
-            if (linked.count !== 1) return { claimed: false };
-            await tx.user.update({
-              where: { id: user.id },
-              data: {
-                emailVerified: true,
-                status: 'ACTIVE',
-                approvalStatus: 'APPROVED',
-                emailLockedUntil: user.emailLockedUntil || lockUntil,
-                mobileLockedUntil: user.mobileLockedUntil || lockUntil,
-              },
-            });
-            return { claimed: true };
-          });
+          const linked = await supabaseRest<Array<{id:string}>>('PropertyUnit',{id:'eq.'+user.unitId,residentUserId:'is.null',status:'eq.ACTIVE',select:'id',limit:'1'},{method:'PATCH',body:JSON.stringify({residentUserId:user.id,residentType:user.residentType||'OWNER',ownerName:user.name,ownerMobile:user.mobile,ownerEmail:user.email})});
+        const activation={claimed:linked.length===1};
           if (!activation.claimed) {
             return NextResponse.json({ error: 'This residence has already been registered by another resident. Please contact the society administrator.' }, { status: 409 });
           }
         } else if (!user.emailVerified || user.status !== 'ACTIVE') {
           const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
-          await prisma.user.update({
-            where: { id: user.id },
-            data: {
-              emailVerified: true,
-              status: 'ACTIVE',
-              approvalStatus: 'APPROVED',
-              emailLockedUntil: user.emailLockedUntil || lockUntil,
-              mobileLockedUntil: user.mobileLockedUntil || lockUntil,
-            },
-          });
+          await supabaseRest('User',{id:'eq.'+user.id},{method:'PATCH',body:JSON.stringify({emailVerified:true,status:'ACTIVE',approvalStatus:'APPROVED',emailLockedUntil:user.emailLockedUntil||lockUntil,mobileLockedUntil:user.mobileLockedUntil||lockUntil,updatedAt:new Date().toISOString()})});
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : '';
@@ -116,7 +85,7 @@ export async function POST(req: Request) {
     }
 
     await clearLoginFailures(user.id);
-    await createSession({ id: user.id, role: user.role, societyId: user.societyId, email: user.email, name: user.name, permissions: user.permissions });
+    await createEdgeSession(user);
     return NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, societyId: user.societyId } });
   } catch (error) {
     console.error('[auth/login] server error', error);
