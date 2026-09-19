@@ -101,6 +101,8 @@ model User {
   verifiedPayments    Payment[]       @relation("PaymentVerifier")
   auditLogs           AuditLog[]
   verificationTokens  VerificationToken[]
+  requestedRoleChanges RoleChangeRequest[] @relation("RoleChangeRequester")
+  targetedRoleChanges  RoleChangeRequest[] @relation("RoleChangeTarget")
   @@index([societyId, role])
   @@index([societyId, role, approvalStatus])
   @@index([unitId])
@@ -142,6 +144,7 @@ model Society {
   notices            Notice[]
   photos             Photo[]
   paymentAccounts    PaymentAccount[]
+  roleChangeRequests RoleChangeRequest[] @relation("SocietyRoleChanges")
   payments           Payment[]
 }
 
@@ -408,7 +411,7 @@ model RoleChangeRequest {
   verifiedAt        DateTime?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
-  society           Society          @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  society           Society          @relation("SocietyRoleChanges", fields: [societyId], references: [id], onDelete: Cascade)
   requester         User             @relation("RoleChangeRequester", fields: [requesterId], references: [id])
   targetUser        User             @relation("RoleChangeTarget", fields: [targetUserId], references: [id])
   @@index([societyId, status, createdAt])
