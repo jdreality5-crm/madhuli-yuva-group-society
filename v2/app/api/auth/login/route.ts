@@ -75,7 +75,7 @@ export async function POST(req: Request) {
       }
     } else {
       if (!user.passwordHash || !(await bcrypt.compare(body.password, user.passwordHash))) {
-        await recordLoginFailure(user.id);
+        await recordLoginFailure(user);
         return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
       }
       if (user.role === 'OWNER') {
