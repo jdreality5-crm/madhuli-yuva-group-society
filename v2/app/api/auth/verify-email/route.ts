@@ -21,10 +21,11 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'This resident verification is no longer valid. Please sign in again.' }, { status: 409 });
     }
 
+    const unitId = user.unitId;
     const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
     const activation = await prisma.$transaction(async tx => {
       const claimed = await tx.propertyUnit.updateMany({
-        where: { id: user.unitId, residentUserId: null, status: 'ACTIVE' },
+        where: { id: unitId, residentUserId: null, status: 'ACTIVE' },
         data: {
           residentUserId: user.id,
           residentType: 'OWNER',
