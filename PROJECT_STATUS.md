@@ -3,9 +3,9 @@
 ## Current
 - Branch: `fresh-society-v2`
 - Phase: Security hardening and production readiness
-- Current task: Firebase configuration readiness and live configuration gate
+- Current task: Security hardening and production verification
 - Final stage: Not signed off
-- Current implementation commit: `eb66b14bc7ea52ca322072774a8342c026ef415f`
+- Current implementation commit: `d08b5a5c9463bd6216783c9e46c8718ff8ad6c09`
 
 ## Status Matrix
 
@@ -18,15 +18,15 @@
 | Login/session enforcement | Migrated / audit | Residents authenticate with Firebase; app session remains DB-revalidated |
 | Profile | Implemented / audit | Review email/session consistency |
 | Financial isolation | Audited / continue | Continue endpoint-by-endpoint audit |
-| Payments | Hardened / build verification pending | Payment-session race protection, expiry restart, rejection release, and transaction-reference uniqueness reviewed |
+| Payments | Hardened / verified | Payment-session race protection, expiry restart, rejection release, and transaction-reference uniqueness reviewed |
 | Property unit linking | Hardened | Active/approved resident requirement + empty-unit clearing |
 | Legacy approval API | Hardened | Both approval paths enforce verified email |
-| Storage upload | Hardened | Generic upload restricted to organizers |
+| Storage upload | Hardened | Generic upload restricted to organizers; bill documents restricted to private society-scoped storage paths |
 | Cloudflare Workers | Configured | vinext + Wrangler |
 | Documentation | Complete | Handoff/status docs are source of truth |
 | E2E testing | Pending | Firebase signup/login/password reset requires live configuration and test |
-| Production build/typecheck | Previously verified | V2 Build Check #454 passed on commit `89229d7f8e3efe65615c9e986827cd1ebe0b5435`; latest payment hardening still needs a fresh run |
-| Production deployment verification | Blocked | Cloudflare Deploy #389 built successfully but stopped because `FIREBASE_WEB_API_KEY` GitHub Secret is not configured |
+| Production build/typecheck | Verified | V2 Build Check #477 passed on commit `d08b5a5c9463bd6216783c9e46c8718ff8ad6c09` |
+| Production deployment verification | Verified | Cloudflare Deploy #412 succeeded after Firebase runtime-secret sync; Worker deployment completed |
 | Production sign-off | Pending | Final gate |
 
 ## Required Sequence
@@ -84,3 +84,9 @@
 - Paid or pending bills cannot be edited or deleted.
 - Bills with any payment history cannot be deleted, preserving payment/audit history instead of relying on the Payment → Bill SetNull relation.
 - Fresh V2 build verification is still required for this change.
+
+### Bill document storage hardening — 2026-09-19
+- Bill create/update APIs now accept only society-scoped private storage paths matching the authenticated society ID; arbitrary external URLs are rejected.
+- This keeps resident bill downloads on the existing signed private-storage path and prevents a client from attaching an unrelated external document URL through the bill API.
+- V2 Build Check #477 passed after this hardening.
+- Cloudflare Deploy #412 succeeded for the resulting branch head.
