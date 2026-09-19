@@ -8,7 +8,7 @@ const PERMISSION_ROUTES: Array<[string, string]> = [
   ['/admin/bills', 'BILLS'], ['/admin/payments', 'PAYMENTS'], ['/admin/income', 'INCOME'],
   ['/admin/expenses', 'EXPENSES'],
 ];
-const MASTER_ONLY = ['/admin/owner-approvals', '/admin/payment-accounts', '/admin/subadmins'];
+const MASTER_ONLY = ['/admin/owner-approvals', '/admin/payment-accounts', '/admin/subadmins', '/admin/role-change'];
 
 export default function AdminPermissionGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
