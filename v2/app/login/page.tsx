@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -9,8 +9,10 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
-  const params = useSearchParams();
-  const verified = params.get('verified') === '1';
+  const [verified, setVerified] = useState(false);
+  useEffect(() => {
+    setVerified(new URLSearchParams(window.location.search).get('verified') === '1');
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setError('');
