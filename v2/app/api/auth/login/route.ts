@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       } catch (error) {
         const message = error instanceof Error ? error.message : '';
         if (message.includes('EMAIL_NOT_FOUND') || message.includes('INVALID_PASSWORD') || message.includes('INVALID_LOGIN_CREDENTIALS')) {
-          await recordLoginFailure(user.id);
+          await recordLoginFailure(user);
           return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
         }
         if (message.includes('USER_DISABLED')) return NextResponse.json({ error: 'This account is disabled. Please contact the society administrator.' }, { status: 403 });
