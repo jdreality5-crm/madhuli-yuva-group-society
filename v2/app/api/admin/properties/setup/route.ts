@@ -35,8 +35,8 @@ export async function POST(req: Request) {
           const units = Array.from({ length: 26 }, (_, index) => ({
             propertyId: property.id,
             label: String(index + 1),
-            floorNumber: Math.floor(index / 13),
-            floorLabel: index < 13 ? "Ground" : "1st",
+            floorNumber: 0,
+            floorLabel: "Flat",
           }));
           const inserted = await tx.propertyUnit.createMany({ data: units, skipDuplicates: true });
           createdUnits += inserted.count;
