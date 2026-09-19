@@ -16,6 +16,12 @@ async function supabaseRest<T>(table: string, params: Record<string,string>, ini
   const res=await fetch(url.toString(),{...init,headers:{apikey:key,Authorization:'Bearer '+key,Accept:'application/json',...(init?.body?{'Content-Type':'application/json',Prefer:'return=representation'}:{}),...(init?.headers||{})},cache:'no-store'});
   const data=await res.json().catch(()=>null); if(!res.ok) throw new Error('Supabase '+table+' request failed'); return data as T;
 }
+async function supabaseRpc<T>(name:string, body:Record<string,unknown>): Promise<T> {
+  const base=process.env.SUPABASE_URL?.trim().replace(/\/$/,''); const key=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if(!base||!key) throw new Error('SUPABASE server configuration is missing');
+  const res=await fetch(base+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,Accept:'application/json','Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
+  const data=await res.json().catch(()=>null); if(!res.ok) throw new Error('Supabase RPC '+name+' request failed'); return data as T;
+}
 type LoginUser={id:string;email:string;name:string;role:'MASTER_ADMIN'|'ORGANIZER'|'OWNER';societyId:string;status:string;approvalStatus:string;emailVerified:boolean;firebaseUid?:string|null;unitId?:string|null;residentType?:string|null;mobile?:string|null;permissions:string[];passwordHash?:string|null;loginLockedUntil?:string|Date|null;failedLoginAttempts:number;emailLockedUntil?:string|Date|null;mobileLockedUntil?:string|Date|null};
 async function getUserByEmail(email:string){const rows=await supabaseRest<LoginUser[]>('User',{select:'id,email,name,role,societyId,status,approvalStatus,emailVerified,firebaseUid,unitId,residentType,mobile,permissions,passwordHash,loginLockedUntil,failedLoginAttempts,emailLockedUntil,mobileLockedUntil',email:'eq.'+email,limit:'1'});return rows[0]||null;}
 async function recordLoginFailure(user:LoginUser){const attempts=(user.failedLoginAttempts||0)+1;const data:any={failedLoginAttempts:attempts,updatedAt:new Date().toISOString()};if(attempts>=LOGIN_MAX_FAILURES)data.loginLockedUntil=new Date(Date.now()+LOGIN_LOCK_MINUTES*60*1000).toISOString();await supabaseRest('User',{id:'eq.'+user.id,status:'eq.ACTIVE'},{method:'PATCH',body:JSON.stringify(data)});}
@@ -54,24 +60,14 @@ export async function POST(req: Request) {
         }
         if (user.unitId && !user.emailVerified) {
           const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
-          const currentUnit = await supabaseRest<Array<{id:string;residentUserId:string|null}>>('PropertyUnit',{id:'eq.'+user.unitId,status:'eq.ACTIVE',select:'id,residentUserId',limit:'1'});
-          if (currentUnit.length !== 1) return NextResponse.json({ error: 'This residence is no longer available. Please contact the society administrator.' }, { status: 409 });
-          const alreadyClaimedByUser = currentUnit[0].residentUserId === user.id;
-          const linked = alreadyClaimedByUser ? currentUnit : await supabaseRest<Array<{id:string}>>('PropertyUnit',{id:'eq.'+user.unitId,residentUserId:'is.null',status:'eq.ACTIVE',select:'id',limit:'1'},{method:'PATCH',body:JSON.stringify({residentUserId:user.id,residentType:user.residentType||'OWNER',ownerName:user.name,ownerMobile:user.mobile,ownerEmail:user.email})});
-          const activation={claimed:linked.length===1};
-          if (!activation.claimed) {
+          const activated = await supabaseRpc<boolean>('activate_resident_atomic', {
+            p_user_id: user.id,
+            p_unit_id: user.unitId,
+            p_lock_until: lockUntil.toISOString()
+          });
+          if (!activated) {
             return NextResponse.json({ error: 'This residence has already been registered by another resident. Please contact the society administrator.' }, { status: 409 });
           }
-          // Gmail verification has succeeded and the residence is claimed by this account.
-          // Activate the DB user before creating the session so the session guard can accept it.
-          await supabaseRest('User',{id:'eq.'+user.id},{method:'PATCH',body:JSON.stringify({
-            emailVerified:true,
-            status:'ACTIVE',
-            approvalStatus:'APPROVED',
-            emailLockedUntil:user.emailLockedUntil||lockUntil,
-            mobileLockedUntil:user.mobileLockedUntil||lockUntil,
-            updatedAt:new Date().toISOString()
-          })});
         } else if (!user.emailVerified || user.status !== 'ACTIVE') {
           const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
           await supabaseRest('User',{id:'eq.'+user.id},{method:'PATCH',body:JSON.stringify({emailVerified:true,status:'ACTIVE',approvalStatus:'APPROVED',emailLockedUntil:user.emailLockedUntil||lockUntil,mobileLockedUntil:user.mobileLockedUntil||lockUntil,updatedAt:new Date().toISOString()})});
