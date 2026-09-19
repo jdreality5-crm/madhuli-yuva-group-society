@@ -35,3 +35,6 @@ export async function getSession(): Promise<SessionUser | null> {
   } catch { return null; }
 }
 export async function requireSession(){ const session=await getSession(); if(!session) throw new Error('UNAUTHORIZED'); return session; }
+
+export async function requireSubAdminPermission(permission:string){const s=await requireSession();if(s.role==='MASTER_ADMIN'||(s.role==='ORGANIZER'&&s.permissions.includes(permission)))return s;throw new Error('FORBIDDEN');}
+export async function requireAdmin(){const s=await requireSession();if(s.role==='MASTER_ADMIN'||s.role==='ORGANIZER')return s;throw new Error('FORBIDDEN');}
