@@ -19,6 +19,8 @@ const schema = z.object({
 const normalizeMobile = (value: string) => value.replace(/[^0-9+]/g, '');
 
 export async function POST(req: Request) {
+  let stage = 'start';
+  const debugId = crypto.randomUUID();
   try {
     if (!firebaseAuthConfigured()) {
       return NextResponse.json({ error: 'Firebase Authentication is not configured yet. Please contact the society administrator.' }, { status: 503 });
@@ -37,9 +39,11 @@ export async function POST(req: Request) {
     if (!/^\+?[0-9]{10,15}$/.test(mobile)) {
       return NextResponse.json({ error: 'Please enter a valid mobile number (10 to 15 digits).' }, { status: 400 });
     }
+    stage = 'society_lookup';
     const society = await prisma.society.findUnique({ where: { id: appConfig.societyId } });
     if (!society) return NextResponse.json({ error: 'Society registration is not ready yet. Please ask the society administrator.' }, { status: 503 });
 
+    stage = 'residence_lookup';
     let unitId: string | undefined;
     let residentType: 'OWNER' | 'TENANT' | undefined;
     let legacyFlatId: string | undefined;
@@ -75,16 +79,20 @@ export async function POST(req: Request) {
       residentType = 'OWNER';
     }
 
+    stage = 'duplicate_check';
     const existingEmail = await prisma.user.findUnique({ where: { email } });
     const existingMobile = await prisma.user.findFirst({ where: { societyId: society.id, mobile } });
     if (existingMobile) return NextResponse.json({ error: 'This mobile number is already registered in the society portal.' }, { status: 409 });
     if (existingEmail) return NextResponse.json({ error: 'An account with this Gmail address already exists. Please login or use password recovery.' }, { status: 409 });
 
+    stage = 'firebase_signup';
     const firebaseUser = await firebaseSignUp(email, body.password);
     try {
+      stage = 'firebase_verification_email';
       await firebaseSendVerificationEmail(firebaseUser.idToken);
       // Signup creates exactly one local User row; a transaction wrapper is unnecessary
       // here and can add avoidable edge-runtime transaction overhead.
+      stage = 'local_user_create';
       const user = await prisma.user.create({
         data: {
           name: body.name,
@@ -113,9 +121,9 @@ export async function POST(req: Request) {
     }
   } catch (error) {
     const code = error instanceof Error ? error.message : '';
+    console.error('[auth/signup] server error', { debugId, stage, code: code || 'UNKNOWN' });
     if (code.includes('EMAIL_EXISTS')) return NextResponse.json({ error: 'This Gmail address is already registered. Please login or use password recovery.' }, { status: 409 });
     if (code.includes('INVALID_CONTINUE_URI') || code.includes('UNAUTHORIZED_DOMAIN')) return NextResponse.json({ error: 'Email verification is not configured for this website domain yet. Please contact the society administrator.' }, { status: 503 });
-    console.error('[auth/signup] server error', error);
-    return NextResponse.json({ error: 'Signup service temporarily unavailable' }, { status: 500 });
+    return NextResponse.json({ error: `Signup service temporarily unavailable. Reference: ${debugId}` }, { status: 500 });
   }
 }
