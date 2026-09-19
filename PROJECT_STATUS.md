@@ -3,9 +3,9 @@
 ## Current
 - Branch: `fresh-society-v2`
 - Phase: Security hardening and production readiness
-- Current task: Internal V2 build verification before Firebase/Cloudflare live configuration
+- Current task: Firebase configuration readiness and live configuration gate
 - Final stage: Not signed off
-- Current implementation commit: `74a0ca901c278c00938926deb00460ab81cbeb27`
+- Current implementation commit: `89229d7f8e3efe65615c9e986827cd1ebe0b5435`
 
 ## Status Matrix
 
@@ -25,8 +25,8 @@
 | Cloudflare Workers | Configured | vinext + Wrangler |
 | Documentation | Complete | Handoff/status docs are source of truth |
 | E2E testing | Pending | Firebase signup/login/password reset requires live configuration and test |
-| Production build/typecheck | Verification in progress | V2 Build Check triggered by latest branch update |
-| Production deployment verification | Pending | Must verify exact deployed commit |
+| Production build/typecheck | Verified | V2 Build Check #454 passed on commit `89229d7f8e3efe65615c9e986827cd1ebe0b5435` |
+| Production deployment verification | Blocked | Cloudflare Deploy #389 built successfully but stopped because `FIREBASE_WEB_API_KEY` GitHub Secret is not configured |
 | Production sign-off | Pending | Final gate |
 
 ## Required Sequence
@@ -47,6 +47,11 @@
 - Preserve locked architecture in `AI_HANDOFF.md`.
 - Cloudflare Workers is the V2 production target; Vercel is not part of the V2 deployment path.
 - Update status after meaningful implementation work.
+
+### Verification update — 2026-09-19
+- V2 Build Check #454 passed on the latest implementation commit `89229d7f8e3efe65615c9e986827cd1ebe0b5435`.
+- Cloudflare Deploy #389 reached a successful Worker build, then failed only at the Firebase runtime-secret sync because `FIREBASE_WEB_API_KEY` is missing from GitHub Actions secrets; deployment was therefore correctly not attempted.
+- Firebase custom email action handler code is present at `/verify-email`; Firebase documentation confirms custom handlers receive `mode` and `oobCode` parameters and can complete verification/reset flows. citeturn0search0turn0search1
 
 ### Internal verification — 2026-09-19
 - Prisma schema formatting and Bill → PropertyUnit relation were repaired in commit `74a0ca901c278c00938926deb00460ab81cbeb27`.
