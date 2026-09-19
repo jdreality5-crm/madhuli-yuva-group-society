@@ -34,6 +34,9 @@ export async function POST(req: Request) {
 
     const email = normalizeGmail(body.email);
     const mobile = normalizeMobile(body.mobile);
+    if (!/^\+?[0-9]{10,15}$/.test(mobile)) {
+      return NextResponse.json({ error: 'Please enter a valid mobile number (10 to 15 digits).' }, { status: 400 });
+    }
     const society = await prisma.society.findUnique({ where: { id: appConfig.societyId } });
     if (!society) return NextResponse.json({ error: 'Society registration is not ready yet. Please ask the society administrator.' }, { status: 503 });
 
