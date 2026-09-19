@@ -45,25 +45,42 @@ export async function POST(req: Request) {
       }
 
       let createdProperties = 0;
+      let createdUnits = 0;
       for (let number = 1; number <= 27; number += 1) {
         const propertyNumber = String(number);
         const existing = await tx.property.findUnique({
           where: { societyId_type_propertyNumber: { societyId: session.societyId, type: "TENAMENT", propertyNumber } },
           select: { id: true },
         });
-        if (!existing) {
-          await tx.property.create({
+        const property = existing
+          ? existing
+          : await tx.property.create({
+              data: {
+                societyId: session.societyId,
+                type: "TENAMENT",
+                name: "Pramukhpark Society",
+                propertyNumber,
+              },
+              select: { id: true },
+            });
+        if (!existing) createdProperties += 1;
+        const unit = await tx.propertyUnit.findUnique({
+          where: { propertyId_label: { propertyId: property.id, label: propertyNumber } },
+          select: { id: true },
+        });
+        if (!unit) {
+          await tx.propertyUnit.create({
             data: {
-              societyId: session.societyId,
-              type: "TENAMENT",
-              name: "Pramukhpark Society",
-              propertyNumber,
+              propertyId: property.id,
+              label: propertyNumber,
+              floorNumber: 0,
+              floorLabel: "Tenament",
             },
           });
-          createdProperties += 1;
+          createdUnits += 1;
         }
       }
-      return { setup, createdProperties, tenaments: 27 };
+      return { setup, createdProperties, createdUnits, tenaments: 27 };
     });
 
     return NextResponse.json(result, { status: 200 });
