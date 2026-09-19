@@ -10,13 +10,25 @@ export async function GET(req: Request) {
 
     const result = await firebaseApplyVerificationCode(oobCode);
     const email = normalizeGmail(result.email);
-    const user = await prisma.user.findUnique({ where: { email }, select: { id: true, role: true, approvalStatus: true, firebaseUid: true } });
+    const user = await prisma.user.findUnique({ where: { email }, select: { id: true, role: true, approvalStatus: true, firebaseUid: true, unitId: true, status: true, emailVerified: true } });
     if (!user || user.role !== 'OWNER' || user.approvalStatus !== 'APPROVED' || !user.firebaseUid || user.firebaseUid !== result.localId) {
       return NextResponse.json({ error: 'No matching resident registration was found.' }, { status: 404 });
     }
 
     // Email verification itself completes resident activation. The application
     // session is still created only after a normal password login.
+    if (!user.unitId || user.status !== 'INACTIVE' || user.emailVerified) {
+      return NextResponse.json({ error: 'This resident verification is no longer valid. Please start signup again.' }, { status: 409 });
+    }
+
+    const reservedUnit = await prisma.propertyUnit.findFirst({
+      where: { id: user.unitId, residentUserId: user.id, status: 'ACTIVE' },
+      select: { id: true },
+    });
+    if (!reservedUnit) {
+      return NextResponse.json({ error: 'This residence reservation has expired. Please start signup again.' }, { status: 409 });
+    }
+
     const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
     await prisma.user.update({
       where: { id: user.id },
