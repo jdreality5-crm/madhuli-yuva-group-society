@@ -58,7 +58,10 @@ export async function POST(req: Request) {
         if (!firebaseUser || firebaseUser.localId !== user.firebaseUid || firebaseUser.emailVerified !== true || firebaseUser.disabled === true) {
           return NextResponse.json({ error: 'Please verify your Gmail address before signing in.' }, { status: 403 });
         }
-        if (user.unitId && !user.emailVerified) {
+        if (!user.unitId) {
+          return NextResponse.json({ error: 'Your resident registration is not linked to an active residence. Please contact the society administrator.' }, { status: 403 });
+        }
+        if (!user.emailVerified || user.status !== 'ACTIVE') {
           const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
           const activated = await supabaseRpc<boolean>('activate_resident_atomic', {
             p_user_id: user.id,
@@ -66,11 +69,8 @@ export async function POST(req: Request) {
             p_lock_until: lockUntil.toISOString()
           });
           if (!activated) {
-            return NextResponse.json({ error: 'This residence has already been registered by another resident. Please contact the society administrator.' }, { status: 409 });
+            return NextResponse.json({ error: 'This residence is no longer available for this registration. Please contact the society administrator.' }, { status: 409 });
           }
-        } else if (!user.emailVerified || user.status !== 'ACTIVE') {
-          const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
-          await supabaseRest('User',{id:'eq.'+user.id},{method:'PATCH',body:JSON.stringify({emailVerified:true,status:'ACTIVE',approvalStatus:'APPROVED',emailLockedUntil:user.emailLockedUntil||lockUntil,mobileLockedUntil:user.mobileLockedUntil||lockUntil,updatedAt:new Date().toISOString()})});
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : '';
