@@ -59,17 +59,40 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: 'Please verify your Gmail address before signing in.' }, { status: 403 });
         }
         if (user.unitId && !user.emailVerified) {
-          const linked = await prisma.propertyUnit.updateMany({
-            where: { id: user.unitId, residentUserId: null, status: 'ACTIVE' },
-            data: { residentUserId: user.id, residentType: user.residentType || 'OWNER', ownerName: user.name, ownerMobile: user.mobile, ownerEmail: user.email },
+          const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
+          const activation = await prisma.$transaction(async (tx) => {
+            const linked = await tx.propertyUnit.updateMany({
+              where: { id: user.unitId!, residentUserId: null, status: 'ACTIVE' },
+              data: { residentUserId: user.id, residentType: user.residentType || 'OWNER', ownerName: user.name, ownerMobile: user.mobile, ownerEmail: user.email },
+            });
+            if (linked.count !== 1) return { claimed: false };
+            await tx.user.update({
+              where: { id: user.id },
+              data: {
+                emailVerified: true,
+                status: 'ACTIVE',
+                approvalStatus: 'APPROVED',
+                emailLockedUntil: user.emailLockedUntil || lockUntil,
+                mobileLockedUntil: user.mobileLockedUntil || lockUntil,
+              },
+            });
+            return { claimed: true };
           });
-          if (linked.count !== 1) {
+          if (!activation.claimed) {
             return NextResponse.json({ error: 'This residence has already been registered by another resident. Please contact the society administrator.' }, { status: 409 });
           }
-        }
-        if (!user.emailVerified || user.status !== 'ACTIVE') {
+        } else if (!user.emailVerified || user.status !== 'ACTIVE') {
           const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
-          await prisma.user.update({ where: { id: user.id }, data: { emailVerified: true, status: 'ACTIVE', approvalStatus: 'APPROVED', emailLockedUntil: user.emailLockedUntil || lockUntil, mobileLockedUntil: user.mobileLockedUntil || lockUntil } });
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              emailVerified: true,
+              status: 'ACTIVE',
+              approvalStatus: 'APPROVED',
+              emailLockedUntil: user.emailLockedUntil || lockUntil,
+              mobileLockedUntil: user.mobileLockedUntil || lockUntil,
+            },
+          });
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : '';
