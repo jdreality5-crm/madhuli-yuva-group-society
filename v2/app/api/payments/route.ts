@@ -45,18 +45,28 @@ export async function POST(req: Request) {
     if (amountPaise <= 0n) return NextResponse.json({ error: 'Amount must be greater than zero.' }, { status: 400 });
     let billId = body.billId || null;
     if (billId) {
-      const bill = await prisma.bill.findFirst({ where: { id: billId, societyId: session.societyId, propertyUnit: { residentUserId: session.id, property: { societyId: session.societyId } } }, select: { id: true, amountPaise: true } });
+      const bill = await prisma.bill.findFirst({ where: { id: billId, societyId: session.societyId, propertyUnit: { residentUserId: session.id, property: { societyId: session.societyId } } }, select: { id: true, amountPaise: true, paymentStatus: true } });
       if (!bill) return NextResponse.json({ error: 'Bill not found.' }, { status: 404 });
       if (bill.amountPaise !== amountPaise) return NextResponse.json({ error: 'Payment amount must match the bill amount.' }, { status: 400 });
+      if (bill.paymentStatus === 'PAID' || bill.paymentStatus === 'PENDING') return NextResponse.json({ error: bill.paymentStatus === 'PAID' ? 'This bill has already been paid.' : 'A payment is already pending for this bill.' }, { status: 409 });
     }
     const account = await prisma.paymentAccount.findFirst({ where: { id: body.paymentAccountId, societyId: session.societyId, status: 'ACTIVE' } });
     if (!account) return NextResponse.json({ error: 'Payment account not found.' }, { status: 404 });
     let eventId = body.eventId || null;
     if (eventId && !(await prisma.event.findFirst({ where: { id: eventId, societyId: session.societyId } }))) eventId = null;
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    const payment = await prisma.payment.create({ data: { societyId: session.societyId, ownerUserId: session.id, paymentAccountId: account.id, eventId, billId, amountPaise, expiresAt } });
+    const payment = await prisma.$transaction(async tx => {
+      if (billId) {
+        const claimedBill = await tx.bill.updateMany({
+          where: { id: billId, societyId: session.societyId, paymentStatus: 'UNPAID' },
+          data: { paymentStatus: 'PENDING' },
+        });
+        if (claimedBill.count !== 1) throw new Error('BILL_PAYMENT_ALREADY_CLAIMED');
+      }
+      return tx.payment.create({ data: { societyId: session.societyId, ownerUserId: session.id, paymentAccountId: account.id, eventId, billId, amountPaise, expiresAt } });
+    });
     return NextResponse.json({ payment: { ...payment, amountPaise: payment.amountPaise.toString() } }, { status: 201 });
-  } catch (e) { const status = e instanceof z.ZodError ? 400 : e instanceof Error && e.message === 'UNAUTHORIZED' ? 401 : 500; return NextResponse.json({ error: status === 400 ? 'Invalid payment details.' : status === 401 ? 'Unauthorized' : 'Server error' }, { status }); }
+  } catch (e) { const message = e instanceof Error ? e.message : ''; const status = e instanceof z.ZodError ? 400 : message === 'UNAUTHORIZED' ? 401 : message === 'BILL_PAYMENT_ALREADY_CLAIMED' ? 409 : 500; return NextResponse.json({ error: status === 400 ? 'Invalid payment details.' : status === 401 ? 'Unauthorized' : status === 409 ? 'A payment is already pending or completed for this bill.' : 'Server error' }, { status }); }
 }
 
 export async function PATCH(req: Request) {
