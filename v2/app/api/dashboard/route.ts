@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireSession } from '@/lib/auth';
+import { requireSession } from '@/lib/session';
 
 async function supabaseRest<T>(table: string, params: Record<string,string>): Promise<T> {
   const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
