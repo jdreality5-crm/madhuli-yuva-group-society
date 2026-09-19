@@ -13,7 +13,7 @@ export default function Signup() {
   const [verificationEmail,setVerificationEmail]=useState(''),[step,setStep]=useState<'signup'|'verify'|'pending'>('signup');
   const [busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState(''),[message,setMessage]=useState('');
 
-  useEffect(()=>{fetch('/api/auth/residences',{cache:'no-store'}).then(async r=>r.ok?r.json():{properties:[]}).then(d=>setProperties(d.properties||[])).catch(()=>setProperties([])).finally(()=>setLoading(false));},[]);
+  useEffect(()=>{fetch('/api/auth/residences',{cache:'no-store'}).then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(typeof d?.error==='string'?d.error:`Unable to load residences (${r.status})`);return d;}).then(d=>setProperties(Array.isArray(d.properties)?d.properties.map((p:Property)=>({...p,type:String(p.type).toUpperCase() as Property['type'],block:p.block?String(p.block).toUpperCase():p.block})):[])).catch(e=>{setProperties([]);setError(e instanceof Error?e.message:'Unable to load residences. Please refresh the page.');}).finally(()=>setLoading(false));},[]);
 
   const apartmentBlocks=useMemo(()=>properties.filter(p=>p.type==='APARTMENT'),[properties]);
   const tenaments=useMemo(()=>properties.filter(p=>p.type==='TENAMENT').sort((a,b)=>Number(a.propertyNumber)-Number(b.propertyNumber)),[properties]);
