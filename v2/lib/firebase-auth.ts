@@ -27,11 +27,12 @@ type FirebaseLookupResult = { users: Array<{ localId: string; email?: string; em
 export async function firebaseSignUp(email: string, password: string) { return firebaseRequest<FirebaseAuthResult>('signUp', { email, password, returnSecureToken: true }); }
 export async function firebaseSignIn(email: string, password: string) { return firebaseRequest<FirebaseAuthResult>('signInWithPassword', { email, password, returnSecureToken: true }); }
 export async function firebaseLookup(idToken: string) { const result = await firebaseRequest<FirebaseLookupResult>('lookup', { idToken }); return result.users?.[0] || null; }
-export async function firebaseSendVerificationEmail(idToken: string, continueUrl: string) {
-  return firebaseRequest<{ email: string; kind: string }>('sendOobCode', {
+export async function firebaseSendVerificationEmail(idToken: string) {
+  // The Firebase Auth REST sendOobCode endpoint accepts VERIFY_EMAIL + idToken.
+  // Continue URLs are an SDK ActionCodeSettings feature and are not part of this REST payload.
+  return firebaseRequest<{ email: string; kind?: string }>('sendOobCode', {
     requestType: 'VERIFY_EMAIL',
     idToken,
-    continueUrl,
   });
 }
 export async function firebaseApplyVerificationCode(oobCode: string) { return firebaseRequest<{ localId: string; email: string; requestType: string; emailVerified?: boolean }>('update', { oobCode }); }
