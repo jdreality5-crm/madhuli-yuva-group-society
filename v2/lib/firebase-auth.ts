@@ -27,7 +27,13 @@ type FirebaseLookupResult = { users: Array<{ localId: string; email?: string; em
 export async function firebaseSignUp(email: string, password: string) { return firebaseRequest<FirebaseAuthResult>('signUp', { email, password, returnSecureToken: true }); }
 export async function firebaseSignIn(email: string, password: string) { return firebaseRequest<FirebaseAuthResult>('signInWithPassword', { email, password, returnSecureToken: true }); }
 export async function firebaseLookup(idToken: string) { const result = await firebaseRequest<FirebaseLookupResult>('lookup', { idToken }); return result.users?.[0] || null; }
-export async function firebaseSendVerificationEmail(idToken: string) { return firebaseRequest<{ email: string; kind: string }>('sendOobCode', { requestType: 'VERIFY_EMAIL', idToken }); }
+export async function firebaseSendVerificationEmail(idToken: string, continueUrl: string) {
+  return firebaseRequest<{ email: string; kind: string }>('sendOobCode', {
+    requestType: 'VERIFY_EMAIL',
+    idToken,
+    continueUrl,
+  });
+}
 export async function firebaseApplyVerificationCode(oobCode: string) { return firebaseRequest<{ localId: string; email: string; requestType: string; emailVerified?: boolean }>('update', { oobCode }); }
 export async function firebaseDeleteUser(idToken: string) { return firebaseRequest<{ localId: string }>('delete', { idToken }); }
 export function firebaseAuthConfigured() { return Boolean(process.env.FIREBASE_WEB_API_KEY?.trim()); }
