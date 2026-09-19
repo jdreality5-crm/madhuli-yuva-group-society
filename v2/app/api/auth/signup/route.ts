@@ -82,7 +82,7 @@ export async function POST(req: Request) {
 
     const firebaseUser = await firebaseSignUp(email, body.password);
     try {
-      const verificationReturnUrl = new URL('/login?verified=1', req.url).toString();
+      const verificationReturnUrl = new URL('/verify-email?verified=1', req.url).toString();
       await firebaseSendVerificationEmail(firebaseUser.idToken, verificationReturnUrl);
       const user = await prisma.$transaction(async tx => {
         const created = await tx.user.create({
@@ -116,6 +116,7 @@ export async function POST(req: Request) {
   } catch (error) {
     const code = error instanceof Error ? error.message : '';
     if (code.includes('EMAIL_EXISTS')) return NextResponse.json({ error: 'This Gmail address is already registered. Please login or use password recovery.' }, { status: 409 });
+    if (code.includes('INVALID_CONTINUE_URI') || code.includes('UNAUTHORIZED_DOMAIN')) return NextResponse.json({ error: 'Email verification is not configured for this website domain yet. Please contact the society administrator.' }, { status: 503 });
     console.error('[auth/signup] server error', error);
     return NextResponse.json({ error: 'Signup service temporarily unavailable' }, { status: 500 });
   }
