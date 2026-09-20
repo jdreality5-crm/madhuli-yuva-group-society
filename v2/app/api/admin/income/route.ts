@@ -66,7 +66,9 @@ export async function POST(req: Request) {
       }))[0];
       if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
+    const now = new Date().toISOString();
     const payload = {
+      id: crypto.randomUUID(),
       date: parsed.date.toISOString(),
       eventId,
       category: parsed.category?.trim() || null,
@@ -78,6 +80,8 @@ export async function POST(req: Request) {
       notes: parsed.notes?.trim() || null,
       societyId: session.societyId,
       createdById: session.id,
+      createdAt: now,
+      updatedAt: now,
     };
     const row = (await rest<any[]>('Income', { select: '*' }, { method: 'POST', body: JSON.stringify(payload) }))[0];
     return NextResponse.json({ ...row, amountPaise: row.amountPaise.toString() }, { status: 201 });
