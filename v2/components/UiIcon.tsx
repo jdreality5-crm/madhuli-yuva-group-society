@@ -1,6 +1,6 @@
 import React from 'react';
 
-type Name='dashboard'|'property'|'users'|'calendar'|'notice'|'gallery'|'payment'|'report'|'edit'|'trash'|'document'|'camera'|'refresh'|'check'|'home'|'add'|'close'|'arrowRight'|'print';
+type Name='dashboard'|'property'|'users'|'calendar'|'notice'|'gallery'|'payment'|'report'|'edit'|'trash'|'document'|'camera'|'refresh'|'check'|'home'|'add'|'close'|'arrowRight'|'print'|'more';
 export function UiIcon({name,size=18,className=''}:{name:Name;size?:number;className?:string}){
  const common={width:size,height:size,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.8,strokeLinecap:'round' as const,strokeLinejoin:'round' as const,ariaHidden:true};
  const paths:Record<Name,React.ReactNode>={
@@ -22,7 +22,8 @@ export function UiIcon({name,size=18,className=''}:{name:Name;size?:number;class
  add:<><path d="M12 5v14M5 12h14"/></>,
  close:<><path d="m6 6 12 12M18 6 6 18"/></>,
  arrowRight:<><path d="M5 12h13"/><path d="m13 6 6 6-6 6"/></>,
- print:<><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></>
+ print:<><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></>,
+ more:<><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/></>
  };
  return <svg {...common} className={className}>{paths[name]}</svg>;
 }
