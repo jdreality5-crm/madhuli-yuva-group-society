@@ -21,7 +21,7 @@ const masterItems: NavItem[] = [
   { label: 'Properties', href: '/admin/properties', icon: 'property' },
   { label: 'Programs', href: '/admin/programs', icon: 'calendar' },
   { label: 'Finance', href: '/admin/income', icon: 'report' },
-  { label: 'Sub Admins', href: '/admin/subadmins', icon: 'users' },
+  { label: 'Profile', href: '/profile', icon: 'users' },
 ];
 
 const moreItems = [
@@ -34,6 +34,7 @@ const moreItems = [
   { label: 'Reports', href: '/annual-reports', permission: 'REPORTS' },
   { label: 'Owner Approvals', href: '/admin/owner-approvals', permission: 'OWNER_APPROVALS' },
   { label: 'Payment Accounts', href: '/admin/payment-accounts', permission: 'PAYMENT_ACCOUNTS' },
+  { label: 'Sub Admins', href: '/admin/subadmins', permission: 'SUB_ADMINS' },
 ] as const;
 
 const publicPaths = ['/login', '/signup', '/forgot-password', '/verify-email', '/resend-verification'];
@@ -70,14 +71,6 @@ export default function MobileAppShellFix() {
     const hideLegacyNavigation = () => {
       document.querySelectorAll<HTMLElement>('.mobile-nav').forEach((node) => {
         node.style.setProperty('display', 'none', 'important');
-      });
-      document.querySelectorAll<HTMLElement>('body *').forEach((node) => {
-        if (node.classList.contains('mobile-app-nav') || node.classList.contains('mobile-more-menu')) return;
-        const text = (node.textContent || '').trim();
-        const controls = node.querySelectorAll('a,button').length;
-        if (controls >= 4 && text.includes('Dashboard') && text.includes('Properties')) {
-          node.style.setProperty('display', 'none', 'important');
-        }
       });
     };
 
@@ -125,15 +118,6 @@ export default function MobileAppShellFix() {
           .mobile-more-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
           .mobile-more-grid a { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px; border:1px solid #eadfd5; border-radius:12px; color:#3d3030; text-decoration:none; font-size:13px; font-weight:650; background:#fff; }
           :global(body) { padding-bottom:calc(78px + env(safe-area-inset-bottom)); }
-          :global(.profile-actions),:global(.profile-loading) { display:none !important; }
-          :global(.profile-identity) { background:linear-gradient(115deg,#42131c,#641d2a 65%,#7a2938); color:#fff; padding-top:18px; border-radius:0 0 18px 18px; }
-          :global(.profile-identity .identity-copy h2),:global(.profile-identity .identity-copy p) { color:#fff !important; }
-          :global(.profile-identity .identity-badge) { border-color:rgba(255,255,255,.22); }
-          :global(.brand-mark img) { display:none !important; }
-          :global(.brand-mark) { font-size:0 !important; }
-          :global(.brand-mark)::after { content:'M'; font-size:24px; font-weight:800; }
-          :global(.brand-copy) { font-size:0 !important; }
-          :global(.brand-copy)::before { content:'Madhuli Yuva Group'; font-size:16px; }
         }
         @media (max-width:520px) { .mobile-app-nav { grid-template-columns:repeat(6,minmax(0,1fr)); padding-left:3px; padding-right:3px; } .mobile-app-nav small { font-size:9px; } }
       `}</style>
