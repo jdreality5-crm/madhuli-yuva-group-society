@@ -13,6 +13,25 @@ async function supabaseRest<T>(table: string, params: Record<string,string>): Pr
   return data as T;
 }
 
+const bucket = () => process.env.SUPABASE_STORAGE_BUCKET?.trim() || 'society-files';
+
+async function mediaUrl(value: string | null | undefined, societyId: string) {
+  if (!value || /^https?:\/\//.test(value) || value.startsWith('data:')) return value || null;
+  if (!value.startsWith(`${societyId}/`) || value.includes('..') || value.includes('\\')) return null;
+  const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!base || !key) throw new Error('Supabase server configuration is missing');
+  const response = await fetch(base + '/storage/v1/object/sign/' + bucket() + '/' + value, {
+    method: 'POST',
+    headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expiresIn: 3600 }),
+    cache: 'no-store',
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) return null;
+  return base + '/storage/v1' + (data?.signedURL || data?.signedUrl || '');
+}
+
 type PropertyRow = { id: string };
 
 export async function GET() {
@@ -24,8 +43,11 @@ export async function GET() {
       supabaseRest<any[]>('Notice', { societyId: 'eq.' + session.societyId, status: 'eq.PUBLISHED', order: 'date.desc', limit: '8', select: 'id,title,gujaratiTitle,content,gujaratiContent,date,important,imageUrl' }),
       supabaseRest<any[]>('Photo', { societyId: 'eq.' + session.societyId, order: 'createdAt.desc', limit: '12', select: 'id,title,fileUrl,altText,albumName,eventId' }),
     ]);
-    const society = societyRows[0] || null;
-    if (session.role === 'OWNER') return NextResponse.json({ role: session.role, permissions: session.permissions, society, upcomingEvents, notices, photos });
+    const society = societyRows[0] ? { ...societyRows[0], logoUrl: await mediaUrl(societyRows[0].logoUrl, session.societyId) } : null;
+    const signedEvents = await Promise.all(upcomingEvents.map(async event => ({ ...event, imageUrl: await mediaUrl(event.imageUrl, session.societyId) })));
+    const signedNotices = await Promise.all(notices.map(async notice => ({ ...notice, imageUrl: await mediaUrl(notice.imageUrl, session.societyId) })));
+    const signedPhotos = await Promise.all(photos.map(async photo => ({ ...photo, fileUrl: await mediaUrl(photo.fileUrl, session.societyId) })));
+    if (session.role === 'OWNER') return NextResponse.json({ role: session.role, permissions: session.permissions, society, upcomingEvents: signedEvents, notices: signedNotices, photos: signedPhotos });
     const properties = await supabaseRest<PropertyRow[]>('Property', { societyId: 'eq.' + session.societyId, status: 'eq.ACTIVE', select: 'id' });
     const propertyIds = properties.map(property => property.id);
     const [income, expense, propertyUnits, events] = await Promise.all([
@@ -39,7 +61,7 @@ export async function GET() {
     const canViewExpenses = session.role === 'MASTER_ADMIN' || session.permissions?.includes('*') || session.permissions?.includes('EXPENSES');
     const totalIncome = canViewIncome ? total(income) : 0n;
     const totalExpense = canViewExpenses ? total(expense) : 0n;
-    return NextResponse.json({ role: session.role, society, upcomingEvents, notices, photos, stats: { totalIncome: totalIncome.toString(), totalExpense: totalExpense.toString(), balance: (totalIncome - totalExpense).toString(), flats: propertyUnits.length, events: events.length } });
+    return NextResponse.json({ role: session.role, society, upcomingEvents: signedEvents, notices: signedNotices, photos: signedPhotos, stats: { totalIncome: totalIncome.toString(), totalExpense: totalExpense.toString(), balance: (totalIncome - totalExpense).toString(), flats: propertyUnits.length, events: events.length } });
   } catch (e) {
     const status = e instanceof Error && e.message === 'UNAUTHORIZED' ? 401 : 500;
     return NextResponse.json({ error: status === 401 ? 'Unauthorized' : 'Server error' }, { status });
