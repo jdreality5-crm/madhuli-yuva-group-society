@@ -23,7 +23,7 @@ type UnitRow = {
 async function supabaseRest<T>(table:string, params:Record<string,string>, init?:RequestInit):Promise<T>{
   const base=process.env.SUPABASE_URL?.trim().replace(/\/$/,"");
   const key=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if(!base||!key) throw new Error("Supabase server configuration is missing");
+  if(!base||!key) throw new Error("CONFIG");
   const url=new URL(base+"/rest/v1/"+table);
   Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
   const response=await fetch(url.toString(),{
@@ -35,9 +35,19 @@ async function supabaseRest<T>(table:string, params:Record<string,string>, init?
     },
     cache:"no-store"
   });
-  const data=await response.json().catch(()=>null);
-  if(!response.ok) throw new Error("Supabase "+table+" request failed");
-  return data as T;
+  if(!response.ok) throw new Error("REST");
+  return (await response.json().catch(()=>null)) as T;
+}
+
+function errorResponse(error:unknown, fallback:string){
+  if(error instanceof z.ZodError) return NextResponse.json({error:"Invalid request"},{status:400});
+  const message=error instanceof Error?error.message:"";
+  if(message==="UNAUTHORIZED") return NextResponse.json({error:"Unauthorized"},{status:401});
+  if(message==="FORBIDDEN") return NextResponse.json({error:"Forbidden"},{status:403});
+  if(message==="CONFIG") return NextResponse.json({error:"Server configuration error"},{status:500});
+  if(message==="REST") return NextResponse.json({error:"Database request failed"},{status:502});
+  console.error(fallback,error);
+  return NextResponse.json({error:fallback},{status:500});
 }
 
 async function requireOrganizer(){
@@ -77,9 +87,7 @@ export async function GET(){
       }))
     });
   }catch(error){
-    const message=error instanceof Error?error.message:"";
-    const status=message==="UNAUTHORIZED"?401:message==="FORBIDDEN"?403:500;
-    return NextResponse.json({error:status===401?"Unauthorized":status===403?"Forbidden":"Unable to load properties"},{status});
+    return errorResponse(error,"Unable to load properties");
   }
 }
 
@@ -111,8 +119,7 @@ export async function POST(request:NextRequest){
       })
     });
     return NextResponse.json({property:property[0]},{status:201});
-  }catch(error:any){
-    const status=error?.name==="ZodError"?400:error?.message==="UNAUTHORIZED"?401:error?.message==="FORBIDDEN"?403:500;
-    return NextResponse.json({error:error?.message||"Unable to create property"},{status});
+  }catch(error){
+    return errorResponse(error,"Unable to create property");
   }
 }
