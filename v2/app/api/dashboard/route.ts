@@ -24,15 +24,18 @@ export async function GET() {
     ]);
     const society = societyRows[0] || null;
     if (session.role === 'OWNER') return NextResponse.json({ role: session.role, permissions: session.permissions, society, upcomingEvents, notices, photos });
-    const [income, expense, flats, events] = await Promise.all([
+    const [income, expense, propertyUnits, events] = await Promise.all([
       supabaseRest<any[]>('Income', { societyId: 'eq.' + session.societyId, select: 'amountPaise' }),
       supabaseRest<any[]>('Expense', { societyId: 'eq.' + session.societyId, select: 'amountPaise' }),
-      supabaseRest<any[]>('Flat', { societyId: 'eq.' + session.societyId, status: 'eq.ACTIVE', select: 'id' }),
+      supabaseRest<any[]>('PropertyUnit', { societyId: 'eq.' + session.societyId, status: 'eq.ACTIVE', select: 'id' }),
       supabaseRest<any[]>('Event', { societyId: 'eq.' + session.societyId, select: 'id' }),
     ]);
     const total = (rows:any[]) => rows.reduce((sum, row) => sum + BigInt(row.amountPaise ?? 0), 0n);
-    const totalIncome = total(income), totalExpense = total(expense);
-    return NextResponse.json({ role: session.role, society, upcomingEvents, notices, photos, stats: { totalIncome: totalIncome.toString(), totalExpense: totalExpense.toString(), balance: (totalIncome - totalExpense).toString(), flats: flats.length, events: events.length } });
+    const canViewIncome = session.role === 'MASTER_ADMIN' || session.permissions?.includes('*') || session.permissions?.includes('INCOME');
+    const canViewExpenses = session.role === 'MASTER_ADMIN' || session.permissions?.includes('*') || session.permissions?.includes('EXPENSES');
+    const totalIncome = canViewIncome ? total(income) : 0n;
+    const totalExpense = canViewExpenses ? total(expense) : 0n;
+    return NextResponse.json({ role: session.role, society, upcomingEvents, notices, photos, stats: { totalIncome: totalIncome.toString(), totalExpense: totalExpense.toString(), balance: (totalIncome - totalExpense).toString(), flats: propertyUnits.length, events: events.length } });
   } catch (e) {
     const status = e instanceof Error && e.message === 'UNAUTHORIZED' ? 401 : 500;
     return NextResponse.json({ error: status === 401 ? 'Unauthorized' : 'Server error' }, { status });
