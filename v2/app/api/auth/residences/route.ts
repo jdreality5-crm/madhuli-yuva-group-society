@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { appConfig } from '@/lib/config';
 
 type PropertyRow = { id: string; type: string; name: string; propertyNumber: string; block: string | null };
-type UnitRow = { id: string; propertyId: string; label: string; floorLabel: string; floorNumber: number; residentType: 'OWNER' | 'TENANT' | null; signupEnabled: boolean };
+type UnitRow = { id: string; propertyId: string; label: string; floorLabel: string; floorNumber: number; residentType: 'OWNER' | 'TENANT' | null };
 
 async function supabaseRest<T>(table: string, params: Record<string, string>) {
   const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
@@ -37,9 +37,10 @@ export async function GET() {
     const propertyIds = properties.map((property) => property.id);
     const units = propertyIds.length
       ? await supabaseRest<UnitRow[]>('PropertyUnit', {
-          select: 'id,propertyId,label,floorLabel,residentType,signupEnabled',
+          select: 'id,propertyId,label,floorLabel,floorNumber,residentType',
           propertyId: 'in.(' + propertyIds.join(',') + ')',
           status: 'eq.ACTIVE',
+          signupEnabled: 'eq.true',
           residentUserId: 'is.null',
           order: 'floorNumber.asc,label.asc',
         })
@@ -47,14 +48,16 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        properties: properties.map((property) => ({
-          id: property.id,
-          type: String(property.type).toUpperCase(),
-          name: property.name,
-          propertyNumber: property.propertyNumber,
-          block: property.block ? String(property.block).toUpperCase() : null,
-          units: units.filter((unit) => unit.propertyId === property.id),
-        })),
+        properties: properties
+          .map((property) => ({
+            id: property.id,
+            type: String(property.type).toUpperCase(),
+            name: property.name,
+            propertyNumber: property.propertyNumber,
+            block: property.block ? String(property.block).toUpperCase() : null,
+            units: units.filter((unit) => unit.propertyId === property.id),
+          }))
+          .filter((property) => property.units.length > 0),
       },
       { headers: { 'Cache-Control': 'no-store, max-age=0' } },
     );
