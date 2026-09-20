@@ -82,7 +82,7 @@ async function getProfile(session:Awaited<ReturnType<typeof requireSession>>) {
     const rawUnit=units[0];
     if(rawUnit?.propertyId){
       const properties=await supabaseRest<any[]>('Property',{id:'eq.'+rawUnit.propertyId,societyId:'eq.'+session.societyId,select:'id,name,type,propertyNumber,block',limit:'1'});
-      unit=rawUnit ? {...rawUnit,property:properties[0]||null} : null;
+      unit=properties[0] ? {...rawUnit,property:properties[0]} : null;
     }
   }
 
