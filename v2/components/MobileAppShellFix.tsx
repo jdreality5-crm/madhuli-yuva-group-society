@@ -88,8 +88,7 @@ export default function MobileAppShellFix() {
       <style jsx>{`
         .mobile-app-nav,.mobile-more-backdrop,.mobile-more-menu { display:none; }
         @media (max-width:900px) {
-          .mobile-app-nav { position:fixed; left:0; right:0; bottom:0; z-index:100; display:grid; grid-template-columns:repeat(6,minmax(0,1fr); gap:3px; padding:8px 6px calc(8px + env(safe-area-inset-bottom)); background:rgba(255,255,255,.98); border-top:1px solid #eadfd5; box-shadow:0 -8px 24px rgba(53,21,26,.08); }
-          .mobile-app-nav:has(> button:last-child) { grid-template-columns:repeat(6,minmax(0,1fr)); }
+          .mobile-app-nav { position:fixed; left:0; right:0; bottom:0; z-index:100; display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:3px; padding:8px 6px calc(8px + env(safe-area-inset-bottom)); background:rgba(255,255,255,.98); border-top:1px solid #eadfd5; box-shadow:0 -8px 24px rgba(53,21,26,.08); }
           .mobile-app-nav a,.mobile-app-nav button { min-width:0; border:0; background:transparent; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:54px; border-radius:12px; color:#756b64; text-decoration:none; font:inherit; cursor:pointer; }
           .mobile-app-nav small { font-size:10px; line-height:1; }
           .mobile-app-nav a.active,.mobile-app-nav button.active { background:#f8e9ed; color:#74182f; font-weight:800; }
