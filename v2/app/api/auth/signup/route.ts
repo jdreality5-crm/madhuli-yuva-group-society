@@ -1,1 +1,1 @@
-// PENDING: complete verified source required before safe replacement
+// RESTORE FROM PREVIOUS BLOB REQUIRED
