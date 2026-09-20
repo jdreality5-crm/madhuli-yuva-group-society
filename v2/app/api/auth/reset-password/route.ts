@@ -8,8 +8,8 @@ export async function POST(req: Request) {
   try {
     if (!firebaseAuthConfigured()) return NextResponse.json({ error: 'Authentication service is not configured.' }, { status: 503 });
     const body = schema.parse(await req.json());
-    const result = await firebaseRequest<{ email?: string }>('resetPassword', { oobCode: body.oobCode, newPassword: body.newPassword });
-    return NextResponse.json({ success: true, email: result.email });
+    await firebaseRequest<{ email?: string }>('resetPassword', { oobCode: body.oobCode, newPassword: body.newPassword });
+    return NextResponse.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
     if (message.includes('EXPIRED_OOB_CODE') || message.includes('INVALID_OOB_CODE')) return NextResponse.json({ error: 'This password reset link has expired or has already been used. Please request a new one.' }, { status: 400 });
