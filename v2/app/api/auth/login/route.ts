@@ -8,24 +8,94 @@ import { firebaseAuthConfigured, firebaseLookup, firebaseSignIn, normalizeGmail 
 const LOGIN_MAX_FAILURES = 5;
 const LOGIN_LOCK_MINUTES = 15;
 
-async function supabaseRest<T>(table: string, params: Record<string,string>, init?: RequestInit): Promise<T> {
-  const base=process.env.SUPABASE_URL?.trim().replace(/\/$/,''); const key=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if(!base||!key) throw new Error('SUPABASE server configuration is missing');
-  const url=new URL(base+'/rest/v1/'+table); Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
-  const res=await fetch(url.toString(),{...init,headers:{apikey:key,Authorization:'Bearer '+key,Accept:'application/json',...(init?.body?{'Content-Type':'application/json',Prefer:'return=representation'}:{}),...(init?.headers||{})},cache:'no-store'});
-  const data=await res.json().catch(()=>null); if(!res.ok) throw new Error('Supabase '+table+' request failed'); return data as T;
+async function supabaseRest<T>(table: string, params: Record<string, string>, init?: RequestInit): Promise<T> {
+  const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!base || !key) throw new Error('SUPABASE server configuration is missing');
+  const url = new URL(base + '/rest/v1/' + table);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString(), {
+    ...init,
+    headers: {
+      apikey: key,
+      Authorization: 'Bearer ' + key,
+      Accept: 'application/json',
+      ...(init?.body ? { 'Content-Type': 'application/json', Prefer: 'return=representation' } : {}),
+      ...(init?.headers || {}),
+    },
+    cache: 'no-store',
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error('Supabase ' + table + ' request failed');
+  return data as T;
 }
-async function supabaseRpc<T>(name:string, body:Record<string,unknown>): Promise<T> {
-  const base=process.env.SUPABASE_URL?.trim().replace(/\/$/,''); const key=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if(!base||!key) throw new Error('SUPABASE server configuration is missing');
-  const res=await fetch(base+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,Accept:'application/json','Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
-  const data=await res.json().catch(()=>null); if(!res.ok) throw new Error('Supabase RPC '+name+' request failed'); return data as T;
+
+async function supabaseRpc<T>(name: string, body: Record<string, unknown>): Promise<T> {
+  const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!base || !key) throw new Error('SUPABASE server configuration is missing');
+  const res = await fetch(base + '/rest/v1/rpc/' + name, {
+    method: 'POST',
+    headers: { apikey: key, Authorization: 'Bearer ' + key, Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error('Supabase RPC ' + name + ' request failed');
+  return data as T;
 }
-type LoginUser={id:string;email:string;name:string;role:'MASTER_ADMIN'|'ORGANIZER'|'OWNER';societyId:string;status:string;approvalStatus:string;emailVerified:boolean;firebaseUid?:string|null;unitId?:string|null;residentType?:string|null;mobile?:string|null;permissions:string[];passwordHash?:string|null;loginLockedUntil?:string|Date|null;failedLoginAttempts:number;emailLockedUntil?:string|Date|null;mobileLockedUntil?:string|Date|null};
-async function getUserByEmail(email:string){const rows=await supabaseRest<LoginUser[]>('User',{select:'id,email,name,role,societyId,status,approvalStatus,emailVerified,firebaseUid,unitId,residentType,mobile,permissions,passwordHash,loginLockedUntil,failedLoginAttempts,emailLockedUntil,mobileLockedUntil',email:'eq.'+email,limit:'1'});return rows[0]||null;}
-async function recordLoginFailure(user:LoginUser){const attempts=(user.failedLoginAttempts||0)+1;const data:any={failedLoginAttempts:attempts,updatedAt:new Date().toISOString()};if(attempts>=LOGIN_MAX_FAILURES)data.loginLockedUntil=new Date(Date.now()+LOGIN_LOCK_MINUTES*60*1000).toISOString();await supabaseRest('User',{id:'eq.'+user.id,status:'eq.ACTIVE'},{method:'PATCH',body:JSON.stringify(data)});}
-async function clearLoginFailures(userId:string){await supabaseRest('User',{id:'eq.'+userId},{method:'PATCH',body:JSON.stringify({failedLoginAttempts:0,loginLockedUntil:null,updatedAt:new Date().toISOString()})});}
-async function createEdgeSession(user:LoginUser){const secret=process.env.JWT_SECRET?.trim();if(!secret)throw new Error('JWT_SECRET is required');const token=await new SignJWT({id:user.id,role:user.role,societyId:user.societyId,email:user.email,name:user.name,permissions:user.permissions||[]}).setProtectedHeader({alg:'HS256'}).setIssuedAt().setExpirationTime('7d').sign(new TextEncoder().encode(secret));(await cookies()).set('society_session',token,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax',path:'/',maxAge:604800});}
+
+type LoginUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: 'MASTER_ADMIN' | 'ORGANIZER' | 'OWNER';
+  societyId: string;
+  status: string;
+  approvalStatus: string;
+  emailVerified: boolean;
+  firebaseUid?: string | null;
+  unitId?: string | null;
+  residentType?: string | null;
+  mobile?: string | null;
+  permissions: string[];
+  passwordHash?: string | null;
+  loginLockedUntil?: string | Date | null;
+  failedLoginAttempts: number;
+  emailLockedUntil?: string | Date | null;
+  mobileLockedUntil?: string | Date | null;
+};
+
+async function getUserByEmail(email: string) {
+  const rows = await supabaseRest<LoginUser[]>('User', {
+    select: 'id,email,name,role,societyId,status,approvalStatus,emailVerified,firebaseUid,unitId,residentType,mobile,permissions,passwordHash,loginLockedUntil,failedLoginAttempts,emailLockedUntil,mobileLockedUntil',
+    email: 'eq.' + email,
+    limit: '1',
+  });
+  return rows[0] || null;
+}
+
+async function recordLoginFailure(user: LoginUser) {
+  const attempts = (user.failedLoginAttempts || 0) + 1;
+  const data: any = { failedLoginAttempts: attempts, updatedAt: new Date().toISOString() };
+  if (attempts >= LOGIN_MAX_FAILURES) data.loginLockedUntil = new Date(Date.now() + LOGIN_LOCK_MINUTES * 60 * 1000).toISOString();
+  await supabaseRest('User', { id: 'eq.' + user.id, status: 'eq.ACTIVE' }, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+async function clearLoginFailures(userId: string) {
+  await supabaseRest('User', { id: 'eq.' + userId }, { method: 'PATCH', body: JSON.stringify({ failedLoginAttempts: 0, loginLockedUntil: null, updatedAt: new Date().toISOString() }) });
+}
+
+async function createEdgeSession(user: LoginUser) {
+  const secret = process.env.JWT_SECRET?.trim();
+  if (!secret) throw new Error('JWT_SECRET is required');
+  const token = await new SignJWT({ id: user.id, role: user.role, societyId: user.societyId, email: user.email, name: user.name, permissions: user.permissions || [] })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('7d')
+    .sign(new TextEncoder().encode(secret));
+  (await cookies()).set('society_session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 604800 });
+}
 
 const schema = z.object({
   email: z.string().trim().email(),
@@ -54,7 +124,9 @@ export async function POST(req: Request) {
       try {
         const authResult = await firebaseSignIn(email, body.password);
         const firebaseUser = await firebaseLookup(authResult.idToken);
-        if (!firebaseUser || firebaseUser.localId !== user.firebaseUid || firebaseUser.emailVerified !== true || firebaseUser.disabled === true) {
+        const invalidFirebaseUser = !firebaseUser || firebaseUser.localId !== user.firebaseUid || firebaseUser.disabled === true;
+        const ownerVerificationRequired = user.role === 'OWNER' && firebaseUser?.emailVerified !== true;
+        if (invalidFirebaseUser || ownerVerificationRequired) {
           return NextResponse.json({ error: 'Please verify your Gmail address before signing in.' }, { status: 403 });
         }
         if (user.role === 'OWNER') {
@@ -66,7 +138,7 @@ export async function POST(req: Request) {
             const activated = await supabaseRpc<boolean>('activate_resident_atomic', {
               p_user_id: user.id,
               p_unit_id: user.unitId,
-              p_lock_until: lockUntil.toISOString()
+              p_lock_until: lockUntil.toISOString(),
             });
             if (!activated) {
               return NextResponse.json({ error: 'This residence is no longer available for this registration. Please contact the society administrator.' }, { status: 409 });
