@@ -83,7 +83,7 @@ export default function MobileAppShellFix() {
       {moreOpen && <button type="button" className="mobile-more-backdrop" aria-label="Close more menu" onClick={() => setMoreOpen(false)} />}
       <nav className="mobile-app-nav" aria-label="Mobile application navigation">
         {items.map((item) => (
-          <a key={item.href} href={item.href} className={pathname === item.href ? 'active' : ''}>
+          <a key={item.href} href={item.href} className={pathname === item.href ? 'active' : ''} onClick={(event) => { if (pathname === item.href) event.preventDefault(); }}>
             <UiIcon name={item.icon as any} size={20} />
             <small>{item.label}</small>
           </a>
