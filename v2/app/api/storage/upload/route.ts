@@ -26,6 +26,12 @@ export async function POST(req: Request) {
     const form = await req.formData();
     const file = form.get('file');
     const folder = String(form.get('folder') || 'uploads').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40) || 'uploads';
+
+    // Payment QR receivers are controlled exclusively by the Master Admin.
+    if (folder === 'payment-qrs' && session.role !== 'MASTER_ADMIN') {
+      return NextResponse.json({ error: 'Master Admin access required for payment QR uploads.' }, { status: 403 });
+    }
+
     if (!(file instanceof File)) return NextResponse.json({ error: 'File is required.' }, { status: 400 });
     if (file.size <= 0 || file.size > MAX_BYTES) return NextResponse.json({ error: 'File must be between 1 byte and 5 MB.' }, { status: 400 });
     const extension = ALLOWED[file.type];
