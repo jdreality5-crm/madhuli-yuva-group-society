@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { z } from 'zod';
 import { appConfig } from '@/lib/config';
 import { firebaseAuthConfigured, firebaseDeleteUser, firebaseSendVerificationEmail, firebaseSignUp, isGmailAddress, normalizeGmail } from '@/lib/firebase-auth';
@@ -147,11 +148,10 @@ export async function POST(req: Request) {
       if(result.kind==='EMAIL_EXISTS') throw new Error('EMAIL_EXISTS');
       if(result.kind==='MOBILE_EXISTS') throw new Error('MOBILE_EXISTS');
       if(result.kind==='UNIT_TAKEN'||result.kind==='FLAT_TAKEN') throw new Error('RESIDENCE_TAKEN');
+      if(result.kind==='UNIT_NOT_ENABLED') throw new Error('UNIT_NOT_ENABLED');
+      if(result.kind==='UNIT_CONTACT_MISMATCH') throw new Error('UNIT_CONTACT_MISMATCH');
       if(result.kind!=='OK') throw new Error('RESIDENT_CREATE_FAILED');
 
-      // Create the local resident record before sending the Firebase action email.
-      // If the DB write fails, Firebase cleanup invalidates the email action code,
-      // so sending the email first can produce a delivered-but-already-expired link.
       stage = 'firebase_verification_email';
       try {
         await firebaseSendVerificationEmail(firebaseUser.idToken);
@@ -182,6 +182,8 @@ export async function POST(req: Request) {
     if (code.includes('EMAIL_EXISTS')) return NextResponse.json({ error: 'This Gmail address is already registered. Please login or use password recovery.' }, { status: 409 });
     if (code.includes('MOBILE_EXISTS')) return NextResponse.json({ error: 'This mobile number is already registered in the society portal.' }, { status: 409 });
     if (code.includes('RESIDENCE_TAKEN')) return NextResponse.json({ error: 'This residence was registered by another resident during signup.' }, { status: 409 });
+    if (code.includes('UNIT_NOT_ENABLED')) return NextResponse.json({ error: 'Resident signup is not enabled for this residence. Please contact the society administrator.' }, { status: 403 });
+    if (code.includes('UNIT_CONTACT_MISMATCH')) return NextResponse.json({ error: 'The email or mobile number does not match the society record for this residence.' }, { status: 403 });
     if (code.includes('INVALID_EMAIL')) return NextResponse.json({ error: 'Please enter a valid Gmail address.' }, { status: 400 });
     if (code.includes('WEAK_PASSWORD')) return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
     if (code.includes('OPERATION_NOT_ALLOWED')) return NextResponse.json({ error: 'Firebase Email/Password signup is not enabled yet. Please enable Email/Password sign-in in Firebase Authentication.' }, { status: 503 });
