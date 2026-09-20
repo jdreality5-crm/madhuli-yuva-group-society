@@ -5,7 +5,6 @@ import { cookies } from 'next/headers';
 import { SignJWT } from 'jose';
 import { firebaseAuthConfigured, firebaseLookup, firebaseSignIn, normalizeGmail } from '@/lib/firebase-auth';
 
-
 const LOGIN_MAX_FAILURES = 5;
 const LOGIN_LOCK_MINUTES = 15;
 
@@ -42,15 +41,15 @@ export async function POST(req: Request) {
 
     const email = normalizeGmail(body.email);
     const user = await getUserByEmail(email);
-    const isFirebaseResident = user?.role === 'OWNER' && Boolean(user.firebaseUid);
-    if (!user || (user.status !== 'ACTIVE' && !isFirebaseResident) || (body.role && user.role !== body.role)) {
+    const isFirebaseManagedUser = Boolean(user?.firebaseUid) && (user?.role === 'OWNER' || user?.role === 'MASTER_ADMIN');
+    if (!user || (user.status !== 'ACTIVE' && !isFirebaseManagedUser) || (body.role && user.role !== body.role)) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
     if (user.loginLockedUntil && user.loginLockedUntil > new Date()) {
       return NextResponse.json({ error: 'Too many failed login attempts. Please try again after 15 minutes.' }, { status: 429 });
     }
 
-    if (user.role === 'OWNER' && user.firebaseUid) {
+    if (isFirebaseManagedUser) {
       if (!firebaseAuthConfigured()) return NextResponse.json({ error: 'Authentication service is not configured.' }, { status: 503 });
       try {
         const authResult = await firebaseSignIn(email, body.password);
@@ -58,18 +57,20 @@ export async function POST(req: Request) {
         if (!firebaseUser || firebaseUser.localId !== user.firebaseUid || firebaseUser.emailVerified !== true || firebaseUser.disabled === true) {
           return NextResponse.json({ error: 'Please verify your Gmail address before signing in.' }, { status: 403 });
         }
-        if (!user.unitId) {
-          return NextResponse.json({ error: 'Your resident registration is not linked to an active residence. Please contact the society administrator.' }, { status: 403 });
-        }
-        if (!user.emailVerified || user.status !== 'ACTIVE') {
-          const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
-          const activated = await supabaseRpc<boolean>('activate_resident_atomic', {
-            p_user_id: user.id,
-            p_unit_id: user.unitId,
-            p_lock_until: lockUntil.toISOString()
-          });
-          if (!activated) {
-            return NextResponse.json({ error: 'This residence is no longer available for this registration. Please contact the society administrator.' }, { status: 409 });
+        if (user.role === 'OWNER') {
+          if (!user.unitId) {
+            return NextResponse.json({ error: 'Your resident registration is not linked to an active residence. Please contact the society administrator.' }, { status: 403 });
+          }
+          if (!user.emailVerified || user.status !== 'ACTIVE') {
+            const lockUntil = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
+            const activated = await supabaseRpc<boolean>('activate_resident_atomic', {
+              p_user_id: user.id,
+              p_unit_id: user.unitId,
+              p_lock_until: lockUntil.toISOString()
+            });
+            if (!activated) {
+              return NextResponse.json({ error: 'This residence is no longer available for this registration. Please contact the society administrator.' }, { status: 409 });
+            }
           }
         }
       } catch (error) {
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
         }
         if (message.includes('USER_DISABLED')) return NextResponse.json({ error: 'This account is disabled. Please contact the society administrator.' }, { status: 403 });
-        console.error('[auth/login] Firebase resident authentication error', error);
+        console.error('[auth/login] Firebase authentication error', error);
         return NextResponse.json({ error: 'Authentication service temporarily unavailable' }, { status: 503 });
       }
     } else {
