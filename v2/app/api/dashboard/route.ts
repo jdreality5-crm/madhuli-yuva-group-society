@@ -13,6 +13,8 @@ async function supabaseRest<T>(table: string, params: Record<string,string>): Pr
   return data as T;
 }
 
+type PropertyRow = { id: string };
+
 export async function GET() {
   try {
     const session = await requireSession();
@@ -24,10 +26,12 @@ export async function GET() {
     ]);
     const society = societyRows[0] || null;
     if (session.role === 'OWNER') return NextResponse.json({ role: session.role, permissions: session.permissions, society, upcomingEvents, notices, photos });
+    const properties = await supabaseRest<PropertyRow[]>('Property', { societyId: 'eq.' + session.societyId, status: 'eq.ACTIVE', select: 'id' });
+    const propertyIds = properties.map(property => property.id);
     const [income, expense, propertyUnits, events] = await Promise.all([
       supabaseRest<any[]>('Income', { societyId: 'eq.' + session.societyId, select: 'amountPaise' }),
       supabaseRest<any[]>('Expense', { societyId: 'eq.' + session.societyId, select: 'amountPaise' }),
-      supabaseRest<any[]>('PropertyUnit', { societyId: 'eq.' + session.societyId, status: 'eq.ACTIVE', select: 'id' }),
+      propertyIds.length ? supabaseRest<any[]>('PropertyUnit', { propertyId: 'in.(' + propertyIds.join(',') + ')', status: 'eq.ACTIVE', select: 'id' }) : Promise.resolve([]),
       supabaseRest<any[]>('Event', { societyId: 'eq.' + session.societyId, select: 'id' }),
     ]);
     const total = (rows:any[]) => rows.reduce((sum, row) => sum + BigInt(row.amountPaise ?? 0), 0n);
