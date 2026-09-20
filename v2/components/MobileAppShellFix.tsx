@@ -6,17 +6,25 @@ import { UiIcon } from '@/components/UiIcon';
 
 type Role = 'MASTER_ADMIN' | 'ORGANIZER' | 'OWNER';
 type SessionInfo = { authenticated: boolean; role?: Role; permissions?: string[] };
+type NavItem = { label: string; href: string; icon: string };
 
-const items = [
+const residentItems: NavItem[] = [
   { label: 'Home', href: '/', icon: 'home' },
   { label: 'Properties', href: '/properties', icon: 'property' },
   { label: 'Programs', href: '/programs', icon: 'calendar' },
   { label: 'Bills', href: '/bills', icon: 'report' },
   { label: 'Profile', href: '/profile', icon: 'users' },
-] as const;
+];
+
+const masterItems: NavItem[] = [
+  { label: 'Dashboard', href: '/', icon: 'home' },
+  { label: 'Properties', href: '/admin/properties', icon: 'property' },
+  { label: 'Programs', href: '/admin/programs', icon: 'calendar' },
+  { label: 'Finance', href: '/admin/income', icon: 'report' },
+  { label: 'Sub Admins', href: '/admin/subadmins', icon: 'users' },
+];
 
 const moreItems = [
-  { label: 'Sub Admins', href: '/admin/subadmins', permission: 'SUB_ADMINS' },
   { label: 'Flats & Owners', href: '/admin/flats', permission: 'FLATS' },
   { label: 'Income', href: '/admin/income', permission: 'INCOME' },
   { label: 'Expenses', href: '/admin/expenses', permission: 'EXPENSES' },
@@ -24,6 +32,8 @@ const moreItems = [
   { label: 'Payments', href: '/admin/payments', permission: 'PAYMENTS' },
   { label: 'Gallery', href: '/admin/gallery', permission: 'GALLERY' },
   { label: 'Reports', href: '/annual-reports', permission: 'REPORTS' },
+  { label: 'Owner Approvals', href: '/admin/owner-approvals', permission: 'OWNER_APPROVALS' },
+  { label: 'Payment Accounts', href: '/admin/payment-accounts', permission: 'PAYMENT_ACCOUNTS' },
 ] as const;
 
 const publicPaths = ['/login', '/signup', '/forgot-password', '/verify-email', '/resend-verification'];
@@ -42,6 +52,9 @@ export default function MobileAppShellFix() {
       .catch(() => { if (active) setSession({ authenticated: false }); });
     return () => { active = false; };
   }, [pathname]);
+
+  const isMaster = session?.role === 'MASTER_ADMIN';
+  const items = isMaster ? masterItems : residentItems;
 
   const visibleMoreItems = useMemo(() => {
     if (session?.role === 'MASTER_ADMIN') return moreItems;
@@ -72,7 +85,7 @@ export default function MobileAppShellFix() {
     const observer = new MutationObserver(hideLegacyNavigation);
     observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
-  }, [router, visibleMoreItems]);
+  }, [items, router, visibleMoreItems]);
 
   useEffect(() => { setMoreOpen(false); }, [pathname]);
 
@@ -94,7 +107,7 @@ export default function MobileAppShellFix() {
         </button>}
       </nav>
       {moreOpen && visibleMoreItems.length > 0 && <section id="mobile-more-menu" className="mobile-more-menu" aria-label="More administration sections">
-        <div className="mobile-more-heading"><strong>More sections</strong><button type="button" onClick={() => setMoreOpen(false)} aria-label="Close more menu"><UiIcon name="close" size={18} /></button></div>
+        <div className="mobile-more-heading"><strong>{isMaster ? 'Master Admin sections' : 'More sections'}</strong><button type="button" onClick={() => setMoreOpen(false)} aria-label="Close more menu"><UiIcon name="close" size={18} /></button></div>
         <div className="mobile-more-grid">{visibleMoreItems.map((item) => <a key={item.href} href={item.href}>{item.label}<span aria-hidden="true">›</span></a>)}</div>
       </section>}
       <style jsx>{`
@@ -103,7 +116,7 @@ export default function MobileAppShellFix() {
           :global(.mobile-nav) { display:none !important; }
           .mobile-app-nav { position:fixed; left:0; right:0; bottom:0; z-index:100; display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:3px; padding:8px 6px calc(8px + env(safe-area-inset-bottom)); background:rgba(255,255,255,.98); border-top:1px solid #eadfd5; box-shadow:0 -8px 24px rgba(53,21,26,.08); }
           .mobile-app-nav a,.mobile-app-nav button { min-width:0; border:0; background:transparent; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:54px; border-radius:12px; color:#756b64; text-decoration:none; font:inherit; cursor:pointer; }
-          .mobile-app-nav small { font-size:10px; line-height:1; }
+          .mobile-app-nav small { font-size:10px; line-height:1; text-align:center; }
           .mobile-app-nav a.active,.mobile-app-nav button.active { background:#f8e9ed; color:#74182f; font-weight:800; }
           .mobile-more-backdrop { display:block; position:fixed; inset:0; z-index:101; border:0; background:rgba(34,18,20,.24); }
           .mobile-more-menu { display:block; position:fixed; left:12px; right:12px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:102; background:#fffdf9; border:1px solid #eadfd5; border-radius:20px; box-shadow:0 18px 55px rgba(53,21,26,.2); padding:16px; }
