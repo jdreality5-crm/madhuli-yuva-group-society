@@ -1,13 +1,25 @@
 import { NextResponse } from 'next/server';
 import { requireSession } from '@/lib/session';
 
+const FETCH_TIMEOUT_MS = 5000;
+
+async function fetchWithTimeout(url: string, init: RequestInit = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function supabaseRest<T>(table: string, params: Record<string,string>): Promise<T> {
   const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!base || !key) throw new Error('Supabase server configuration is missing');
   const url = new URL(base + '/rest/v1/' + table);
   Object.entries(params).forEach(([name, value]) => url.searchParams.set(name, value));
-  const response = await fetch(url.toString(), { headers: { apikey: key, Authorization: 'Bearer ' + key, Accept: 'application/json' }, cache: 'no-store' });
+  const response = await fetchWithTimeout(url.toString(), { headers: { apikey: key, Authorization: 'Bearer ' + key, Accept: 'application/json' }, cache: 'no-store' });
   const data = await response.json().catch(() => null);
   if (!response.ok) throw new Error('Supabase ' + table + ' request failed');
   return data as T;
@@ -21,15 +33,19 @@ async function mediaUrl(value: string | null | undefined, societyId: string) {
   const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!base || !key) throw new Error('Supabase server configuration is missing');
-  const response = await fetch(base + '/storage/v1/object/sign/' + bucket() + '/' + value, {
-    method: 'POST',
-    headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ expiresIn: 3600 }),
-    cache: 'no-store',
-  });
-  const data = await response.json().catch(() => null);
-  if (!response.ok) return null;
-  return base + '/storage/v1' + (data?.signedURL || data?.signedUrl || '');
+  try {
+    const response = await fetchWithTimeout(base + '/storage/v1/object/sign/' + bucket() + '/' + value, {
+      method: 'POST',
+      headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiresIn: 3600 }),
+      cache: 'no-store',
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) return null;
+    return base + '/storage/v1' + (data?.signedURL || data?.signedUrl || '');
+  } catch {
+    return null;
+  }
 }
 
 type PropertyRow = { id: string };
