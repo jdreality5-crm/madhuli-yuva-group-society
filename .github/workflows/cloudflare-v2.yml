@@ -74,4 +74,4 @@ jobs:
         run: |
           set -e
           response="$(curl --silent --show-error --fail-with-body --max-time 30 https://society-function-management-v2.jdreality5.workers.dev/api/auth/residences)"
-          node -e 'const d=JSON.parse(process.argv[1]); if (!Array.isArray(d.properties)) throw new Error("Signup residences response missing properties array"); if (!d.properties.some(p => p.type === "APARTMENT")) throw new Error("Signup residences response missing apartment properties"); console.log("Signup residences smoke test passed:", d.properties.length, "properties");' "$response"
+          node -e 'const d=JSON.parse(process.argv[1]); if (!Array.isArray(d.properties)) throw new Error("Signup residences response missing properties array"); if (!d.properties.length) throw new Error("Signup residences response has no eligible properties"); if (!d.properties.some(p => Array.isArray(p.units) && p.units.length > 0)) throw new Error("Signup residences response has no eligible units"); console.log("Signup residences smoke test passed:", d.properties.length, "properties");' "$response"
