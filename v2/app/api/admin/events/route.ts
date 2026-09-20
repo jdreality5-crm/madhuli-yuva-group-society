@@ -41,12 +41,22 @@ const safeMedia = (value: string | undefined, societyId: string) =>
   !value || /^https?:\/\//.test(value) || value.startsWith('data:') ||
   (value.startsWith(`${societyId}/`) && !value.includes('://') && !value.includes('\\') && !value.includes('..'));
 
+const errorStatus = (error: unknown) => {
+  if (error instanceof z.ZodError) return 400;
+  if (error instanceof Error && error.message === 'FORBIDDEN') return 403;
+  if (error instanceof Error && error.message === 'CONFIG') return 500;
+  if (error instanceof Error && error.message === 'REST') return 502;
+  return 500;
+};
+
 export async function GET() {
   try {
     const session = await requireSubAdminPermission('EVENTS');
     return NextResponse.json(await rest<any[]>({ select: '*', societyId: `eq.${session.societyId}`, order: 'date.desc' }));
-  } catch {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  } catch (error) {
+    const status = errorStatus(error);
+    console.error('Event list failed', error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: status === 403 ? 'Forbidden' : 'Unable to load events' }, { status });
   }
 }
 
@@ -60,11 +70,17 @@ export async function POST(req: Request) {
     }
     const rows = await rest<any[]>({ select: '*' }, {
       method: 'POST',
-      body: JSON.stringify({ ...parsed, imageUrl: imageUrl || null, date: parsed.date.toISOString(), societyId: session.societyId }),
+      body: JSON.stringify({
+        ...parsed,
+        imageUrl: imageUrl || null,
+        date: parsed.date.toISOString(),
+        societyId: session.societyId,
+      }),
     });
     return NextResponse.json(rows[0], { status: 201 });
   } catch (error) {
+    const status = errorStatus(error);
     console.error('Event create failed', error instanceof Error ? error.message : error);
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+    return NextResponse.json({ error: status === 403 ? 'Forbidden' : status === 502 ? 'Database request failed' : status === 500 ? 'Server configuration error' : 'Invalid request' }, { status });
   }
 }
