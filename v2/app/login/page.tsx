@@ -29,10 +29,28 @@ export default function Login() {
   }
 
   return <main className="login-page">
+    <style>{`@media (max-width: 900px) {
+      .login-page { align-items: flex-start; padding: 18px 14px 28px; overflow-y: auto; }
+      .login-shell { gap: 18px; width: 100%; }
+      .login-blade { height: 46%; top: -9%; right: -30%; opacity: .72; animation: mobileBladeIn .85s cubic-bezier(.2,.8,.2,1) both; }
+      .login-copy { padding: 8px 4px 0; animation: mobileCopyIn .7s ease both; }
+      .login-copy h1 { font-size: clamp(30px, 8vw, 38px); }
+      .login-copy > p:last-child { line-height: 1.6; }
+      .login-card { padding: 22px 18px; border-radius: 18px; animation: mobileCardIn .75s .08s cubic-bezier(.2,.8,.2,1) both; }
+      .role-switch { gap: 6px; }
+      .role-switch .btn { padding: 9px 5px; font-size: 11px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .login-blade, .auth-card, .auth-copy { animation: none !important; }
+    }
+    @keyframes mobileBladeIn { from { opacity: 0; transform: translate3d(24%, -5%, 0) skewX(-8deg); } to { opacity: .72; transform: translate3d(0, 0, 0) skewX(-8deg); } }
+    @keyframes mobileCopyIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes mobileCardIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    `}</style>
     <div className="login-blade" aria-hidden="true" />
     <div className="login-shell auth-animate">
       <section className="login-copy auth-copy">
-        <div className="login-brand"><div className="brand-mark">S</div><span>Society Administration</span></div>
+        <div className="login-brand"><div className="brand-mark">M</div><span>Madhuli Yuva Group Administration</span></div>
         <p className="eyebrow" style={{ marginTop: 70 }}>Madhuli Yuva Group • Resident &amp; Admin Access</p>
         <h1>One secure workspace for <em>society operations.</em></h1>
         <p>Manage programs, members, notices and authorized financial operations with a clean, responsive administration experience.</p>
