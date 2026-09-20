@@ -17,7 +17,7 @@ const bucket = () => process.env.SUPABASE_STORAGE_BUCKET?.trim() || 'society-fil
 
 async function mediaUrl(value: string | null | undefined, societyId: string) {
   if (!value || /^https?:\/\//.test(value) || value.startsWith('data:')) return value || null;
-  if (!value.startsWith(`${societyId}/`) || value.includes('..') || value.includes('\\')) return null;
+  if (!value.startsWith(`${societyId}/`) || value.includes('..') || value.includes('\\') || value.includes('\0')) return null;
   const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!base || !key) throw new Error('Supabase server configuration is missing');
