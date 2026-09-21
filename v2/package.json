@@ -25,6 +25,7 @@
     "bcryptjs": "^3.0.3",
     "jose": "^6.1.0",
     "next": "^16.3.5",
+    "pdf-lib": "^1.17.1",
     "pg": "^8.16.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -38,7 +39,6 @@
     "@vitejs/plugin-rsc": "^0.5.34",
     "prisma": "^6.19.3",
     "tsx": "^4.20.3",
-    "typescript": "^5.9.2",
     "vinext": "^1.0.0-beta.9",
     "vite": "^8.2.2",
     "wrangler": "^4.127.1"
