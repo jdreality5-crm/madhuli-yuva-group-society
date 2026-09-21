@@ -20,7 +20,7 @@ const adminItems: NavItem[] = [
   { label: 'Home', href: '/', icon: 'home' },
   { label: 'Properties', href: '/admin/properties', icon: 'property' },
   { label: 'Programs', href: '/admin/programs', icon: 'calendar' },
-  { label: 'Finance', href: '/admin/income', icon: 'report' },
+  { label: 'Finance', href: '/admin/finance', icon: 'report' },
   { label: 'Profile', href: '/profile', icon: 'users' },
 ];
 
@@ -92,7 +92,7 @@ export default function MobileAppShellFix() {
       {moreOpen && <button type="button" className="mobile-more-backdrop" aria-label="Close more menu" onClick={() => setMoreOpen(false)} />}
       <nav className={`mobile-app-nav nav-${navItemCount}`} aria-label="Mobile application navigation">
         {items.map((item) => (
-          <a key={item.href} href={item.href} className={pathname === item.href ? 'active' : ''} onClick={(event) => { if (pathname === item.href) event.preventDefault(); }}>
+          <a key={item.href} href={item.href} className={pathname === item.href || (item.href === '/admin/finance' && (pathname === '/admin/income' || pathname === '/admin/expenses')) ? 'active' : ''} onClick={(event) => { if (pathname === item.href) event.preventDefault(); }}>
             <UiIcon name={item.icon as any} size={19} />
             <small>{item.label}</small>
           </a>
