@@ -1,10 +1,11 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
+import type {CSSProperties} from 'react';
 type A={id:string;displayName:string;upiId?:string|null;qrImageUrl?:string|null;purpose:string;instructions?:string|null;amountPaise?:string|null};type P={id:string;amountPaise:string;status:string;transactionId?:string|null;paymentAccount?:A|null};
 const statusLabel=(s:string)=>({VERIFIED:'Verified / सफल',PENDING:'Pending verification / जांच बाकी',REJECTED:'Rejected / अस्वीकृत'}[s]||s);
 const SESSION_KEY='society_payment_session_v2';
 const PAYMENT_WINDOW_MS=10*60*1000;
-const actionStyle={width:'100%',minHeight:52,display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',padding:'14px 18px',borderRadius:12,fontWeight:600,lineHeight:1.35,whiteSpace:'normal'} as const;
+const actionStyle:CSSProperties={width:'100%',minHeight:52,display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',padding:'14px 18px',borderRadius:12,fontWeight:600,lineHeight:1.35,whiteSpace:'normal'};
 export default function Payments(){const[billId,setBillId]=useState('');const[a,setA]=useState<A[]>([]);const[p,setP]=useState<P[]>([]);const[account,setAccount]=useState('');const[current,setCurrent]=useState<any>(null);const[tx,setTx]=useState('');const[shot,setShot]=useState('');const[seconds,setSeconds]=useState(0);const[showProof,setShowProof]=useState(false);const[msg,setMsg]=useState('');
 async function load(){try{const[ar,pr]=await Promise.all([fetch('/api/admin/payment-accounts',{cache:'no-store'}),fetch('/api/payments',{cache:'no-store'})]);const[aa,pp]=await Promise.all([ar.json().catch(()=>({})),pr.json().catch(()=>({}))]);if(!ar.ok||!pr.ok)throw Error(aa.error||pp.error||'Unable to load payments.');setA(aa.accounts||[]);setP(pp.payments||[])}catch(e){setMsg(e instanceof Error?e.message:'Unable to load payments.')}}
 useEffect(()=>{const q=new URLSearchParams(window.location.search);setBillId(q.get('billId')||'');try{const saved=sessionStorage.getItem(SESSION_KEY);if(saved){const parsed=JSON.parse(saved);if(parsed?.current){const expiry=new Date(parsed.current.expiresAt).getTime();if(expiry>Date.now()){setCurrent(parsed.current);setTx(parsed.tx||'');setShot(parsed.shot||'');setShowProof(Boolean(parsed.showProof));}else{sessionStorage.removeItem(SESSION_KEY);}}}}catch{}void load()},[]);
