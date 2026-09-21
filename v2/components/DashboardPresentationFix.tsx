@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 const BRAND_NAME = 'Madhuli Yuva Group';
+const BRAND_SUBTITLE = 'સોસાયટી ફંક્શન મેનેજમેન્ટ';
 
 export default function DashboardPresentationFix() {
   const pathname = usePathname();
@@ -17,16 +18,28 @@ export default function DashboardPresentationFix() {
     const apply = () => {
       if (cancelled) return;
 
-      const brandMark = document.querySelector<HTMLElement>('.dashboard-shell .brand-mark');
-      const brandCopy = document.querySelector<HTMLElement>('.dashboard-shell .brand-copy');
-      if (brandMark) brandMark.textContent = 'M';
-      if (brandCopy) {
-        brandCopy.childNodes[0].textContent = BRAND_NAME;
-        const subtitle = brandCopy.querySelector('small');
-        if (subtitle) subtitle.textContent = 'સોસાયટી ફંક્શન મેનેજમેન્ટ';
+      const shell = document.querySelector<HTMLElement>('.dashboard-shell');
+      if (!shell) return;
+
+      // MobileAppShellFix owns the responsive navigation. Hide the dashboard's
+      // legacy internal nav to prevent duplicate/role-mismatched footers.
+      const legacyMobileNav = shell.querySelector<HTMLElement>(':scope > .mobile-nav');
+      if (legacyMobileNav) {
+        legacyMobileNav.style.setProperty('display', 'none', 'important');
       }
 
-      const controlCard = document.querySelector<HTMLElement>('.dashboard-shell .control-card');
+      const brandMark = shell.querySelector<HTMLElement>('.brand-mark');
+      const brandCopy = shell.querySelector<HTMLElement>('.brand-copy');
+      if (brandMark) brandMark.textContent = 'M';
+      if (brandCopy) {
+        brandCopy.textContent = '';
+        const name = document.createTextNode(BRAND_NAME);
+        const subtitle = document.createElement('small');
+        subtitle.textContent = BRAND_SUBTITLE;
+        brandCopy.append(name, subtitle);
+      }
+
+      const controlCard = shell.querySelector<HTMLElement>('.control-card');
       if (!controlCard) return;
 
       controlCard.querySelector<HTMLElement>('.badge')?.remove();
