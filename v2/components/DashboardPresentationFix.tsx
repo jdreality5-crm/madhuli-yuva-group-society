@@ -21,8 +21,6 @@ export default function DashboardPresentationFix() {
       const shell = document.querySelector<HTMLElement>('.dashboard-shell');
       if (!shell) return;
 
-      // MobileAppShellFix owns the responsive navigation. Hide the dashboard's
-      // legacy internal nav to prevent duplicate/role-mismatched footers.
       const legacyMobileNav = shell.querySelector<HTMLElement>(':scope > .mobile-nav');
       if (legacyMobileNav) {
         legacyMobileNav.style.setProperty('display', 'none', 'important');
@@ -30,13 +28,16 @@ export default function DashboardPresentationFix() {
 
       const brandMark = shell.querySelector<HTMLElement>('.brand-mark');
       const brandCopy = shell.querySelector<HTMLElement>('.brand-copy');
-      if (brandMark) brandMark.textContent = 'M';
-      if (brandCopy) {
+      if (brandMark && brandMark.textContent !== 'M') {
+        brandMark.textContent = 'M';
+      }
+      if (brandCopy && brandCopy.dataset.presentationFixed !== 'true') {
         brandCopy.textContent = '';
         const name = document.createTextNode(BRAND_NAME);
         const subtitle = document.createElement('small');
         subtitle.textContent = BRAND_SUBTITLE;
         brandCopy.append(name, subtitle);
+        brandCopy.dataset.presentationFixed = 'true';
       }
 
       const controlCard = shell.querySelector<HTMLElement>('.control-card');
@@ -48,7 +49,20 @@ export default function DashboardPresentationFix() {
 
       const heading = controlCard.querySelector<HTMLElement>('.section-head h2');
       if (heading) {
-        heading.textContent = profileName ? `Welcome, ${profileName}` : 'Society administration';
+        const nextHeading = profileName ? `Welcome, ${profileName}` : 'Society administration';
+        if (heading.textContent !== nextHeading) {
+          heading.textContent = nextHeading;
+        }
+      }
+    };
+
+    let observer: MutationObserver;
+    const applySafely = () => {
+      if (cancelled) return;
+      observer.disconnect();
+      apply();
+      if (!cancelled) {
+        observer.observe(document.body, { childList: true, subtree: true });
       }
     };
 
@@ -63,13 +77,13 @@ export default function DashboardPresentationFix() {
       } catch {
         // The dashboard remains usable even when profile data is unavailable.
       } finally {
-        apply();
+        applySafely();
       }
     };
 
-    const observer = new MutationObserver(apply);
+    observer = new MutationObserver(applySafely);
     observer.observe(document.body, { childList: true, subtree: true });
-    apply();
+    applySafely();
     void loadProfileName();
 
     return () => {
