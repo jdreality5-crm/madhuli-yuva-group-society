@@ -1,0 +1,16 @@
+@media (max-width: 900px) {
+  .mobile-nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 6px;
+    scrollbar-width: thin;
+  }
+
+  .mobile-nav a {
+    flex: 0 0 68px;
+    min-width: 68px;
+    min-height: 52px;
+  }
+}
