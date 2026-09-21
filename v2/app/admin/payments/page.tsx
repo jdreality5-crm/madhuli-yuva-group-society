@@ -18,6 +18,7 @@ export default function AdminPayments() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState('');
+  const [receiptId, setReceiptId] = useState('');
   const [canDelete, setCanDelete] = useState(false);
 
   async function load() {
@@ -42,6 +43,21 @@ export default function AdminPayments() {
     const x = await r.json();
     if (!r.ok) return setError(x.error || 'Review failed');
     load();
+  }
+
+  async function downloadReceipt(id: string) {
+    setReceiptId(id); setError('');
+    try {
+      const r = await fetch(`/api/admin/payments/receipt?paymentId=${encodeURIComponent(id)}`);
+      const x = await r.json();
+      if (!r.ok) return setError(x.error || 'Unable to prepare receipt.');
+      if (x.url) window.open(x.url, '_blank', 'noopener,noreferrer');
+      else setError('Receipt download unavailable.');
+    } catch {
+      setError('Unable to prepare receipt.');
+    } finally {
+      setReceiptId('');
+    }
   }
 
   async function deletePaymentRequest(id: string) {
@@ -73,6 +89,7 @@ export default function AdminPayments() {
       <div className="payment-card-head"><div><span className={`status-pill status-${v.status.toLowerCase()}`}>{v.status}</span><h2>{money(v.amountPaise)}</h2><p>{v.paymentAccount.purpose}</p></div><div className="payment-meta"><span>{new Date(v.createdAt).toLocaleDateString('en-IN')}</span>{v.event?.title && <span>{v.event.title}</span>}</div></div>
       <div className="payment-card-grid"><section className="payment-detail-block"><span className="detail-label">Resident</span><strong>{v.ownerUser.name}</strong><span>{v.ownerUser.flatId ? `Flat / Unit: ${v.ownerUser.flatId}` : 'Unit not listed'}</span><span>{v.ownerUser.mobile || v.ownerUser.email}</span></section><section className="payment-detail-block"><span className="detail-label">Bill</span><strong>{v.bill ? `${v.bill.type} • ${money(v.bill.amountPaise)}` : 'General society payment'}</strong><span>{v.bill?.category || v.bill?.vendor || (v.bill ? 'Linked unit bill' : 'No bill linked')}</span><span>Status: {v.bill?.paymentStatus || '—'}</span></section><section className="payment-detail-block transaction-block"><span className="detail-label">Transaction Reference</span><strong>{v.transactionId || 'Not submitted yet'}</strong><span>Receiver: {v.paymentAccount.displayName}</span>{v.paymentAccount.upiId && <span>UPI: {v.paymentAccount.upiId}</span>}</section><section className="payment-proof"><span className="detail-label">Payment Proof</span>{v.screenshotUrl ? <img src={v.screenshotUrl} alt="Payment proof screenshot" /> : <div className="proof-missing">No screenshot attached</div>}</section></div>
       {v.status === 'PENDING' && v.transactionId && <div className="payment-actions"><button className="btn btn-primary" onClick={() => review(v.id, 'VERIFY')}><><UiIcon name="check" size={16}/> Payment Received / Verify</></button><button className="btn btn-secondary reject-btn" onClick={() => review(v.id, 'REJECT')}>Reject Payment</button></div>}
+      {v.status === 'VERIFIED' && <div className="payment-actions"><button className="btn btn-secondary" disabled={receiptId === v.id} onClick={() => downloadReceipt(v.id)}><><UiIcon name="download" size={16}/> {receiptId === v.id ? 'Preparing Receipt…' : 'Download Receipt'}</></button></div>}
       {canDelete && <div className="payment-admin-actions"><button className="btn btn-secondary delete-verification-btn" disabled={deletingId === v.id} onClick={() => deletePaymentRequest(v.id)}>{deletingId === v.id ? 'Deleting…' : <><UiIcon name="trash" size={16}/> Delete Payment Request Permanently</>}</button></div>}
       {v.status !== 'PENDING' && v.verifiedBy && <div className="reviewed-note">Reviewed by {v.verifiedBy.name} · {v.verifiedBy.role}</div>}
     </article>)}</div>}
