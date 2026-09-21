@@ -84,7 +84,7 @@ export async function GET() {
       bill: billMap.has(row.billId) ? { ...billMap.get(row.billId), amountPaise: String(billMap.get(row.billId).amountPaise) } : null,
       event: eventMap.get(row.eventId) || null,
     })));
-    return NextResponse.json({ payments: normalizedPayments });
+    return NextResponse.json({ payments: normalizedPayments, canDelete: session.role === 'MASTER_ADMIN' });
   } catch (error) {
     console.error('Payment list failed', error instanceof Error ? error.message : error);
     const forbidden = error instanceof Error && error.message === 'FORBIDDEN';
