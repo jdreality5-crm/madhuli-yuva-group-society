@@ -4,6 +4,7 @@ import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import MobileAppShellFix from '@/components/MobileAppShellFix';
 import ProfileLogoutGate from '@/components/ProfileLogoutGate';
 import LoadingExperienceGuard from '@/components/LoadingExperienceGuard';
+import DashboardBrandGuard from '@/components/DashboardBrandGuard';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
@@ -26,5 +27,5 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="gu" className={inter.variable + ' ' + gujarati.variable + ' ' + playfair.variable}><body>{children}<ProfileLogoutGate /><LoadingExperienceGuard /><MobileAppShellFix /><PwaInstallPrompt /></body></html>;
+  return <html lang="gu" className={inter.variable + ' ' + gujarati.variable + ' ' + playfair.variable}><body>{children}<ProfileLogoutGate /><LoadingExperienceGuard /><DashboardBrandGuard /><MobileAppShellFix /><PwaInstallPrompt /></body></html>;
 }
