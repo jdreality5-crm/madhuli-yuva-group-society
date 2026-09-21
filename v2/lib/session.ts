@@ -3,13 +3,25 @@ import { SignJWT, jwtVerify } from 'jose';
 
 export type SessionUser = { id: string; role: 'MASTER_ADMIN' | 'ORGANIZER' | 'OWNER'; societyId: string; email: string; name: string; permissions: string[] };
 
+const FETCH_TIMEOUT_MS = 5000;
+
+async function fetchWithTimeout(url: string, init: RequestInit = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function supabaseRest<T>(table: string, params: Record<string,string>): Promise<T> {
   const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!base || !key) throw new Error('SUPABASE server configuration is missing');
   const url = new URL(base + '/rest/v1/' + table);
   Object.entries(params).forEach(([name, value]) => url.searchParams.set(name, value));
-  const response = await fetch(url.toString(), { headers: { apikey:key, Authorization:'Bearer '+key, Accept:'application/json' }, cache:'no-store' });
+  const response = await fetchWithTimeout(url.toString(), { headers: { apikey:key, Authorization:'Bearer '+key, Accept:'application/json' }, cache:'no-store' });
   const data = await response.json().catch(()=>null);
   if (!response.ok) throw new Error('Supabase ' + table + ' request failed');
   return data as T;
