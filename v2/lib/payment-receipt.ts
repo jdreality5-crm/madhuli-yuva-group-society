@@ -47,7 +47,7 @@ async function storageUpload(path: string, bytes: Uint8Array) {
       'Content-Type': 'application/pdf',
       'x-upsert': 'true',
     },
-    body: Buffer.from(bytes),
+    body: bytes as unknown as BodyInit,
     cache: 'no-store',
   });
   if (!response.ok) throw new Error('STORAGE_UPLOAD');
