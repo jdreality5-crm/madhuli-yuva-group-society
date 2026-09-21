@@ -114,13 +114,14 @@ export async function DELETE(req: Request) {
     const rows = await rest<any[]>('Payment', { select: 'id,societyId,screenshotUrl', id: `eq.${body.paymentId}`, societyId: `eq.${session.societyId}`, limit: '1' });
     const payment = rows[0];
     if (!payment) return NextResponse.json({ error: 'Payment not found.' }, { status: 404 });
+
     await removeStorageObject(payment.screenshotUrl);
-    const updated = await rest<any[]>('Payment', { id: `eq.${body.paymentId}`, societyId: `eq.${session.societyId}` }, { method: 'PATCH', body: JSON.stringify({ transactionId: null, screenshotUrl: null, rejectionReason: null, verifiedAt: null, verifiedById: null }) });
-    return NextResponse.json({ ok: true, payment: updated[0] || null });
+    await rest('Payment', { id: `eq.${body.paymentId}`, societyId: `eq.${session.societyId}` }, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+    return NextResponse.json({ ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
-    console.error('Payment verification detail deletion failed', message);
+    console.error('Payment request deletion failed', message);
     const status = message === 'FORBIDDEN' ? 403 : error instanceof z.ZodError ? 400 : 500;
-    return NextResponse.json({ error: status === 403 ? 'Master Admin access required.' : status === 400 ? 'Invalid delete request.' : 'Unable to delete verification details.' }, { status });
+    return NextResponse.json({ error: status === 403 ? 'Master Admin access required.' : status === 400 ? 'Invalid delete request.' : 'Unable to delete payment request.' }, { status });
   }
 }
