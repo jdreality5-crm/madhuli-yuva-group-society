@@ -109,26 +109,29 @@ async function buildPdf(context: ReceiptContext, requestUrl: string, number: str
   if (!letterheadResponse.ok) throw new Error('LETTERHEAD_NOT_FOUND');
   const letterhead = await letterheadResponse.arrayBuffer();
   const pdf = await PDFDocument.create();
-  const page = pdf.addPage([842, 561]);
   const image = await pdf.embedJpg(letterhead);
-  page.drawImage(image, { x: 0, y: 0, width: 842, height: 561 });
+  const pageWidth = 595;
+  const pageHeight = pageWidth * (image.height / image.width);
+  const page = pdf.addPage([pageWidth, pageHeight]);
+  page.drawImage(image, { x: 0, y: 0, width: pageWidth, height: pageHeight });
 
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const maroon = rgb(0.35, 0.04, 0.04);
   const gold = rgb(0.60, 0.42, 0.12);
   const dark = rgb(0.16, 0.13, 0.12);
-  const x = 112;
-  const right = 730;
+  const scale = pageWidth / 842;
+  const x = 112 * scale;
+  const right = 730 * scale;
   const row = (label: string, value: string, y: number) => {
-    page.drawText(label, { x, y, size: 12, font: bold, color: maroon });
-    page.drawText(value || '-', { x: x + 155, y, size: 12, font: regular, color: dark, maxWidth: 450 });
-    page.drawLine({ start: { x, y: y - 8 }, end: { x: right, y: y - 8 }, thickness: 0.45, color: rgb(0.80, 0.75, 0.67) });
+    page.drawText(label, { x, y: y * scale, size: 12 * scale, font: bold, color: maroon });
+    page.drawText(value || '-', { x: x + 155 * scale, y: y * scale, size: 12 * scale, font: regular, color: dark, maxWidth: 450 * scale });
+    page.drawLine({ start: { x, y: (y - 8) * scale }, end: { x: right, y: (y - 8) * scale }, thickness: 0.45 * scale, color: rgb(0.80, 0.75, 0.67) });
   };
 
-  page.drawText('PAYMENT RECEIPT', { x: 315, y: 338, size: 20, font: bold, color: maroon });
-  page.drawText(`Receipt No: ${number}`, { x: 112, y: 313, size: 10, font: regular, color: dark });
-  page.drawText(`Date: ${dateText(context.payment.verifiedAt || context.payment.updatedAt)}`, { x: 640, y: 313, size: 10, font: regular, color: dark });
+  page.drawText('PAYMENT RECEIPT', { x: 315 * scale, y: 338 * scale, size: 20 * scale, font: bold, color: maroon });
+  page.drawText(`Receipt No: ${number}`, { x, y: 313 * scale, size: 10 * scale, font: regular, color: dark });
+  page.drawText(`Date: ${dateText(context.payment.verifiedAt || context.payment.updatedAt)}`, { x: 640 * scale, y: 313 * scale, size: 10 * scale, font: regular, color: dark });
 
   row('Received From', context.owner?.name || context.owner?.email || '-', 286);
   row('Amount', money(context.payment.amountPaise), 258);
@@ -137,9 +140,9 @@ async function buildPdf(context: ReceiptContext, requestUrl: string, number: str
   row('Transaction ID / UTR', context.payment.transactionId || '-', 174);
   row('Payment Status', 'VERIFIED', 146);
 
-  page.drawText('Authorized Signature', { x: 590, y: 106, size: 10, font: regular, color: dark });
-  page.drawLine({ start: { x: 585, y: 116 }, end: { x: 730, y: 116 }, thickness: 0.8, color: gold });
-  page.drawText(context.society?.authorizedSignatory || 'Authorized Signatory', { x: 585, y: 92, size: 10, font: bold, color: maroon, maxWidth: 145 });
+  page.drawText('Authorized Signature', { x: 590 * scale, y: 106 * scale, size: 10 * scale, font: regular, color: dark });
+  page.drawLine({ start: { x: 585 * scale, y: 116 * scale }, end: { x: 730 * scale, y: 116 * scale }, thickness: 0.8 * scale, color: gold });
+  page.drawText(context.society?.authorizedSignatory || 'Authorized Signatory', { x: 585 * scale, y: 92 * scale, size: 10 * scale, font: bold, color: maroon, maxWidth: 145 * scale });
   return pdf.save();
 }
 
