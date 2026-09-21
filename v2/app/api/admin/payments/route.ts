@@ -34,6 +34,19 @@ async function rpc<T>(body: Record<string, unknown>) {
   return data as T;
 }
 
+async function sign(path: string | null | undefined) {
+  if (!path) return null;
+  const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET?.trim() || 'society-files';
+  if (!base || !key) throw Error('CONFIG');
+  const response = await fetch(`${base}/storage/v1/object/sign/${encodeURIComponent(bucket)}`, { method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: [path], expiresIn: 3600 }), cache: 'no-store' });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw Error('STORAGE');
+  const item = Array.isArray(data) ? data[0] : data;
+  return item?.signedURL ? base + '/storage/v1' + item.signedURL : null;
+}
+
 export async function GET() {
   try {
     const session = await requireSubAdminPermission('PAYMENTS');
@@ -52,7 +65,16 @@ export async function GET() {
     const userMap = new Map(users.map((row) => [row.id, row]));
     const billMap = new Map(bills.map((row) => [row.id, row]));
     const eventMap = new Map(events.map((row) => [row.id, row]));
-    return NextResponse.json({ payments: payments.map((row) => ({ ...row, amountPaise: String(row.amountPaise), paymentAccount: accountMap.get(row.paymentAccountId) || null, ownerUser: userMap.get(row.ownerUserId) || null, bill: billMap.has(row.billId) ? { ...billMap.get(row.billId), amountPaise: String(billMap.get(row.billId).amountPaise) } : null, event: eventMap.get(row.eventId) || null })) });
+    const normalizedPayments = await Promise.all(payments.map(async (row) => ({
+      ...row,
+      amountPaise: String(row.amountPaise),
+      screenshotUrl: await sign(row.screenshotUrl),
+      paymentAccount: accountMap.get(row.paymentAccountId) || null,
+      ownerUser: userMap.get(row.ownerUserId) || null,
+      bill: billMap.has(row.billId) ? { ...billMap.get(row.billId), amountPaise: String(billMap.get(row.billId).amountPaise) } : null,
+      event: eventMap.get(row.eventId) || null,
+    })));
+    return NextResponse.json({ payments: normalizedPayments });
   } catch (error) {
     console.error('Payment list failed', error instanceof Error ? error.message : error);
     const forbidden = error instanceof Error && error.message === 'FORBIDDEN';
