@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireSubAdminPermission } from '@/lib/session';
+import { requireSession, requireSubAdminPermission } from '@/lib/session';
 
 const schema = z.object({
   paymentId: z.string().trim().min(1),
@@ -45,6 +45,16 @@ async function sign(path: string | null | undefined) {
   if (!response.ok) throw Error('STORAGE');
   const item = Array.isArray(data) ? data[0] : data;
   return item?.signedURL ? base + '/storage/v1' + item.signedURL : null;
+}
+
+async function removeStorageObject(path: string | null | undefined) {
+  if (!path || /^https?:\/\//i.test(path)) return;
+  const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET?.trim() || 'society-files';
+  if (!base || !key) throw Error('CONFIG');
+  const response = await fetch(`${base}/storage/v1/object/${encodeURIComponent(bucket)}`, { method: 'DELETE', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ prefixes: [path] }), cache: 'no-store' });
+  if (!response.ok && response.status !== 404) throw Error('STORAGE_DELETE');
 }
 
 export async function GET() {
@@ -93,5 +103,24 @@ export async function PATCH(req: Request) {
     console.error('Payment review failed', message);
     const status = message.includes('NOT_FOUND') ? 404 : message.includes('ALREADY_REVIEWED') ? 409 : error instanceof z.ZodError ? 400 : message.includes('FORBIDDEN') ? 403 : 500;
     return NextResponse.json({ error: status === 404 ? 'Payment not found.' : status === 409 ? 'Payment has already been reviewed.' : status === 400 ? 'Invalid review request.' : status === 403 ? 'Organizer access required' : 'Server error' }, { status });
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const session = await requireSession();
+    if (session.role !== 'MASTER_ADMIN') throw Error('FORBIDDEN');
+    const body = z.object({ paymentId: z.string().trim().min(1) }).parse(await req.json());
+    const rows = await rest<any[]>('Payment', { select: 'id,societyId,screenshotUrl', id: `eq.${body.paymentId}`, societyId: `eq.${session.societyId}`, limit: '1' });
+    const payment = rows[0];
+    if (!payment) return NextResponse.json({ error: 'Payment not found.' }, { status: 404 });
+    await removeStorageObject(payment.screenshotUrl);
+    const updated = await rest<any[]>('Payment', { id: `eq.${body.paymentId}`, societyId: `eq.${session.societyId}` }, { method: 'PATCH', body: JSON.stringify({ transactionId: null, screenshotUrl: null, rejectionReason: null, verifiedAt: null, verifiedById: null }) });
+    return NextResponse.json({ ok: true, payment: updated[0] || null });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '';
+    console.error('Payment verification detail deletion failed', message);
+    const status = message === 'FORBIDDEN' ? 403 : error instanceof z.ZodError ? 400 : 500;
+    return NextResponse.json({ error: status === 403 ? 'Master Admin access required.' : status === 400 ? 'Invalid delete request.' : 'Unable to delete verification details.' }, { status });
   }
 }
