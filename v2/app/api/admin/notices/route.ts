@@ -90,3 +90,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: status === 403 ? 'Forbidden' : status === 502 ? 'Database request failed: ' + detail.replace(/^REST:\d+:/, '') : status === 500 ? 'Server configuration error' : 'Invalid request' }, { status });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const session = await requireSubAdminPermission('NOTICES');
+    const id = new URL(req.url).searchParams.get('id')?.trim();
+    if (!id || id.length > 100) {
+      return NextResponse.json({ error: 'Notice id is required' }, { status: 400 });
+    }
+    await rest<unknown>({ id: `eq.${id}`, societyId: `eq.${session.societyId}` }, { method: 'DELETE' });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const status = errorStatus(error);
+    const detail = error instanceof Error ? error.message : '';
+    console.error('Notice delete failed', detail);
+    return NextResponse.json({ error: status === 403 ? 'Forbidden' : status === 502 ? 'Database request failed' : 'Unable to delete notice' }, { status });
+  }
+}
