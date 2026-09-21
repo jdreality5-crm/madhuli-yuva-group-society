@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireSession, requireSubAdminPermission } from '@/lib/session';
+import { generateAndStoreReceipt } from '@/lib/payment-receipt';
 
 const schema = z.object({
   paymentId: z.string().trim().min(1),
@@ -97,7 +98,16 @@ export async function PATCH(req: Request) {
     const session = await requireSubAdminPermission('PAYMENTS');
     const parsed = schema.parse(await req.json());
     const row = await rpc<any>({ p_payment_id: parsed.paymentId, p_society_id: session.societyId, p_reviewer_id: session.id, p_action: parsed.action, p_rejection_reason: parsed.rejectionReason || null });
-    return NextResponse.json({ payment: { ...row, amountPaise: String(row.amountPaise) } });
+    let receipt: { receiptNumber: string; receiptStoragePath: string; reused: boolean } | null = null;
+    if (parsed.action === 'VERIFY') {
+      try {
+        receipt = await generateAndStoreReceipt({ paymentId: parsed.paymentId, societyId: session.societyId, requestUrl: req.url });
+      } catch (receiptError) {
+        // Verification must remain successful even if storage/PDF generation needs a retry.
+        console.error('Payment receipt generation failed', receiptError instanceof Error ? receiptError.message : receiptError);
+      }
+    }
+    return NextResponse.json({ payment: { ...row, amountPaise: String(row.amountPaise) }, receipt });
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
     console.error('Payment review failed', message);
