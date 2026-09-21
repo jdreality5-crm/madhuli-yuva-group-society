@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireSubAdminPermission } from '@/lib/session';
-import { signReceipt } from '@/lib/payment-receipt';
+import { generateAndStoreReceipt, signReceipt } from '@/lib/payment-receipt';
 
 const schema = z.object({ paymentId: z.string().trim().min(1) });
 
@@ -26,8 +26,8 @@ export async function GET(req: Request) {
     const parsed = schema.safeParse({ paymentId: new URL(req.url).searchParams.get('paymentId') || '' });
     if (!parsed.success) return NextResponse.json({ error: 'Invalid payment request.' }, { status: 400 });
 
-    const rows = await rest<Array<{ receiptStoragePath: string | null; receiptNumber: string | null; status: string }>>('Payment', {
-      select: 'receiptStoragePath,receiptNumber,status',
+    const rows = await rest<Array<{ id: string; receiptStoragePath: string | null; receiptNumber: string | null; status: string }>>('Payment', {
+      select: 'id,receiptStoragePath,receiptNumber,status',
       id: `eq.${parsed.data.paymentId}`,
       societyId: `eq.${session.societyId}`,
       status: 'eq.VERIFIED',
@@ -35,11 +35,18 @@ export async function GET(req: Request) {
     });
     const payment = rows[0];
     if (!payment) return NextResponse.json({ error: 'Verified payment not found.' }, { status: 404 });
-    if (!payment.receiptStoragePath || !payment.receiptNumber) return NextResponse.json({ error: 'Receipt is not generated yet.' }, { status: 404 });
 
-    const url = await signReceipt(payment.receiptStoragePath);
+    let receiptNumber = payment.receiptNumber;
+    let receiptStoragePath = payment.receiptStoragePath;
+    if (!receiptStoragePath || !receiptNumber) {
+      const generated = await generateAndStoreReceipt({ paymentId: payment.id, societyId: session.societyId, requestUrl: req.url });
+      receiptNumber = generated.receiptNumber;
+      receiptStoragePath = generated.receiptStoragePath;
+    }
+
+    const url = await signReceipt(receiptStoragePath);
     if (!url) return NextResponse.json({ error: 'Receipt download unavailable.' }, { status: 503 });
-    return NextResponse.json({ receiptNumber: payment.receiptNumber, url });
+    return NextResponse.json({ receiptNumber, url });
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
     const status = message === 'FORBIDDEN' ? 403 : message === 'UNAUTHORIZED' ? 401 : 500;
