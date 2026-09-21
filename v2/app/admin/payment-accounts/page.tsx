@@ -15,6 +15,7 @@ export default function PaymentAccounts() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState('');
 
   async function load() {
     setLoading(true);
@@ -90,5 +91,29 @@ export default function PaymentAccounts() {
     }
   }
 
-  return <main className="main"><div className="page-title"><div><p className="eyebrow">FINANCE • UPI</p><h1>UPI Payment Accounts</h1><p>Master Admin controls the society payment receivers.</p></div><div className="stat-card card"><span className="stat-label">Active Receivers</span><strong className="stat-value">{accounts.length}</strong></div></div><form className="card finance-form grid" onSubmit={create}><div className="section-head"><div><p className="eyebrow">PAYMENT SETUP</p><h2>Add payment account</h2><p className="section-subtitle">Publish verified society UPI receivers for resident collections.</p></div></div><input className="input" required minLength={2} placeholder="Display name" value={displayName} onChange={e => setDisplayName(e.target.value)} /><input className="input" placeholder="UPI ID e.g. society@upi" value={upiId} onChange={e => setUpiId(e.target.value)} /><input className="input" required minLength={2} placeholder="Purpose / receiver" value={purpose} onChange={e => setPurpose(e.target.value)} /><textarea className="input" placeholder="Payment instructions" value={instructions} onChange={e => setInstructions(e.target.value)} /><label>UPI QR image<input className="input" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading || saving} onChange={uploadQr} /></label>{qr && <p>✓ QR uploaded securely</p>}<button className="btn btn-primary" disabled={saving || uploading}>{saving ? 'Saving...' : 'Create Account'}</button></form>{msg && <div className="card">{msg}</div>}<section><div className="section-head"><div><p className="eyebrow">PUBLISHED RECEIVERS</p><h2>Payment Accounts</h2></div></div>{loading ? <div className="card">Loading payment accounts…</div> : <div className="grid">{accounts.map(a => <article className="card" key={a.id}><h3>{a.displayName}</h3><p><b>Purpose:</b> {a.purpose}</p><p><b>UPI:</b> {a.upiId || '—'}</p>{a.qrImageUrl && <img src={a.qrImageUrl} alt="UPI QR" style={{ width: 180, height: 180, objectFit: 'contain' }} />}</article>)}{!accounts.length && <div className="card">No payment accounts added yet.</div>}</div>}</section></main>;
+  async function removeAccount(account: Account) {
+    if (!window.confirm(`Delete payment account “${account.displayName}”? It will no longer be available for new payments.`)) return;
+    setDeletingId(account.id);
+    setMsg('Deleting payment account…');
+    try {
+      const response = await fetch('/api/admin/payment-accounts', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountId: account.id }),
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) {
+        setMsg(body?.error || `Could not delete payment account (${response.status})`);
+        return;
+      }
+      setMsg('Payment account deleted.');
+      setAccounts(current => current.filter(item => item.id !== account.id));
+    } catch {
+      setMsg('Network error while deleting payment account.');
+    } finally {
+      setDeletingId('');
+    }
+  }
+
+  return <main className="main"><div className="page-title"><div><p className="eyebrow">FINANCE • UPI</p><h1>UPI Payment Accounts</h1><p>Master Admin controls the society payment receivers.</p></div><div className="stat-card card"><span className="stat-label">Active Receivers</span><strong className="stat-value">{accounts.length}</strong></div></div><form className="card finance-form grid" onSubmit={create}><div className="section-head"><div><p className="eyebrow">PAYMENT SETUP</p><h2>Add payment account</h2><p className="section-subtitle">Publish verified society UPI receivers for resident collections.</p></div></div><input className="input" required minLength={2} placeholder="Display name" value={displayName} onChange={e => setDisplayName(e.target.value)} /><input className="input" placeholder="UPI ID e.g. society@upi" value={upiId} onChange={e => setUpiId(e.target.value)} /><input className="input" required minLength={2} placeholder="Purpose / receiver" value={purpose} onChange={e => setPurpose(e.target.value)} /><textarea className="input" placeholder="Payment instructions" value={instructions} onChange={e => setInstructions(e.target.value)} /><label>UPI QR image<input className="input" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading || saving} onChange={uploadQr} /></label>{qr && <p>✓ QR uploaded securely</p>}<button className="btn btn-primary" disabled={saving || uploading}>{saving ? 'Saving...' : 'Create Account'}</button></form>{msg && <div className="card">{msg}</div>}<section><div className="section-head"><div><p className="eyebrow">PUBLISHED RECEIVERS</p><h2>Payment Accounts</h2></div></div>{loading ? <div className="card">Loading payment accounts…</div> : <div className="grid">{accounts.map(a => <article className="card" key={a.id}><div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}><div><h3>{a.displayName}</h3><p><b>Purpose:</b> {a.purpose}</p><p><b>UPI:</b> {a.upiId || '—'}</p></div><button className="btn btn-danger" type="button" disabled={deletingId === a.id} onClick={() => void removeAccount(a)}>{deletingId === a.id ? 'Deleting…' : 'Delete'}</button></div>{a.qrImageUrl && <img src={a.qrImageUrl} alt="UPI QR" style={{ width: 180, height: 180, objectFit: 'contain' }} />}</article>)}{!accounts.length && <div className="card">No payment accounts added yet.</div>}</div>}</section></main>;
 }
