@@ -6,6 +6,7 @@ import ProfileLogoutGate from '@/components/ProfileLogoutGate';
 import LoadingExperienceGuard from '@/components/LoadingExperienceGuard';
 import DashboardBrandGuard from '@/components/DashboardBrandGuard';
 import './globals.css';
+import './mobile-nav-fix.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const gujarati = Noto_Sans_Gujarati({ subsets: ['gujarati'], variable: '--font-gujarati', display: 'swap' });
