@@ -53,7 +53,7 @@ async function removeStorageObject(path: string | null | undefined) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   const bucket = process.env.SUPABASE_STORAGE_BUCKET?.trim() || 'society-files';
   if (!base || !key) throw Error('CONFIG');
-  const response = await fetch(`${base}/storage/v1/object/${encodeURIComponent(bucket)}`, { method: 'DELETE', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ prefixes: [path] }), cache: 'no-store' });
+  const response = await fetch(`${base}/storage/v1/object/${encodeURIComponent(bucket)}/remove`, { method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ prefixes: [path] }), cache: 'no-store' });
   if (!response.ok && response.status !== 404) throw Error('STORAGE_DELETE');
 }
 
