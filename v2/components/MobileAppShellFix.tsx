@@ -16,8 +16,8 @@ const residentItems: NavItem[] = [
   { label: 'Profile', href: '/profile', icon: 'users' },
 ];
 
-const masterItems: NavItem[] = [
-  { label: 'Dashboard', href: '/', icon: 'home' },
+const adminItems: NavItem[] = [
+  { label: 'Home', href: '/', icon: 'home' },
   { label: 'Properties', href: '/admin/properties', icon: 'property' },
   { label: 'Programs', href: '/admin/programs', icon: 'calendar' },
   { label: 'Finance', href: '/admin/income', icon: 'report' },
@@ -54,8 +54,8 @@ export default function MobileAppShellFix() {
     return () => { active = false; };
   }, [pathname]);
 
-  const isMaster = session?.role === 'MASTER_ADMIN';
-  const items = isMaster ? masterItems : residentItems;
+  const isAdminRole = session?.role === 'MASTER_ADMIN' || session?.role === 'ORGANIZER';
+  const items = isAdminRole ? adminItems : residentItems;
 
   const visibleMoreItems = useMemo(() => {
     if (session?.role === 'MASTER_ADMIN') return moreItems;
@@ -63,6 +63,9 @@ export default function MobileAppShellFix() {
     const permissions = new Set(session.permissions || []);
     return moreItems.filter((item) => permissions.has(item.permission) || permissions.has('*'));
   }, [session]);
+
+  const hasMore = visibleMoreItems.length > 0;
+  const navItemCount = items.length + (hasMore ? 1 : 0);
 
   useEffect(() => {
     for (const item of items) router.prefetch(item.href);
@@ -87,39 +90,45 @@ export default function MobileAppShellFix() {
   return (
     <>
       {moreOpen && <button type="button" className="mobile-more-backdrop" aria-label="Close more menu" onClick={() => setMoreOpen(false)} />}
-      <nav className="mobile-app-nav" aria-label="Mobile application navigation">
+      <nav className={`mobile-app-nav nav-${navItemCount}`} aria-label="Mobile application navigation">
         {items.map((item) => (
           <a key={item.href} href={item.href} className={pathname === item.href ? 'active' : ''} onClick={(event) => { if (pathname === item.href) event.preventDefault(); }}>
-            <UiIcon name={item.icon as any} size={20} />
+            <UiIcon name={item.icon as any} size={19} />
             <small>{item.label}</small>
           </a>
         ))}
-        {visibleMoreItems.length > 0 && <button type="button" className={moreOpen ? 'active' : ''} onClick={() => setMoreOpen((value) => !value)} aria-expanded={moreOpen} aria-controls="mobile-more-menu">
-          <UiIcon name="more" size={20} />
+        {hasMore && <button type="button" className={moreOpen ? 'active' : ''} onClick={() => setMoreOpen((value) => !value)} aria-expanded={moreOpen} aria-controls="mobile-more-menu">
+          <UiIcon name="more" size={19} />
           <small>More</small>
         </button>}
       </nav>
-      {moreOpen && visibleMoreItems.length > 0 && <section id="mobile-more-menu" className="mobile-more-menu" aria-label="More administration sections">
-        <div className="mobile-more-heading"><strong>{isMaster ? 'Master Admin sections' : 'More sections'}</strong><button type="button" onClick={() => setMoreOpen(false)} aria-label="Close more menu"><UiIcon name="close" size={18} /></button></div>
+      {moreOpen && hasMore && <section id="mobile-more-menu" className="mobile-more-menu" aria-label="More administration sections">
+        <div className="mobile-more-heading"><strong>{session?.role === 'MASTER_ADMIN' ? 'Master Admin sections' : 'More sections'}</strong><button type="button" onClick={() => setMoreOpen(false)} aria-label="Close more menu"><UiIcon name="close" size={18} /></button></div>
         <div className="mobile-more-grid">{visibleMoreItems.map((item) => <a key={item.href} href={item.href}>{item.label}<span aria-hidden="true">›</span></a>)}</div>
       </section>}
       <style jsx>{`
         .mobile-app-nav,.mobile-more-backdrop,.mobile-more-menu { display:none; }
         @media (max-width:900px) {
           :global(.mobile-nav) { display:none !important; }
-          .mobile-app-nav { position:fixed; left:0; right:0; bottom:0; z-index:100; display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:3px; padding:8px 6px calc(8px + env(safe-area-inset-bottom)); background:rgba(255,255,255,.98); border-top:1px solid #eadfd5; box-shadow:0 -8px 24px rgba(53,21,26,.08); }
-          .mobile-app-nav a,.mobile-app-nav button { min-width:0; border:0; background:transparent; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:54px; border-radius:12px; color:#756b64; text-decoration:none; font:inherit; cursor:pointer; }
-          .mobile-app-nav small { font-size:10px; line-height:1; text-align:center; }
+          .mobile-app-nav { position:fixed; left:0; right:0; bottom:0; z-index:100; display:grid; gap:3px; padding:7px 5px calc(7px + env(safe-area-inset-bottom)); background:rgba(255,255,255,.99); border-top:1px solid #eadfd5; box-shadow:0 -8px 24px rgba(53,21,26,.08); box-sizing:border-box; }
+          .mobile-app-nav.nav-5 { grid-template-columns:repeat(5,minmax(0,1fr)); }
+          .mobile-app-nav.nav-6 { grid-template-columns:repeat(6,minmax(0,1fr)); }
+          .mobile-app-nav a,.mobile-app-nav button { min-width:0; width:100%; border:0; background:transparent; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:52px; padding:5px 1px; border-radius:11px; color:#756b64; text-decoration:none; font:inherit; cursor:pointer; overflow:hidden; }
+          .mobile-app-nav small { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10px; line-height:1.1; text-align:center; }
           .mobile-app-nav a.active,.mobile-app-nav button.active { background:#f8e9ed; color:#74182f; font-weight:800; }
           .mobile-more-backdrop { display:block; position:fixed; inset:0; z-index:101; border:0; background:rgba(34,18,20,.24); }
-          .mobile-more-menu { display:block; position:fixed; left:12px; right:12px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:102; background:#fffdf9; border:1px solid #eadfd5; border-radius:20px; box-shadow:0 18px 55px rgba(53,21,26,.2); padding:16px; }
+          .mobile-more-menu { display:block; position:fixed; left:12px; right:12px; bottom:calc(76px + env(safe-area-inset-bottom)); z-index:102; max-height:calc(100dvh - 110px); overflow:auto; background:#fffdf9; border:1px solid #eadfd5; border-radius:20px; box-shadow:0 18px 55px rgba(53,21,26,.2); padding:16px; }
           .mobile-more-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; color:#641d2a; }
           .mobile-more-heading button { border:0; background:transparent; color:#641d2a; cursor:pointer; }
           .mobile-more-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
           .mobile-more-grid a { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px; border:1px solid #eadfd5; border-radius:12px; color:#3d3030; text-decoration:none; font-size:13px; font-weight:650; background:#fff; }
-          :global(body) { padding-bottom:calc(78px + env(safe-area-inset-bottom)); }
+          :global(body) { padding-bottom:calc(74px + env(safe-area-inset-bottom)); }
         }
-        @media (max-width:520px) { .mobile-app-nav { grid-template-columns:repeat(6,minmax(0,1fr)); padding-left:3px; padding-right:3px; } .mobile-app-nav small { font-size:9px; } }
+        @media (max-width:520px) {
+          .mobile-app-nav { gap:2px; padding-left:2px; padding-right:2px; }
+          .mobile-app-nav a,.mobile-app-nav button { min-height:50px; gap:3px; border-radius:10px; }
+          .mobile-app-nav small { font-size:9px; letter-spacing:-.1px; }
+        }
       `}</style>
     </>
   );
