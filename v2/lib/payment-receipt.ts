@@ -47,7 +47,7 @@ async function storageUpload(path: string, bytes: Uint8Array) {
       'Content-Type': 'application/pdf',
       'x-upsert': 'true',
     },
-    body: bytes,
+    body: Buffer.from(bytes),
     cache: 'no-store',
   });
   if (!response.ok) throw new Error('STORAGE_UPLOAD');
@@ -109,7 +109,6 @@ async function buildPdf(context: ReceiptContext, requestUrl: string, number: str
   if (!letterheadResponse.ok) throw new Error('LETTERHEAD_NOT_FOUND');
   const letterhead = await letterheadResponse.arrayBuffer();
   const pdf = await PDFDocument.create();
-  // The page uses the letterhead's native 3:2 aspect ratio to preserve the original design.
   const page = pdf.addPage([842, 561]);
   const image = await pdf.embedJpg(letterhead);
   page.drawImage(image, { x: 0, y: 0, width: 842, height: 561 });
