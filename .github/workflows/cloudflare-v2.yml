@@ -30,6 +30,8 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Apply database migrations
+        run: npm run db:migrate
       - name: Generate Prisma client
         run: npm run db:generate:edge
       - name: Build Cloudflare Worker
