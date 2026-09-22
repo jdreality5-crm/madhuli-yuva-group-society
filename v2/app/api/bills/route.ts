@@ -1,8 +1,54 @@
 import { NextResponse } from 'next/server';
 import { requireSession } from '@/lib/session';
-type Unit={id:string};
-type Bill={id:string;societyId:string;eventId:string|null;type:string;fileUrl:string|null;amountPaise:string|number;vendor:string|null;category:string|null;date:string;paymentMethod:string|null;notes:string|null;createdAt:string;updatedAt:string;propertyUnitId:string|null;paymentStatus:string};
-type ReceiptPayment={id:string;amountPaise:string|number;createdAt:string;verifiedAt:string|null;transactionId:string|null;receiptNumber:string|null;billId:string|null};
-async function rest<T>(table:string,params:Record<string,string>):Promise<T>{const base=process.env.SUPABASE_URL?.trim().replace(/\/$/,'');const key=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();if(!base||!key)throw new Error('CONFIG');const u=new URL(base+'/rest/v1/'+table);Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));const r=await fetch(u,{headers:{apikey:key,Authorization:'Bearer '+key,Accept:'application/json'},cache:'no-store'});const d=await r.json().catch(()=>null);if(!r.ok)throw new Error('REST');return d as T}
-async function sign(path:string|null){if(!path)return null;const base=process.env.SUPABASE_URL?.trim().replace(/\/$/,'');const key=process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();const bucket=process.env.SUPABASE_STORAGE_BUCKET?.trim()||'society-files';if(!base||!key)throw new Error('CONFIG');const r=await fetch(base+'/storage/v1/object/sign/'+encodeURIComponent(bucket),{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify({paths:[path],expiresIn:3600}),cache:'no-store'});const d=await r.json().catch(()=>null);if(!r.ok)throw new Error('STORAGE');const x=Array.isArray(d)?d[0]:d;const signed=x?.signedURL||x?.signedUrl;return signed?(String(signed).startsWith('http')?String(signed):base+'/storage/v1'+String(signed)):null}
-export async function GET(){try{const s=await requireSession();if(s.role!=='OWNER')return NextResponse.json({error:'Resident access required'},{status:403});const units=await rest<Unit[]>('PropertyUnit',{select:'id',residentUserId:'eq.'+s.id,status:'eq.ACTIVE'});const receipts=await rest<ReceiptPayment[]>('Payment',{select:'id,amountPaise,createdAt,verifiedAt,transactionId,receiptNumber,billId',societyId:'eq.'+s.societyId,ownerUserId:'eq.'+s.id,status:'eq.VERIFIED',order:'verifiedAt.desc,createdAt.desc'});if(!units.length)return NextResponse.json({bills:[],receiptPayments:receipts.map(x=>({...x,amountPaise:String(x.amountPaise)}))});const ids=units.map(x=>x.id).join(',');const rows=await rest<Bill[]>('Bill',{select:'*',societyId:'eq.'+s.societyId,propertyUnitId:'in.('+ids+')',order:'date.desc'});return NextResponse.json({bills:await Promise.all(rows.map(async b=>({...b,amountPaise:String(b.amountPaise),fileUrl:await sign(b.fileUrl)}))),receiptPayments:receipts.map(x=>({...x,amountPaise:String(x.amountPaise)}))})}catch(e){const u=e instanceof Error&&e.message==='UNAUTHORIZED';return NextResponse.json({error:u?'Unauthorized':'Forbidden'},{status:u?401:403})}}
+
+type Unit = { id: string };
+async function rest<T>(table: string, params: Record<string, string>): Promise<T> {
+  const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!base || !key) throw new Error('CONFIG');
+  const url = new URL(`${base}/rest/v1/${table}`);
+  Object.entries(params).forEach(([keyName, value]) => url.searchParams.set(keyName, value));
+  const response = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' }, cache: 'no-store' });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(String(data?.message || data?.hint || 'REST'));
+  return data as T;
+}
+async function sign(path: string | null | undefined) {
+  if (!path) return null;
+  const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET?.trim() || 'society-files';
+  if (!base || !key) throw new Error('CONFIG');
+  const response = await fetch(`${base}/storage/v1/object/sign/${encodeURIComponent(bucket)}`, { method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ paths: [path], expiresIn: 3600 }), cache: 'no-store' });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(String(data?.message || data?.error || 'STORAGE_SIGN'));
+  const item = Array.isArray(data) ? data[0] : data;
+  const signed = item?.signedURL || item?.signedUrl;
+  return signed ? (String(signed).startsWith('http') ? String(signed) : base + '/storage/v1' + String(signed)) : null;
+}
+
+export async function GET() {
+  try {
+    const session = await requireSession();
+    if (session.role !== 'OWNER') return NextResponse.json({ error: 'Resident access required' }, { status: 403 });
+
+    const [units, receipts] = await Promise.all([
+      rest<Unit[]>('PropertyUnit', { select: 'id', residentUserId: `eq.${session.id}` }),
+      rest<any[]>('Payment', { select: '*', societyId: `eq.${session.societyId}`, ownerUserId: `eq.${session.id}`, status: 'eq.VERIFIED', order: 'createdAt.desc' }),
+    ]);
+
+    let bills: any[] = [];
+    if (units.length) {
+      const ids = units.map((unit) => unit.id).join(',');
+      const rows = await rest<any[]>('Bill', { select: '*', societyId: `eq.${session.societyId}`, propertyUnitId: `in.(${ids})`, order: 'date.desc' });
+      bills = await Promise.all(rows.map(async (bill) => ({ ...bill, amountPaise: String(bill.amountPaise), fileUrl: await sign(bill.fileUrl) })));
+    }
+
+    return NextResponse.json({ bills, receiptPayments: receipts.map((payment) => ({ ...payment, amountPaise: String(payment.amountPaise) })) });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '';
+    console.error('Resident bills failed', message);
+    const unauthorized = message === 'UNAUTHORIZED';
+    return NextResponse.json({ error: unauthorized ? 'Unauthorized' : 'Unable to load bills.' }, { status: unauthorized ? 401 : 500 });
+  }
+}
