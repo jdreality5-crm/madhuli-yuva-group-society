@@ -56,6 +56,7 @@ export async function GET(req: Request) {
     const status = message === 'FORBIDDEN' ? 403 : message === 'UNAUTHORIZED' ? 401 : message === 'STORAGE_SIGN_EMPTY' ? 503 : 500;
     return NextResponse.json({
       error: status === 403 ? 'Organizer access required.' : status === 401 ? 'Authentication required.' : status === 503 ? 'Receipt storage link unavailable.' : 'Unable to prepare receipt download.',
+      code: message.slice(0, 120),
     }, { status });
   }
 }
