@@ -6,7 +6,7 @@ const money=(p:string)=>'₹ '+(Number(p)/100).toLocaleString('en-IN',{minimumFr
 export default function BillsPage(){
  const [rows,setRows]=useState<Bill[]>([]),[receipts,setReceipts]=useState<ReceiptPayment[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[receiptId,setReceiptId]=useState('');
  useEffect(()=>{fetch('/api/bills').then(async r=>{const x=await r.json();if(!r.ok)throw new Error(x.error||'Unable to load bills');setRows(x.bills||[]);setReceipts(x.receiptPayments||[])}).catch(e=>setError(e.message)).finally(()=>setLoading(false))},[]);
- function payBill(b:Bill){window.location.href=`/payments?billId=${encodeURIComponent(b.id)}&amount=${encodeURIComponent((Number(b.amountPaise)/100).toFixed(2))}`)}
+ const payBill=(b:Bill)=>{const params=new URLSearchParams({billId:b.id,amount:(Number(b.amountPaise)/100).toFixed(2)});window.location.href='/payments?'+params.toString();};
  async function downloadReceipt(id:string){setReceiptId(id);setError('');try{const r=await fetch(`/api/payments/receipt?paymentId=${encodeURIComponent(id)}`);const x=await r.json();if(!r.ok)throw new Error(x.error||'Unable to prepare receipt');if(x.url)window.open(x.url,'_blank','noopener,noreferrer');else throw new Error('Receipt download unavailable')}catch(e){setError(e instanceof Error?e.message:'Unable to prepare receipt')}finally{setReceiptId('')}}
  const due=rows.filter(x=>x.type==='INVOICE');
  return <main className="main resident-bills-page">
