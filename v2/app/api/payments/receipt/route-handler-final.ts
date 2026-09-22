@@ -20,9 +20,8 @@ export async function GET(req: Request) {
     const paymentId = new URL(req.url).searchParams.get('paymentId')?.trim() || '';
     if (!paymentId) return NextResponse.json({ error: 'Payment ID is required.' }, { status: 400 });
 
-    const role = String(session.role || '').toUpperCase();
-    const adminRoles = new Set(['MASTER_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'SUB_ADMIN', 'SOCIETY_ADMIN']);
-    const isAdmin = adminRoles.has(role);
+    // Keep authorization aligned with the actual V2 session role model.
+    const isAdmin = session.role === 'MASTER_ADMIN' || session.role === 'ORGANIZER';
     const query: Record<string, string> = {
       select: 'id',
       id: `eq.${paymentId}`,
@@ -31,8 +30,8 @@ export async function GET(req: Request) {
       limit: '1',
     };
 
-    // Residents can download only their own receipts. Admin accounts can download
-    // receipts for any verified payment inside their current society.
+    // Owners can download only their own receipts. Admin/organizer accounts
+    // can download receipts for any verified payment in their society.
     if (!isAdmin) query.ownerUserId = `eq.${session.id}`;
 
     const rows = await rest<Array<{ id: string }>>('Payment', query);
