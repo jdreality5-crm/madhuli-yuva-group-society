@@ -77,7 +77,7 @@ async function loadContext(paymentId: string, societyId: string): Promise<Receip
 }
 
 function money(value: unknown) {
-  return `₹${(Number(value || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `Rs. ${(Number(value || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function dateText(value: unknown) {
