@@ -14,13 +14,18 @@ async function rest<T>(table: string, query: Record<string, string>): Promise<T>
   return data as T;
 }
 
+function receiptRequestUrl(req: Request) {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const origin = configured || 'https://society-function-management-v2.jdreality5.workers.dev';
+  return new URL('/api/payments/receipt', origin).toString();
+}
+
 export async function GET(req: Request) {
   try {
     const session = await requireSession();
     const paymentId = new URL(req.url).searchParams.get('paymentId')?.trim() || '';
     if (!paymentId) return NextResponse.json({ error: 'Payment ID is required.' }, { status: 400 });
 
-    // Keep authorization aligned with the actual V2 session role model.
     const isAdmin = session.role === 'MASTER_ADMIN' || session.role === 'ORGANIZER';
     const query: Record<string, string> = {
       select: 'id',
@@ -30,16 +35,13 @@ export async function GET(req: Request) {
       limit: '1',
     };
 
-    // Owners can download only their own receipts. Admin/organizer accounts
-    // can download receipts for any verified payment in their society.
     if (!isAdmin) query.ownerUserId = `eq.${session.id}`;
 
     const rows = await rest<Array<{ id: string }>>('Payment', query);
     const payment = rows[0];
     if (!payment) return NextResponse.json({ error: 'Verified payment not found.' }, { status: 404 });
 
-    // Always regenerate so previously stored PDFs cannot bypass template fixes.
-    const generated = await generateAndStoreReceipt({ paymentId: payment.id, societyId: session.societyId, requestUrl: req.url });
+    const generated = await generateAndStoreReceipt({ paymentId: payment.id, societyId: session.societyId, requestUrl: receiptRequestUrl(req) });
     const url = await signReceipt(generated.receiptStoragePath);
     if (!url) return NextResponse.json({ error: 'Receipt download unavailable.', code: 'SIGNED_URL_EMPTY' }, { status: 503 });
     return NextResponse.json({ receiptNumber: generated.receiptNumber, url });
