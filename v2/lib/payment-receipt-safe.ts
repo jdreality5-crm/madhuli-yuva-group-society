@@ -143,9 +143,7 @@ async function buildPdf(context: ReceiptContext, number: string, requestUrl: str
 export async function generateAndStoreReceipt(input: { paymentId: string; societyId: string; requestUrl: string }) {
   const context = await loadContext(input.paymentId, input.societyId);
   if (!context) throw new Error('VERIFIED_PAYMENT_NOT_FOUND');
-  if (context.payment.receiptStoragePath && context.payment.receiptNumber) {
-    return { receiptNumber: context.payment.receiptNumber, receiptStoragePath: context.payment.receiptStoragePath, reused: true };
-  }
+  // Always regenerate and overwrite the stored PDF so older receipt files cannot bypass template fixes.
   const number = context.payment.receiptNumber || receiptNumber(context.payment.id, context.payment.verifiedAt);
   const bytes = await buildPdf(context, number, input.requestUrl);
   const path = `${input.societyId}/payment-receipts/${number}.pdf`;
