@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
+import { AUTHORIZED_LOGO_BLACK_PATHS } from './authorized-logo-black';
 
 type ReceiptContext = {
   payment: any;
@@ -155,6 +156,17 @@ async function loadLetterhead(pdf: PDFDocument, requestUrl: string) {
   return pdf.embedJpg(bytes);
 }
 
+function drawAuthorizedSignature(page: PDFPage, bold: PDFFont) {
+  const logoX = 385;
+  const logoY = 222;
+  const logoScale = 0.055;
+  for (const path of AUTHORIZED_LOGO_BLACK_PATHS) {
+    page.drawSvgPath(path, { x: logoX, y: logoY, scale: logoScale, color: DARK });
+  }
+  page.drawText('Avnish Patel', { x: 385, y: 190, size: 10, font: bold, color: MAROON });
+  page.drawText('President', { x: 385, y: 176, size: 8.5, font: bold, color: MUTED });
+}
+
 async function buildPdf(context: ReceiptContext, number: string, requestUrl: string) {
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
@@ -176,8 +188,7 @@ async function buildPdf(context: ReceiptContext, number: string, requestUrl: str
   drawData(page, 'Transaction ID / UTR', context.payment.transactionId, 425, regular, bold);
   drawData(page, 'Payment Status', 'VERIFIED', 385, regular, bold);
 
-  page.drawText(clean(context.society?.authorizedSignatory, 'Authorized Signatory'), { x: 385, y: 215, size: 10, font: bold, color: MAROON, maxWidth: 135 });
-  page.drawText('Authorized Signatory', { x: 385, y: 199, size: 8.5, font: regular, color: MUTED });
+  drawAuthorizedSignature(page, bold);
 
   return pdf.save();
 }
