@@ -20,6 +20,12 @@ async function rest<T>(table: string, query: Record<string, string>): Promise<T>
   return data as T;
 }
 
+function receiptRequestUrl() {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const origin = configured || 'https://society-function-management-v2.jdreality5.workers.dev';
+  return new URL('/api/admin/payments/receipt', origin).toString();
+}
+
 export async function GET(req: Request) {
   try {
     const session = await requireSubAdminPermission('PAYMENTS');
@@ -36,12 +42,10 @@ export async function GET(req: Request) {
     const payment = rows[0];
     if (!payment) return NextResponse.json({ error: 'Verified payment not found.' }, { status: 404 });
 
-    // Always regenerate through the exact letterhead handler so legacy PDFs
-    // cannot be returned after the template has changed.
     const generated = await generateAndStoreReceipt({
       paymentId: payment.id,
       societyId: session.societyId,
-      requestUrl: req.url,
+      requestUrl: receiptRequestUrl(),
     });
     const url = await signReceipt(generated.receiptStoragePath);
     if (!url) throw new Error('STORAGE_SIGN_EMPTY');
