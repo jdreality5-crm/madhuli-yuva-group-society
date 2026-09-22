@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireSession } from '@/lib/session';
-import { generateAndStoreReceipt, signReceipt } from '@/lib/payment-receipt-final';
+import { generateAndStoreReceipt, signReceipt } from '@/lib/payment-receipt-safe';
 
 async function rest<T>(table: string, query: Record<string, string>): Promise<T> {
   const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
