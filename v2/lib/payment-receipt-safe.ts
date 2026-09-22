@@ -91,29 +91,44 @@ function receiptNumber(paymentId: string, verifiedAt: unknown) {
   return `MYGM-${year}-${paymentId.replace(/[^a-zA-Z0-9]/g, '').slice(-8).toUpperCase()}`;
 }
 
-async function buildPdf(context: ReceiptContext, number: string) {
+async function embedLetterhead(pdf: PDFDocument, requestUrl: string) {
+  const url = new URL('/letterhead.jpg', requestUrl);
+  const response = await fetch(url, { cache: 'no-store' });
+  if (!response.ok) throw new Error(`LETTERHEAD_${response.status}`);
+  const image = await pdf.embedJpg(new Uint8Array(await response.arrayBuffer()));
+  const pageWidth = 595;
+  const pageHeight = image.height * (pageWidth / image.width);
+  return { image, pageWidth, pageHeight };
+}
+
+async function buildPdf(context: ReceiptContext, number: string, requestUrl: string) {
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([595, 842]);
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const maroon = rgb(0.35, 0.04, 0.04);
   const dark = rgb(0.16, 0.13, 0.12);
   const gold = rgb(0.60, 0.42, 0.12);
+  const maroon = rgb(0.35, 0.04, 0.04);
+  const { image, pageWidth, pageHeight } = await embedLetterhead(pdf, requestUrl);
+  const imageHeight = Math.min(pageHeight, 842);
+  page.drawImage(image, { x: 0, y: 842 - imageHeight, width: pageWidth, height: imageHeight });
+
+  const contentTop = Math.max(842 - imageHeight - 36, 560);
   const row = (label: string, value: string, y: number) => {
-    page.drawText(label, { x: 80, y, size: 11, font: bold, color: maroon });
-    page.drawText(value || '-', { x: 230, y, size: 11, font: regular, color: dark, maxWidth: 285 });
-    page.drawLine({ start: { x: 80, y: y - 8 }, end: { x: 515, y: y - 8 }, thickness: 0.45, color: rgb(0.80, 0.75, 0.67) });
+    page.drawText(label, { x: 80, y, size: 10, font: bold, color: maroon });
+    page.drawText(value || '-', { x: 230, y, size: 10, font: regular, color: dark, maxWidth: 285 });
+    page.drawLine({ start: { x: 80, y: y - 7 }, end: { x: 515, y: y - 7 }, thickness: 0.4, color: rgb(0.80, 0.75, 0.67) });
   };
-  page.drawText(context.society?.name || 'Society', { x: 80, y: 770, size: 20, font: bold, color: maroon });
-  page.drawText('PAYMENT RECEIPT', { x: 210, y: 700, size: 20, font: bold, color: maroon });
-  page.drawText(`Receipt No: ${number}`, { x: 80, y: 670, size: 10, font: regular, color: dark });
-  page.drawText(`Date: ${dateText(context.payment.verifiedAt || context.payment.updatedAt)}`, { x: 390, y: 670, size: 10, font: regular, color: dark });
-  row('Received From', context.owner?.name || context.owner?.email || '-', 620);
-  row('Amount', money(context.payment.amountPaise), 580);
-  row('Purpose', context.event?.title || context.account?.purpose || context.bill?.category || 'Other Payment', 540);
-  row('Payment Type', context.account?.displayName || 'Payment', 500);
-  row('Transaction ID / UTR', context.payment.transactionId || '-', 460);
-  row('Payment Status', 'VERIFIED', 420);
+
+  page.drawText('PAYMENT RECEIPT', { x: 205, y: contentTop, size: 18, font: bold, color: maroon });
+  page.drawText(`Receipt No: ${number}`, { x: 80, y: contentTop - 30, size: 9, font: regular, color: dark });
+  page.drawText(`Date: ${dateText(context.payment.verifiedAt || context.payment.updatedAt)}`, { x: 390, y: contentTop - 30, size: 9, font: regular, color: dark });
+  row('Received From', context.owner?.name || context.owner?.email || '-', contentTop - 70);
+  row('Amount', money(context.payment.amountPaise), contentTop - 108);
+  row('Purpose', context.event?.title || context.account?.purpose || context.bill?.category || 'Other Payment', contentTop - 146);
+  row('Payment Type', context.account?.displayName || 'Payment', contentTop - 184);
+  row('Transaction ID / UTR', context.payment.transactionId || '-', contentTop - 222);
+  row('Payment Status', 'VERIFIED', contentTop - 260);
 
   for (const path of AUTHORIZED_LOGO_BLACK_PATHS) {
     page.drawSvgPath(path, { x: 355, y: 42, scale: 0.12, color: rgb(0, 0, 0) });
@@ -132,7 +147,7 @@ export async function generateAndStoreReceipt(input: { paymentId: string; societ
     return { receiptNumber: context.payment.receiptNumber, receiptStoragePath: context.payment.receiptStoragePath, reused: true };
   }
   const number = context.payment.receiptNumber || receiptNumber(context.payment.id, context.payment.verifiedAt);
-  const bytes = await buildPdf(context, number);
+  const bytes = await buildPdf(context, number, input.requestUrl);
   const path = `${input.societyId}/payment-receipts/${number}.pdf`;
   await storageUpload(path, bytes);
   await rest('Payment', { id: `eq.${input.paymentId}`, societyId: `eq.${input.societyId}`, status: 'eq.VERIFIED' }, {
