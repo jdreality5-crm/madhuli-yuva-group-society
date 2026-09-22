@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { AUTHORIZED_LOGO_BLACK_PATHS } from './authorized-logo-black';
 
 type ReceiptContext = { payment: any; owner: any; society: any; event: any; account: any; bill: any };
 
@@ -113,9 +114,14 @@ async function buildPdf(context: ReceiptContext, number: string) {
   row('Payment Type', context.account?.displayName || 'Payment', 500);
   row('Transaction ID / UTR', context.payment.transactionId || '-', 460);
   row('Payment Status', 'VERIFIED', 420);
+
+  for (const path of AUTHORIZED_LOGO_BLACK_PATHS) {
+    page.drawSvgPath(path, { x: 355, y: 42, scale: 0.12, color: rgb(0, 0, 0) });
+  }
   page.drawText('Authorized Signature', { x: 365, y: 180, size: 10, font: regular, color: dark });
   page.drawLine({ start: { x: 360, y: 190 }, end: { x: 515, y: 190 }, thickness: 0.8, color: gold });
-  page.drawText(context.society?.authorizedSignatory || 'Authorized Signatory', { x: 360, y: 165, size: 10, font: bold, color: maroon, maxWidth: 155 });
+  page.drawText('Avnish Patel', { x: 360, y: 165, size: 10, font: bold, color: maroon });
+  page.drawText('President', { x: 360, y: 151, size: 9, font: regular, color: dark });
   return pdf.save();
 }
 
