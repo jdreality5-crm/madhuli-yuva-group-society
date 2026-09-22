@@ -16,7 +16,7 @@ async function rest<T>(table: string, query: Record<string, string>): Promise<T>
 
 function receiptRequestUrl(req: Request) {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  const origin = configured || 'https://society-function-management-v2.jdreality5.workers.dev';
+  const origin = configured || new URL(req.url).origin;
   return new URL('/api/payments/receipt', origin).toString();
 }
 
