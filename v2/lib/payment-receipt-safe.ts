@@ -74,15 +74,25 @@ function drawWrapped(page: PDFPage, text: string, x: number, y: number, width: n
 function drawData(page: PDFPage, label: string, value: unknown, y: number, regular: PDFFont, bold: PDFFont) { page.drawText(label, { x: 76, y, size: 10, font: bold, color: MAROON }); drawWrapped(page, clean(value), 235, y, 280, regular, 10, DARK); }
 
 async function loadLetterhead(pdf: PDFDocument, requestUrl: string) {
-  try {
-    const assetUrl = new URL('/letterhead.jpg', requestUrl).toString();
-    const response = await fetch(assetUrl, { cache: 'no-store' });
-    if (!response.ok) return null;
-    const bytes = new Uint8Array(await response.arrayBuffer());
-    return await pdf.embedJpg(bytes);
-  } catch {
-    return null;
+  const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const candidates = [
+    configuredOrigin ? new URL('/letterhead.jpg', configuredOrigin).toString() : null,
+    new URL('/letterhead.jpg', requestUrl).toString(),
+    'https://raw.githubusercontent.com/jdreality5-crm/madhuli-yuva-group-society/fresh-society-v2/v2/public/letterhead.jpg',
+  ].filter((value): value is string => Boolean(value));
+
+  for (const assetUrl of candidates) {
+    try {
+      const response = await fetch(assetUrl, { cache: 'no-store' });
+      if (!response.ok) continue;
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      if (!bytes.length) continue;
+      return await pdf.embedJpg(bytes);
+    } catch {
+      // Try the next known asset location.
+    }
   }
+  return null;
 }
 
 function drawAuthorizedSignature(page: PDFPage, bold: PDFFont) {
