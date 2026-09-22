@@ -10,7 +10,7 @@ async function rest<T>(table: string, query: Record<string, string>): Promise<T>
   Object.entries(query).forEach(([name, value]) => url.searchParams.set(name, value));
   const response = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' }, cache: 'no-store' });
   const data = await response.json().catch(() => null);
-  if (!response.ok) throw new Error('REST');
+  if (!response.ok) throw new Error(`REST_${response.status}`);
   return data as T;
 }
 
@@ -31,10 +31,11 @@ export async function GET(req: Request) {
       receiptStoragePath = generated.receiptStoragePath;
     }
     const url = await signReceipt(receiptStoragePath);
-    if (!url) return NextResponse.json({ error: 'Receipt download unavailable.' }, { status: 503 });
+    if (!url) return NextResponse.json({ error: 'Receipt download unavailable.', code: 'SIGNED_URL_EMPTY' }, { status: 503 });
     return NextResponse.json({ receiptNumber, url });
   } catch (error) {
-    console.error('Resident receipt download failed', error instanceof Error ? error.message : error);
-    return NextResponse.json({ error: 'Unable to prepare receipt download.' }, { status: 500 });
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error('Resident receipt download failed', detail);
+    return NextResponse.json({ error: 'Unable to prepare receipt download.', code: detail.slice(0, 120) }, { status: 500 });
   }
 }
