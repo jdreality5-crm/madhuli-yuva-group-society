@@ -20,9 +20,9 @@ async function rest<T>(table: string, query: Record<string, string>): Promise<T>
   return data as T;
 }
 
-function receiptRequestUrl() {
+function receiptRequestUrl(req: Request) {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  const origin = configured || 'https://society-function-management-v2.jdreality5.workers.dev';
+  const origin = configured || new URL(req.url).origin;
   return new URL('/api/admin/payments/receipt', origin).toString();
 }
 
@@ -45,7 +45,7 @@ export async function GET(req: Request) {
     const generated = await generateAndStoreReceipt({
       paymentId: payment.id,
       societyId: session.societyId,
-      requestUrl: receiptRequestUrl(),
+      requestUrl: receiptRequestUrl(req),
     });
     const url = await signReceipt(generated.receiptStoragePath);
     if (!url) throw new Error('STORAGE_SIGN_EMPTY');
