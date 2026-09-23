@@ -70,6 +70,10 @@ async function recordVerifiedIncome(paymentId: string, societyId: string, verifi
   return { created: true, id: row?.id || null };
 }
 
+async function getVerifiedPayment(paymentId: string, societyId: string) {
+  return (await rest<any[]>('Payment', { select: '*', id: `eq.${paymentId}`, societyId: `eq.${societyId}`, status: 'eq.VERIFIED', limit: '1' }))[0] || null;
+}
+
 export async function GET() {
   try {
     const session = await requireSubAdminPermission('PAYMENTS');
@@ -88,16 +92,7 @@ export async function GET() {
     const userMap = new Map(users.map((row) => [row.id, row]));
     const billMap = new Map(bills.map((row) => [row.id, row]));
     const eventMap = new Map(events.map((row) => [row.id, row]));
-    const normalizedPayments = await Promise.all(payments.map(async (row) => ({
-      ...row,
-      amountPaise: String(row.amountPaise),
-      paymentMethod: row.paymentMethod || (row.transactionId ? 'UPI' : 'CASH'),
-      screenshotUrl: await sign(row.screenshotUrl),
-      paymentAccount: accountMap.get(row.paymentAccountId) || null,
-      ownerUser: userMap.get(row.ownerUserId) || null,
-      bill: billMap.has(row.billId) ? { ...billMap.get(row.billId), amountPaise: String(billMap.get(row.billId).amountPaise) } : null,
-      event: eventMap.get(row.eventId) || null,
-    })));
+    const normalizedPayments = await Promise.all(payments.map(async (row) => ({ ...row, amountPaise: String(row.amountPaise), paymentMethod: row.paymentMethod || (row.transactionId ? 'UPI' : 'CASH'), screenshotUrl: await sign(row.screenshotUrl), paymentAccount: accountMap.get(row.paymentAccountId) || null, ownerUser: userMap.get(row.ownerUserId) || null, bill: billMap.has(row.billId) ? { ...billMap.get(row.billId), amountPaise: String(billMap.get(row.billId).amountPaise) } : null, event: eventMap.get(row.eventId) || null })));
     return NextResponse.json({ payments: normalizedPayments, canDelete: session.role === 'MASTER_ADMIN' });
   } catch (error) {
     console.error('Payment list failed', error instanceof Error ? error.message : error);
@@ -110,22 +105,39 @@ export async function PATCH(req: Request) {
   try {
     const session = await requireSubAdminPermission('PAYMENTS');
     const parsed = schema.parse(await req.json());
-    const row = await rpc<any>({ p_payment_id: parsed.paymentId, p_society_id: session.societyId, p_reviewer_id: session.id, p_action: parsed.action, p_rejection_reason: parsed.rejectionReason || null });
+    let row: any;
+    let reconciled = false;
+    try {
+      row = await rpc<any>({ p_payment_id: parsed.paymentId, p_society_id: session.societyId, p_reviewer_id: session.id, p_action: parsed.action, p_rejection_reason: parsed.rejectionReason || null });
+    } catch (reviewError) {
+      const reviewMessage = reviewError instanceof Error ? reviewError.message : '';
+      if (parsed.action !== 'VERIFY' || !reviewMessage.includes('ALREADY_REVIEWED')) throw reviewError;
+      row = await getVerifiedPayment(parsed.paymentId, session.societyId);
+      if (!row) throw reviewError;
+      reconciled = true;
+    }
     let receipt: { receiptNumber: string; receiptStoragePath: string; reused: boolean } | null = null;
     let income: { created: boolean; id: string | null } | null = null;
+    const artifactErrors: string[] = [];
     if (parsed.action === 'VERIFY') {
       try {
         income = await recordVerifiedIncome(parsed.paymentId, session.societyId, session.id);
       } catch (incomeError) {
+        artifactErrors.push('INCOME');
         console.error('Verified payment income creation failed', incomeError instanceof Error ? incomeError.message : incomeError);
       }
       try {
         receipt = await generateAndStoreReceipt({ paymentId: parsed.paymentId, societyId: session.societyId, requestUrl: req.url });
       } catch (receiptError) {
+        artifactErrors.push('RECEIPT');
         console.error('Payment receipt generation failed', receiptError instanceof Error ? receiptError.message : receiptError);
       }
     }
-    return NextResponse.json({ payment: { ...row, amountPaise: String(row.amountPaise) }, receipt, income });
+    const payment = { ...row, amountPaise: String(row.amountPaise) };
+    if (artifactErrors.length) {
+      return NextResponse.json({ payment, receipt, income, reconciled, artifactErrors, error: 'Payment is verified, but financial artifact processing is incomplete. Retry verification to reconcile.' }, { status: 502 });
+    }
+    return NextResponse.json({ payment, receipt, income, reconciled, artifactErrors: [] });
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
     console.error('Payment review failed', message);
