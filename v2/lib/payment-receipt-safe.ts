@@ -76,12 +76,18 @@ function drawData(page: PDFPage, label: string, value: unknown, y: number, regul
   drawWrapped(page, clean(value), 235, y, 280, regular, 10, DARK);
 }
 
+function isPng(bytes: Uint8Array) {
+  return bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 && bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a;
+}
+
 async function loadLetterhead(pdf: PDFDocument, requestUrl: string) {
   const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
   const candidates = [
+    configuredOrigin ? new URL('/letterhead,A4.jpg', configuredOrigin).toString() : null,
+    new URL('/letterhead,A4.jpg', requestUrl).toString(),
+    'https://raw.githubusercontent.com/jdreality5-crm/madhuli-yuva-group-society/fresh-society-v2/v2/public/letterhead,A4.jpg',
     configuredOrigin ? new URL('/letterhead.jpg', configuredOrigin).toString() : null,
     new URL('/letterhead.jpg', requestUrl).toString(),
-    'https://raw.githubusercontent.com/jdreality5-crm/madhuli-yuva-group-society/fresh-society-v2/v2/public/letterhead.jpg',
   ].filter((value): value is string => Boolean(value));
 
   for (const assetUrl of candidates) {
@@ -90,7 +96,7 @@ async function loadLetterhead(pdf: PDFDocument, requestUrl: string) {
       if (!response.ok) continue;
       const bytes = new Uint8Array(await response.arrayBuffer());
       if (!bytes.length) continue;
-      return await pdf.embedJpg(bytes);
+      return isPng(bytes) ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
     } catch {
       // Try the next known asset location.
     }
@@ -110,7 +116,12 @@ async function buildPdf(context: ReceiptContext, number: string, requestUrl: str
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const letterhead = await loadLetterhead(pdf, requestUrl);
-  if (letterhead) page.drawImage(letterhead, { x: 0, y: 0, width: PAGE_WIDTH, height: PAGE_HEIGHT });
+  if (letterhead) {
+    const scale = Math.min(PAGE_WIDTH / letterhead.width, PAGE_HEIGHT / letterhead.height);
+    const width = letterhead.width * scale;
+    const height = letterhead.height * scale;
+    page.drawImage(letterhead, { x: (PAGE_WIDTH - width) / 2, y: (PAGE_HEIGHT - height) / 2, width, height });
+  }
 
   // Keep every field inside the original blank center area of the supplied A4 artwork.
   page.drawText(`Receipt No: ${number}`, { x: 76, y: 620, size: 9, font: regular, color: MUTED });
