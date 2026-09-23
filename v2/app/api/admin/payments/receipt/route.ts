@@ -5,6 +5,8 @@ import { generateAndStoreReceipt, signReceipt } from '@/lib/payment-receipt-safe
 
 const schema = z.object({ paymentId: z.string().trim().min(1) });
 
+type ReceiptRecord = { id: string; receiptNumber?: string | null; receiptStoragePath?: string | null };
+
 async function rest<T>(table: string, query: Record<string, string>): Promise<T> {
   const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
@@ -32,8 +34,8 @@ export async function GET(req: Request) {
     const parsed = schema.safeParse({ paymentId: new URL(req.url).searchParams.get('paymentId') || '' });
     if (!parsed.success) return NextResponse.json({ error: 'Invalid payment request.' }, { status: 400 });
 
-    const rows = await rest<any[]>('Payment', {
-      select: 'id',
+    const rows = await rest<ReceiptRecord[]>('Payment', {
+      select: 'id,receiptNumber,receiptStoragePath',
       id: `eq.${parsed.data.paymentId}`,
       societyId: `eq.${session.societyId}`,
       status: 'eq.VERIFIED',
@@ -42,12 +44,20 @@ export async function GET(req: Request) {
     const payment = rows[0];
     if (!payment) return NextResponse.json({ error: 'Verified payment not found.' }, { status: 404 });
 
-    const generated = await generateAndStoreReceipt({
-      paymentId: payment.id,
-      societyId: session.societyId,
-      requestUrl: receiptRequestUrl(req),
-    });
-    const url = await signReceipt(generated.receiptStoragePath);
+    const requestUrl = receiptRequestUrl(req);
+    let generated = payment.receiptNumber && payment.receiptStoragePath
+      ? { receiptNumber: payment.receiptNumber, receiptStoragePath: payment.receiptStoragePath, reused: true }
+      : await generateAndStoreReceipt({ paymentId: payment.id, societyId: session.societyId, requestUrl });
+
+    let url: string | null = null;
+    try {
+      url = await signReceipt(generated.receiptStoragePath);
+    } catch (error) {
+      if (!generated.reused) throw error;
+      generated = await generateAndStoreReceipt({ paymentId: payment.id, societyId: session.societyId, requestUrl });
+      url = await signReceipt(generated.receiptStoragePath);
+    }
+
     if (!url) throw new Error('STORAGE_SIGN_EMPTY');
     return NextResponse.json({ receiptNumber: generated.receiptNumber, url });
   } catch (error) {
