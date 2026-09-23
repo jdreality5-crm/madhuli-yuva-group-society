@@ -33,11 +33,25 @@ const schema = z.object({
   notes: z.string().trim().max(500).optional().or(z.literal('')),
 });
 
+// Legacy/demo seed owners are preserved for historical references but must not
+// appear in new live cash collections or pass owner validation.
+const liveOwnerFilters = {
+  role: 'eq.OWNER',
+  status: 'eq.ACTIVE',
+  id: 'not.like.legacy-user-*',
+  email: 'not.ilike.*@example.com',
+};
+
 export async function GET() {
   try {
     const session = await requireSubAdminPermission('INCOME');
     const [users, accounts, events] = await Promise.all([
-      rest<any[]>('User', { select: 'id,name,email,mobile,flatId,unitId,residentType', societyId: `eq.${session.societyId}`, role: 'eq.OWNER', status: 'eq.ACTIVE', order: 'name.asc' }),
+      rest<any[]>('User', {
+        select: 'id,name,email,mobile,flatId,unitId,residentType',
+        societyId: `eq.${session.societyId}`,
+        ...liveOwnerFilters,
+        order: 'name.asc',
+      }),
       rest<any[]>('PaymentAccount', { select: 'id,displayName,purpose,upiId', societyId: `eq.${session.societyId}`, status: 'eq.ACTIVE', order: 'displayName.asc' }),
       rest<any[]>('Event', { select: 'id,title,gujaratiTitle,date', societyId: `eq.${session.societyId}`, order: 'date.desc' }),
     ]);
@@ -53,7 +67,13 @@ export async function POST(req: Request) {
     const session = await requireSubAdminPermission('INCOME');
     const parsed = schema.parse(await req.json());
     const [owner, account] = await Promise.all([
-      rest<any[]>('User', { select: 'id,name,email,societyId', id: `eq.${parsed.ownerUserId}`, societyId: `eq.${session.societyId}`, role: 'eq.OWNER', status: 'eq.ACTIVE', limit: '1' }),
+      rest<any[]>('User', {
+        select: 'id,name,email,societyId',
+        id: `eq.${parsed.ownerUserId}`,
+        societyId: `eq.${session.societyId}`,
+        ...liveOwnerFilters,
+        limit: '1',
+      }),
       rest<any[]>('PaymentAccount', { select: 'id', id: `eq.${parsed.paymentAccountId}`, societyId: `eq.${session.societyId}`, status: 'eq.ACTIVE', limit: '1' }),
     ]);
     if (!owner[0]) return NextResponse.json({ error: 'Resident not found.' }, { status: 404 });
