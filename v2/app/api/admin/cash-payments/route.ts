@@ -78,7 +78,7 @@ export async function POST(req: Request) {
       amountPaise: parsed.amountPaise,
       status: 'PENDING',
       paymentMethod: 'CASH',
-      transactionId: null,
+      transactionId: 'CASH_COLLECTION',
       screenshotUrl: null,
       notes: parsed.notes?.trim() || `Cash collected by ${session.id}`,
       initiatedAt: now.toISOString(),
