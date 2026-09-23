@@ -10,6 +10,7 @@ export default function Reports() {
   const [eventId, setEventId] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [from, setFrom] = useState(`${new Date().getFullYear()}-01-01`);
   const [to, setTo] = useState(new Date().toISOString().slice(0, 10));
 
@@ -45,8 +46,30 @@ export default function Reports() {
   const money = (v: string) => `₹ ${(Number(v) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
   const selectedEvent = events.find((event) => event.id === eventId);
 
-  function printPdf() {
-    window.open(`/api/admin/reports/print?${params().toString()}`, '_blank', 'noopener,noreferrer');
+  async function downloadPdf() {
+    setError('');
+    setPdfLoading(true);
+    try {
+      const response = await fetch(`/api/admin/reports/print?${params().toString()}`, { cache: 'no-store' });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        setError(payload?.error || 'Unable to generate PDF report.');
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `society-financial-report-${from}-to-${to}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError('Unable to download PDF report.');
+    } finally {
+      setPdfLoading(false);
+    }
   }
 
   return <div className="main">
@@ -57,8 +80,8 @@ export default function Reports() {
         <p>વર્ષ, તારીખ અને કાર્યક્રમ પ્રમાણે અલગ નાણાકીય રિપોર્ટ બનાવો.</p>
       </div>
       <div className="report-actions">
-        <button className="btn btn-primary" disabled={loading} onClick={load}>{loading ? 'Loading…' : 'Generate Report'}</button>
-        <button className="btn btn-secondary" disabled={!d || loading} onClick={printPdf}>Print / Save PDF</button>
+        <button className="btn btn-primary" disabled={loading || pdfLoading} onClick={load}>{loading ? 'Loading…' : 'Generate Report'}</button>
+        <button className="btn btn-secondary" disabled={!d || loading || pdfLoading} onClick={downloadPdf}>{pdfLoading ? 'Preparing PDF…' : 'Download PDF'}</button>
       </div>
     </div>
 
@@ -66,7 +89,7 @@ export default function Reports() {
       <div className="field"><label>From</label><input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
       <div className="field"><label>To</label><input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
       <div className="field"><label>Program / Event</label><select className="input" value={eventId} onChange={(e) => setEventId(e.target.value)}><option value="">All programs</option>{events.map((event) => <option key={event.id} value={event.id}>{event.gujaratiTitle || event.title}</option>)}</select></div>
-      <p className="filter-help">Date aur program select karke upar <strong>Generate Report</strong> press karein.</p>
+      <p className="filter-help">Date aur program select karke <strong>Generate Report</strong> press karein. PDF ke liye <strong>Download PDF</strong> use karein.</p>
     </div>
 
     {selectedEvent && <div className="card report-scope-note"><strong>Selected program:</strong> {selectedEvent.gujaratiTitle || selectedEvent.title}</div>}
