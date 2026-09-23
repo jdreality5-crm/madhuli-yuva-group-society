@@ -33,12 +33,11 @@ const schema = z.object({
   notes: z.string().trim().max(500).optional().or(z.literal('')),
 });
 
-// Legacy/demo seed owners are preserved for historical references but must not
-// appear in new live cash collections or pass owner validation.
+// Legacy/demo seed owners are preserved for historical references but excluded
+// from new live cash collections and owner validation.
 const liveOwnerFilters = {
   role: 'eq.OWNER',
   status: 'eq.ACTIVE',
-  id: 'not.like.legacy-user-*',
   email: 'not.ilike.*@example.com',
 };
 
@@ -50,6 +49,7 @@ export async function GET() {
         select: 'id,name,email,mobile,flatId,unitId,residentType',
         societyId: `eq.${session.societyId}`,
         ...liveOwnerFilters,
+        and: '(id.not.like.legacy-user-*)',
         order: 'name.asc',
       }),
       rest<any[]>('PaymentAccount', { select: 'id,displayName,purpose,upiId', societyId: `eq.${session.societyId}`, status: 'eq.ACTIVE', order: 'displayName.asc' }),
@@ -72,6 +72,7 @@ export async function POST(req: Request) {
         id: `eq.${parsed.ownerUserId}`,
         societyId: `eq.${session.societyId}`,
         ...liveOwnerFilters,
+        and: '(id.not.like.legacy-user-*)',
         limit: '1',
       }),
       rest<any[]>('PaymentAccount', { select: 'id', id: `eq.${parsed.paymentAccountId}`, societyId: `eq.${session.societyId}`, status: 'eq.ACTIVE', limit: '1' }),
