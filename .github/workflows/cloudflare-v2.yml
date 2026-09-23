@@ -30,10 +30,6 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
-      - name: Recover previously failed payment method migration
-        run: |
-          set -e
-          npx prisma migrate resolve --rolled-back 20260923170000_add_payment_method_to_payment || true
       - name: Apply database migrations
         run: npm run db:migrate
       - name: Generate Prisma client
