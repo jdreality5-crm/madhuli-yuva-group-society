@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb, type PDFPage } from 'pdf-lib';
 import { requireSubAdminPermission } from '@/lib/session';
 
 const W = 595;
 const H = 842;
 const M = 38;
+const TOP = 770;
+const BOTTOM = 70;
 const ink = rgb(0.14, 0.12, 0.11);
 const maroon = rgb(0.35, 0.04, 0.04);
 const gold = rgb(0.72, 0.58, 0.30);
@@ -37,22 +39,40 @@ export async function GET(req: Request) {
       rest<any[]>('Income', { ...base, select: 'date,category,description,receivedFrom,amountPaise,paymentMethod' }),
       rest<any[]>('Expense', { ...base, select: 'date,category,description,paidTo,amountPaise,paymentMethod' }),
     ]);
+    const incomeTotal = income.reduce((sum, row) => sum + Number(row.amountPaise || 0), 0);
+    const expenseTotal = expenses.reduce((sum, row) => sum + Number(row.amountPaise || 0), 0);
     const pdf = await PDFDocument.create();
     const regular = await pdf.embedFont(StandardFonts.Helvetica);
     const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-    const page = pdf.addPage([W, H]);
-    let y = 790;
-    const text = (value: unknown, x: number, size = 8, font = regular, color = ink) => { page.drawText(clean(value).slice(0, 105), { x, y, size, font, color }); y -= size + 5; };
-    page.drawText('Society Financial Report', { x: M, y, size: 16, font: bold, color: maroon }); y -= 25;
-    text(`Period: ${from || 'Year start'} to ${to || 'Today'}`, M, 9, regular, maroon); y -= 10;
-    const incomeTotal = income.reduce((sum, row) => sum + Number(row.amountPaise || 0), 0);
-    const expenseTotal = expenses.reduce((sum, row) => sum + Number(row.amountPaise || 0), 0);
-    text(`Total Income: ${money(incomeTotal)}   Total Expense: ${money(expenseTotal)}   Balance: ${money(incomeTotal - expenseTotal)}`, M, 9, bold, maroon); y -= 8;
-    page.drawLine({ start: { x: M, y }, end: { x: W - M, y }, color: gold, thickness: 1 }); y -= 18;
-    text('Income Register', M, 11, bold, maroon);
-    for (const row of income) { if (y < 55) break; text(`${dateText(row.date)} | ${clean(row.category)} | ${clean(row.description)} | ${clean(row.receivedFrom)} | ${money(row.amountPaise)}`, M, 7); }
-    y -= 10; text('Expense Register', M, 11, bold, maroon);
-    for (const row of expenses) { if (y < 55) break; text(`${dateText(row.date)} | ${clean(row.category)} | ${clean(row.description)} | ${clean(row.paidTo)} | ${money(row.amountPaise)}`, M, 7); }
+    let page: PDFPage;
+    let y = TOP;
+    const newPage = () => {
+      page = pdf.addPage([W, H]);
+      y = TOP;
+      page.drawText('Society Financial Report', { x: M, y, size: 14, font: bold, color: maroon });
+      y -= 22;
+      page.drawLine({ start: { x: M, y }, end: { x: W - M, y }, color: gold, thickness: 1 });
+      y -= 18;
+    };
+    const ensure = (height: number) => { if (y - height < BOTTOM) newPage(); };
+    const line = (value: unknown, size = 8, font = regular, color = ink) => { ensure(size + 7); page.drawText(clean(value).slice(0, 105), { x: M, y, size, font, color }); y -= size + 7; };
+    const section = (title: string) => { ensure(24); page.drawText(title, { x: M, y, size: 11, font: bold, color: maroon }); y -= 17; };
+    newPage();
+    line(`Period: ${from || 'Year start'} to ${to || 'Today'}`, 9, regular, maroon);
+    line(`Total Income: ${money(incomeTotal)}   Total Expense: ${money(expenseTotal)}   Balance: ${money(incomeTotal - expenseTotal)}`, 9, bold, maroon);
+    y -= 4;
+    section('Income Register');
+    for (const row of income) line(`${dateText(row.date)} | ${clean(row.category)} | ${clean(row.description)} | ${clean(row.receivedFrom)} | ${money(row.amountPaise)}`, 7);
+    y -= 5;
+    section('Expense Register');
+    for (const row of expenses) line(`${dateText(row.date)} | ${clean(row.category)} | ${clean(row.description)} | ${clean(row.paidTo)} | ${money(row.amountPaise)}`, 7);
+    ensure(95);
+    section('Report Summary');
+    line(`Income total: ${money(incomeTotal)}`, 9);
+    line(`Expense total: ${money(expenseTotal)}`, 9);
+    line(`Closing balance: ${money(incomeTotal - expenseTotal)}`, 9, bold, maroon);
+    y -= 12;
+    line('Authorized Signatory: ________________________________', 9, regular, maroon);
     const bytes = await pdf.save();
     return new NextResponse(bytes as unknown as BodyInit, { headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': 'attachment; filename="society-financial-report.pdf"', 'Cache-Control': 'no-store' } });
   } catch (error) {
