@@ -71,7 +71,7 @@ export default function Reports() {
       <div className="field"><label>From</label><input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
       <div className="field"><label>To</label><input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
       <div className="field"><label>Program / Event</label><select className="input" value={eventId} onChange={(e) => setEventId(e.target.value)}><option value="">All programs</option>{events.map((event) => <option key={event.id} value={event.id}>{event.gujaratiTitle || event.title}</option>)}</select></div>
-      <button className="btn btn-primary" onClick={load} disabled={loading}>Apply Filters</button>
+      <p className="filter-help">Date aur program select karke upar <strong>Generate Report</strong> press karein.</p>
     </div>
 
     {selectedEvent && <div className="card report-scope-note"><strong>Selected program:</strong> {selectedEvent.gujaratiTitle || selectedEvent.title}</div>}
@@ -87,6 +87,6 @@ export default function Reports() {
       <div className="section"><div className="section-head"><div><p className="eyebrow">INCOME REGISTER</p><h2>Income Details</h2></div></div><div className="table-wrap"><table className="table"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Received From</th><th>Amount</th></tr></thead><tbody>{d.income.map((x: any) => <tr key={x.id}><td>{new Date(x.date).toLocaleDateString('en-IN')}</td><td>{x.category}</td><td>{x.description || '—'}</td><td>{x.receivedFrom || '—'}</td><td><b>{money(x.amountPaise)}</b></td></tr>)}</tbody></table></div></div>
       <div className="section"><div className="section-head"><div><p className="eyebrow">EXPENSE REGISTER</p><h2>Expense Details</h2></div></div><div className="table-wrap"><table className="table"><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Paid To</th><th>Amount</th></tr></thead><tbody>{d.expenses.map((x: any) => <tr key={x.id}><td>{new Date(x.date).toLocaleDateString('en-IN')}</td><td>{x.category}</td><td>{x.description || '—'}</td><td>{x.paidTo || '—'}</td><td><b>{money(x.amountPaise)}</b></td></tr>)}</tbody></table></div></div>
     </>}
-    <style>{`.report-actions{display:flex;gap:10px;flex-wrap:wrap}.btn-secondary{background:var(--ivory);color:var(--maroon);border:1px solid var(--gold)}.report-scope-note{margin:16px 0;border-left:3px solid var(--gold)}@media(max-width:640px){.report-actions{width:100%}.report-actions .btn{flex:1}}`}</style>
+    <style>{`.report-actions{display:flex;gap:10px;flex-wrap:wrap}.btn-secondary{background:var(--ivory);color:var(--maroon);border:1px solid var(--gold)}.report-scope-note{margin:16px 0;border-left:3px solid var(--gold)}.filter-help{margin:0;color:var(--muted);font-size:12px;align-self:end}@media(max-width:640px){.report-actions{width:100%}.report-actions .btn{flex:1}.filter-help{align-self:auto}}`}</style>
   </div>;
 }
