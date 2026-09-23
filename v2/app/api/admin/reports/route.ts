@@ -36,14 +36,21 @@ export async function GET(req: Request) {
     end.setUTCHours(23, 59, 59, 999);
     if (start > end) return NextResponse.json({ error: 'Invalid report date range.' }, { status: 400 });
 
-    const base = {
+    const range = {
       societyId: 'eq.' + s.societyId,
       and: `(date.gte.${start.toISOString()},date.lte.${end.toISOString()})`,
       order: 'date.desc',
-      select: 'id,amountPaise,category,date,description,receivedFrom,paidTo,paymentMethod,referenceNumber,billNumber,eventId',
     };
-    const incomeQuery = eventId ? { ...base, eventId: 'eq.' + eventId } : base;
-    const expenseQuery = eventId ? { ...base, eventId: 'eq.' + eventId } : base;
+    const incomeBase = {
+      ...range,
+      select: 'id,amountPaise,category,date,description,receivedFrom,paymentMethod,referenceNumber,eventId',
+    };
+    const expenseBase = {
+      ...range,
+      select: 'id,amountPaise,category,date,description,paidTo,paymentMethod,billNumber,eventId',
+    };
+    const incomeQuery = eventId ? { ...incomeBase, eventId: 'eq.' + eventId } : incomeBase;
+    const expenseQuery = eventId ? { ...expenseBase, eventId: 'eq.' + eventId } : expenseBase;
     const [income, expenses, events] = await Promise.all([
       rest<any[]>('Income', incomeQuery),
       rest<any[]>('Expense', expenseQuery),
