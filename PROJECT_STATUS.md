@@ -5,7 +5,7 @@
 - Phase: Security hardening and production readiness
 - Current task: Security hardening and production verification
 - Final stage: Not signed off
-- Current implementation commit: `f31185f89e15699cbf71750c146c9b48b476af27`
+- Current implementation commit: `77b52480f90479a117f916f1f68fcafe30de2196`
 
 ## Status Matrix
 
@@ -18,16 +18,16 @@
 | Login/session enforcement | Migrated / audit | Residents authenticate with Firebase; app session remains DB-revalidated |
 | Profile | Implemented / audit | Review email/session consistency |
 | Financial isolation | Audited / continue | Continue endpoint-by-endpoint audit |
-| Payments | Hardened / verified | Payment-session race protection, expiry restart, rejection release, and transaction-reference uniqueness reviewed |
+| Payments | Hardened / verified | Payment-session race protection, expiry restart, rejection release, transaction-reference uniqueness, and payment-method/income-reference persistence reviewed |
 | Property unit linking | Hardened | Active/approved resident requirement + empty-unit clearing |
 | Legacy approval API | Hardened | Both approval paths enforce verified email |
 | Storage upload | Hardened | Generic upload restricted to organizers; bill documents restricted to private society-scoped storage paths |
 | Cloudflare Workers | Configured | vinext + Wrangler |
 | Documentation | Complete | Handoff/status docs are source of truth |
-| E2E testing | Pending | Firebase signup/login/password reset requires live configuration and test |
-| Production build/typecheck | Verified | V2 Build Check #477 passed on commit `d08b5a5c9463bd6216783c9e46c8718ff8ad6c09` |
-| Production deployment verification | Verified | Cloudflare Deploy #412 succeeded after Firebase runtime-secret sync; Worker deployment completed |
-| Production sign-off | Pending | Final gate |
+| E2E testing | Pending | Firebase signup/login/password reset and mobile payment return/proof-upload flow require live testing |
+| Production build/typecheck | Verified | V2 Build Check has passed on the active branch during recent changes |
+| Production deployment verification | Automated verified | Cloudflare Deploy #825 succeeded on commit `77b52480f90479a117f916f1f68fcafe30de2196`; database migrations, Worker build, deployment, and signup residences smoke test passed |
+| Production sign-off | Pending | Manual live E2E and payment flow verification remain required |
 
 ## Required Sequence
 1. Internal V2 build/typecheck verification.
@@ -47,6 +47,14 @@
 - Preserve locked architecture in `AI_HANDOFF.md`.
 - Cloudflare Workers is the V2 production target; Vercel is not part of the V2 deployment path.
 - Update status after meaningful implementation work.
+
+### Verification update — 2026-09-23
+- The failed Prisma migration `20260923170000_add_payment_method_to_payment` was repaired through a targeted database migration-state recovery after confirming that `Payment.paymentMethod` already existed; the failed record is rolled back and a completed record is present.
+- The migration file was made recoverable with `ADD COLUMN IF NOT EXISTS` in commit `c316bc33bcb3ac419fd6cc0df449487037be77eb`.
+- Payment income persistence was hardened in migration `20260923114115_harden_payment_income_idempotency`, including payment-method-aware income description/reference handling; matching migration commit `35c8eb60c992c7a485b2af90d494c89cbd79865e`.
+- The one-time workflow recovery step was removed after database recovery in commit `77b52480f90479a117f916f1f68fcafe30de2196`.
+- Cloudflare Deploy #825 completed successfully: dependency installation, database migrations, Prisma generation, Worker build, runtime secret preparation, Cloudflare deployment, and signup residences smoke test all passed.
+- Automated deployment verification is complete for this run. Manual mobile payment app return, proof upload, receipt generation, and income visibility testing remain pending; production sign-off is not claimed.
 
 ### Verification update — 2026-09-19
 - V2 Build Check #454 passed on the implementation commit `89229d7f8e3efe65615c9e986827cd1ebe0b5435`.
@@ -77,7 +85,6 @@
 - Payment-session claims are now serialized with a PostgreSQL transaction-scoped advisory lock keyed to the bill ID, closing the remaining concurrent payment-session creation race.
 - Fresh V2 build verification is still required for these latest payment changes; no green build is claimed until GitHub Actions reports it.
 
-
 ### Bill authorization and payment-safety review — 2026-09-19
 - Bill PUT/DELETE now enforce the same DB-backed BILLS permission used by the bill list/create APIs; the previous organizer-only guard could bypass a Sub Admin's module restriction.
 - Bill edits now validate any reassigned PropertyUnit within the current society and allow relinking only while the bill is UNPAID.
@@ -97,7 +104,6 @@
 - Apartment units are created without invented floor assignments (`floorLabel: Flat`); Pramukhpark floors remain dynamic and are added separately.
 - V2 Build Check #480 passed and Cloudflare Deploy #415 succeeded for the fix.
 
-
 ## Dependency security hardening — 2026-09-19
 - Added a `deepmerge-ts` `^8.0.1` package override after CI identified the vulnerable transitive dependency.
 - V2 Build Check #484 passed with `npm install` reporting **0 vulnerabilities**.
@@ -116,18 +122,15 @@
 - Live browser E2E signup → Firebase verification → activation → login and password recovery remains pending.
 - Production sign-off remains pending until live E2E and final smoke tests are completed.
 
-
 ## Accessibility hardening — 2026-09-19
 - Added explicit `htmlFor`/input `id` associations to previously unassociated authentication form labels on signup, forgot-password, and reset-password pages.
 - No authentication or validation behavior changed.
-
 
 ## Form accessibility hardening — 2026-09-19
 - Added explicit `htmlFor`/input `id` associations to payment, admin bill, and admin gallery form fields.
 - No business logic or authorization behavior changed.
 - V2 Build Check #494 and Cloudflare Deploy #429 succeeded; deployment reported 0 npm vulnerabilities.
 - Latest deployed Worker version: `9c2330db-2ec7-4b6e-990c-5cbe277edf2b`.
-
 
 ### Atomic resident login activation — 2026-09-19
 - Firebase resident login activation was made transactional, matching the earlier email-verification transaction hardening.
