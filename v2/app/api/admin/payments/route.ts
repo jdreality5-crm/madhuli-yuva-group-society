@@ -8,9 +8,7 @@ const schema = z.object({
   action: z.enum(['VERIFY', 'REJECT']),
   rejectionReason: z.string().trim().max(300).optional().or(z.literal('')),
 }).superRefine((value, ctx) => {
-  if (value.action === 'REJECT' && !value.rejectionReason) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['rejectionReason'], message: 'Rejection reason is required.' });
-  }
+  if (value.action === 'REJECT' && !value.rejectionReason) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['rejectionReason'], message: 'Rejection reason is required.' });
 });
 
 async function rest<T>(table: string, query: Record<string, string> = {}, init?: RequestInit) {
@@ -21,7 +19,7 @@ async function rest<T>(table: string, query: Record<string, string> = {}, init?:
   Object.entries(query).forEach(([name, value]) => url.searchParams.set(name, value));
   const response = await fetch(url, { ...init, headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json', ...(init?.body ? { 'Content-Type': 'application/json', Prefer: 'return=representation' } : {}), ...(init?.headers || {}) }, cache: 'no-store' });
   const data = await response.json().catch(() => null);
-  if (!response.ok) throw Error('REST');
+  if (!response.ok) throw Error(String(data?.message || data?.hint || 'REST'));
   return data as T;
 }
 
@@ -58,6 +56,20 @@ async function removeStorageObject(path: string | null | undefined) {
   if (!response.ok && response.status !== 404) throw Error('STORAGE_DELETE');
 }
 
+async function recordVerifiedIncome(paymentId: string, societyId: string, verifierId: string) {
+  const payment = (await rest<any[]>('Payment', { select: 'id,societyId,eventId,ownerUserId,amountPaise,paymentMethod,transactionId,notes,verifiedAt,status', id: `eq.${paymentId}`, societyId: `eq.${societyId}`, status: 'eq.VERIFIED', limit: '1' }))[0];
+  if (!payment) throw Error('VERIFIED_PAYMENT_NOT_FOUND');
+  const referenceNumber = `PAYMENT:${payment.id}`;
+  const existing = (await rest<any[]>('Income', { select: 'id', societyId: `eq.${societyId}`, referenceNumber: `eq.${referenceNumber}`, limit: '1' }))[0];
+  if (existing) return { created: false, id: existing.id };
+  const owner = (await rest<any[]>('User', { select: 'name,email', id: `eq.${payment.ownerUserId}`, societyId: `eq.${societyId}`, limit: '1' }))[0];
+  const method = String(payment.paymentMethod || (payment.transactionId ? 'UPI' : 'CASH')).toUpperCase();
+  const incomeMethod = ['CASH', 'UPI', 'BANK_TRANSFER', 'CHEQUE', 'OTHER'].includes(method) ? method : 'OTHER';
+  const now = new Date().toISOString();
+  const row = (await rest<any[]>('Income', { select: '*' }, { method: 'POST', body: JSON.stringify({ id: crypto.randomUUID(), societyId, eventId: payment.eventId || null, date: payment.verifiedAt || now, category: incomeMethod === 'CASH' ? 'Cash Collection' : 'Payment Collection', description: `Verified payment ${payment.id}`, receivedFrom: owner?.name || owner?.email || 'Resident', amountPaise: String(payment.amountPaise), paymentMethod: incomeMethod, referenceNumber, notes: payment.notes || null, createdById: verifierId, createdAt: now, updatedAt: now }) }))[0];
+  return { created: true, id: row?.id || null };
+}
+
 export async function GET() {
   try {
     const session = await requireSubAdminPermission('PAYMENTS');
@@ -79,6 +91,7 @@ export async function GET() {
     const normalizedPayments = await Promise.all(payments.map(async (row) => ({
       ...row,
       amountPaise: String(row.amountPaise),
+      paymentMethod: row.paymentMethod || (row.transactionId ? 'UPI' : 'CASH'),
       screenshotUrl: await sign(row.screenshotUrl),
       paymentAccount: accountMap.get(row.paymentAccountId) || null,
       ownerUser: userMap.get(row.ownerUserId) || null,
@@ -99,15 +112,20 @@ export async function PATCH(req: Request) {
     const parsed = schema.parse(await req.json());
     const row = await rpc<any>({ p_payment_id: parsed.paymentId, p_society_id: session.societyId, p_reviewer_id: session.id, p_action: parsed.action, p_rejection_reason: parsed.rejectionReason || null });
     let receipt: { receiptNumber: string; receiptStoragePath: string; reused: boolean } | null = null;
+    let income: { created: boolean; id: string | null } | null = null;
     if (parsed.action === 'VERIFY') {
+      try {
+        income = await recordVerifiedIncome(parsed.paymentId, session.societyId, session.id);
+      } catch (incomeError) {
+        console.error('Verified payment income creation failed', incomeError instanceof Error ? incomeError.message : incomeError);
+      }
       try {
         receipt = await generateAndStoreReceipt({ paymentId: parsed.paymentId, societyId: session.societyId, requestUrl: req.url });
       } catch (receiptError) {
-        // Verification must remain successful even if storage/PDF generation needs a retry.
         console.error('Payment receipt generation failed', receiptError instanceof Error ? receiptError.message : receiptError);
       }
     }
-    return NextResponse.json({ payment: { ...row, amountPaise: String(row.amountPaise) }, receipt });
+    return NextResponse.json({ payment: { ...row, amountPaise: String(row.amountPaise) }, receipt, income });
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
     console.error('Payment review failed', message);
@@ -124,7 +142,6 @@ export async function DELETE(req: Request) {
     const rows = await rest<any[]>('Payment', { select: 'id,societyId,screenshotUrl', id: `eq.${body.paymentId}`, societyId: `eq.${session.societyId}`, limit: '1' });
     const payment = rows[0];
     if (!payment) return NextResponse.json({ error: 'Payment not found.' }, { status: 404 });
-
     await removeStorageObject(payment.screenshotUrl);
     await rest('Payment', { id: `eq.${body.paymentId}`, societyId: `eq.${session.societyId}` }, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
     return NextResponse.json({ ok: true });
