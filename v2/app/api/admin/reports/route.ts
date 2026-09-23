@@ -44,9 +44,14 @@ export async function GET(req: Request) {
     };
     const incomeQuery = eventId ? { ...base, eventId: 'eq.' + eventId } : base;
     const expenseQuery = eventId ? { ...base, eventId: 'eq.' + eventId } : base;
-    const [income, expenses] = await Promise.all([
+    const [income, expenses, events] = await Promise.all([
       rest<any[]>('Income', incomeQuery),
       rest<any[]>('Expense', expenseQuery),
+      rest<any[]>('Event', {
+        societyId: 'eq.' + s.societyId,
+        select: 'id,title,gujaratiTitle,date',
+        order: 'date.desc',
+      }),
     ]);
 
     const sum = (rows: any[]) => rows.reduce((a, x) => a + BigInt(x.amountPaise ?? 0), 0n);
@@ -65,6 +70,7 @@ export async function GET(req: Request) {
       from: start.toISOString(),
       to: end.toISOString(),
       eventId: eventId || null,
+      events: events.map(x => ({ id: x.id, title: x.title, gujaratiTitle: x.gujaratiTitle ?? null, date: x.date })),
       summary: { income: it.toString(), expense: et.toString(), balance: (it - et).toString() },
       income: income.map(x => ({ ...x, amountPaise: String(x.amountPaise ?? 0) })),
       expenses: expenses.map(x => ({ ...x, amountPaise: String(x.amountPaise ?? 0) })),
