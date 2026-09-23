@@ -1,2 +1,2 @@
 ALTER TABLE "Payment"
-ADD COLUMN "paymentMethod" "PaymentMethod";
+ADD COLUMN IF NOT EXISTS "paymentMethod" "PaymentMethod";
