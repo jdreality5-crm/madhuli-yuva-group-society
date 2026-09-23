@@ -14,12 +14,6 @@ export default function Reports() {
   const [to, setTo] = useState(new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
-    fetch('/api/admin/events', { cache: 'no-store' })
-      .then(async (r) => {
-        const x = await r.json().catch(() => []);
-        if (r.ok && Array.isArray(x)) setEvents(x);
-      })
-      .catch(() => {});
     load();
   }, []);
 
@@ -40,6 +34,7 @@ export default function Reports() {
         return;
       }
       setD(x);
+      if (Array.isArray(x.events)) setEvents(x.events);
     } catch {
       setError('Unable to connect to the report service.');
     } finally {
