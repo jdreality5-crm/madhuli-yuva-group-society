@@ -84,7 +84,7 @@ function isPng(bytes: Uint8Array) {
   return bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 && bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a;
 }
 
-async function loadLetterhead(pdf: PDFDocument, requestUrl: string) {
+export async function loadLetterhead(pdf: PDFDocument, requestUrl: string) {
   const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
   const candidates = [
     configuredOrigin ? new URL('/letterhead,A4.jpg', configuredOrigin).toString() : null,
@@ -131,7 +131,6 @@ async function buildPdf(context: ReceiptContext, number: string, requestUrl: str
     page.drawImage(letterhead, { x: (PAGE_WIDTH - width) / 2, y: (PAGE_HEIGHT - height) / 2, width, height });
   }
 
-  // Keep every field inside the original blank center area of the supplied A4 artwork.
   page.drawText(`Receipt No: ${number}`, { x: 76, y: 620, size: 9, font: regular, color: MUTED });
   page.drawText(`Date: ${dateText(context.payment.verifiedAt || context.payment.updatedAt)}`, { x: 405, y: 620, size: 9, font: regular, color: DARK });
   drawData(page, 'Received From', context.owner?.name || context.owner?.email, 575, regular, bold);
