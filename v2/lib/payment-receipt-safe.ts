@@ -63,7 +63,11 @@ function clean(value: unknown, fallback = '-') { const text = String(value ?? ''
 function money(value: unknown) { return `Rs. ${(Number(value || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
 function dateText(value: unknown) { if (!value) return '-'; return new Date(String(value)).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); }
 function receiptNumber(paymentId: string, verifiedAt: unknown) { const year = verifiedAt ? new Date(String(verifiedAt)).getFullYear() : new Date().getFullYear(); return `MYGM-${year}-${paymentId.replace(/[^a-zA-Z0-9]/g, '').slice(-8).toUpperCase()}`; }
-function paymentMethod(context: ReceiptContext) { const method = context.payment?.paymentMethod || context.bill?.paymentMethod; return method ? String(method).replace(/_/g, ' ') : 'Not recorded'; }
+function formatPaymentMethod(value: unknown) { return String(value ?? '').trim().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()); }
+function paymentMethod(context: ReceiptContext) {
+  const candidates = [context.payment?.paymentMethod, context.payment?.method, context.payment?.payment_mode, context.payment?.mode, context.payment?.channel, context.bill?.paymentMethod, context.bill?.method];
+  return candidates.map(formatPaymentMethod).find(Boolean) || '—';
+}
 
 function drawWrapped(page: PDFPage, text: string, x: number, y: number, width: number, font: PDFFont, size: number, color: ReturnType<typeof rgb>) {
   const words = text.split(/\s+/).filter(Boolean); let line = ''; let cursor = y;
@@ -105,8 +109,12 @@ async function loadLetterhead(pdf: PDFDocument, requestUrl: string) {
 }
 
 function drawAuthorizedSignature(page: PDFPage, context: ReceiptContext, bold: PDFFont) {
-  const name = clean(context.society?.authorizedSignatory, 'Authorized Signatory');
-  page.drawText(name, { x: 390, y: 245, size: 10, font: bold, color: MAROON });
+  const rawName = String(context.society?.authorizedSignatory ?? '').trim();
+  const normalized = rawName.toLowerCase().replace(/[^a-z]/g, '');
+  const genericLabels = new Set(['adminorganizer', 'admin', 'organizer', 'authorizedsignatory', 'authorisedsignatory']);
+  if (rawName && !genericLabels.has(normalized)) {
+    page.drawText(rawName, { x: 390, y: 245, size: 10, font: bold, color: MAROON });
+  }
   page.drawText('Authorized Signatory', { x: 390, y: 231, size: 8.5, font: bold, color: MUTED });
 }
 
