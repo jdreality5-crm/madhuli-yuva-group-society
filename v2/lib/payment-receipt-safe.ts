@@ -1,5 +1,4 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
-import { AUTHORIZED_LOGO_BLACK_PATHS } from './authorized-logo-black';
 
 type ReceiptContext = { payment: any; owner: any; society: any; event: any; account: any; bill: any };
 const PAGE_WIDTH = 595;
@@ -71,7 +70,11 @@ function drawWrapped(page: PDFPage, text: string, x: number, y: number, width: n
   for (const word of words) { const next = line ? `${line} ${word}` : word; if (font.widthOfTextAtSize(next, size) > width && line) { page.drawText(line, { x, y: cursor, size, font, color }); cursor -= size + 3; line = word; } else line = next; }
   if (line) page.drawText(line, { x, y: cursor, size, font, color }); return cursor;
 }
-function drawData(page: PDFPage, label: string, value: unknown, y: number, regular: PDFFont, bold: PDFFont) { page.drawText(label, { x: 76, y, size: 10, font: bold, color: MAROON }); drawWrapped(page, clean(value), 235, y, 280, regular, 10, DARK); }
+
+function drawData(page: PDFPage, label: string, value: unknown, y: number, regular: PDFFont, bold: PDFFont) {
+  page.drawText(label, { x: 76, y, size: 10, font: bold, color: MAROON });
+  drawWrapped(page, clean(value), 235, y, 280, regular, 10, DARK);
+}
 
 async function loadLetterhead(pdf: PDFDocument, requestUrl: string) {
   const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim();
@@ -95,11 +98,10 @@ async function loadLetterhead(pdf: PDFDocument, requestUrl: string) {
   return null;
 }
 
-function drawAuthorizedSignature(page: PDFPage, bold: PDFFont) {
-  const logoX = 385; const logoY = 222; const logoScale = 0.055;
-  for (const path of AUTHORIZED_LOGO_BLACK_PATHS) page.drawSvgPath(path, { x: logoX, y: logoY, scale: logoScale, color: DARK });
-  page.drawText('Avnish Patel', { x: 385, y: 190, size: 10, font: bold, color: MAROON });
-  page.drawText('President', { x: 385, y: 176, size: 8.5, font: bold, color: MUTED });
+function drawAuthorizedSignature(page: PDFPage, context: ReceiptContext, bold: PDFFont) {
+  const name = clean(context.society?.authorizedSignatory, 'Authorized Signatory');
+  page.drawText(name, { x: 390, y: 245, size: 10, font: bold, color: MAROON });
+  page.drawText('Authorized Signatory', { x: 390, y: 231, size: 8.5, font: bold, color: MUTED });
 }
 
 async function buildPdf(context: ReceiptContext, number: string, requestUrl: string) {
@@ -110,16 +112,17 @@ async function buildPdf(context: ReceiptContext, number: string, requestUrl: str
   const letterhead = await loadLetterhead(pdf, requestUrl);
   if (letterhead) page.drawImage(letterhead, { x: 0, y: 0, width: PAGE_WIDTH, height: PAGE_HEIGHT });
 
-  page.drawText(`Receipt No: ${number}`, { x: 76, y: 675, size: 9, font: regular, color: MUTED });
-  page.drawText(`Date: ${dateText(context.payment.verifiedAt || context.payment.updatedAt)}`, { x: 405, y: 675, size: 9, font: regular, color: DARK });
-  drawData(page, 'Received From', context.owner?.name || context.owner?.email, 625, regular, bold);
-  drawData(page, 'Amount', money(context.payment.amountPaise), 585, regular, bold);
-  drawData(page, 'Purpose', context.event?.title || context.account?.purpose || context.bill?.category || 'Other Payment', 545, regular, bold);
-  drawData(page, 'Payment Account', context.account?.displayName, 505, regular, bold);
-  drawData(page, 'Payment Method', paymentMethod(context), 465, regular, bold);
-  drawData(page, 'Transaction ID / UTR', context.payment.transactionId, 425, regular, bold);
-  drawData(page, 'Payment Status', 'VERIFIED', 385, regular, bold);
-  drawAuthorizedSignature(page, bold);
+  // Keep every field inside the original blank center area of the supplied A4 artwork.
+  page.drawText(`Receipt No: ${number}`, { x: 76, y: 620, size: 9, font: regular, color: MUTED });
+  page.drawText(`Date: ${dateText(context.payment.verifiedAt || context.payment.updatedAt)}`, { x: 405, y: 620, size: 9, font: regular, color: DARK });
+  drawData(page, 'Received From', context.owner?.name || context.owner?.email, 575, regular, bold);
+  drawData(page, 'Amount', money(context.payment.amountPaise), 535, regular, bold);
+  drawData(page, 'Purpose', context.event?.title || context.account?.purpose || context.bill?.category || 'Other Payment', 495, regular, bold);
+  drawData(page, 'Payment Account', context.account?.displayName, 455, regular, bold);
+  drawData(page, 'Payment Method', paymentMethod(context), 415, regular, bold);
+  drawData(page, 'Transaction ID / UTR', context.payment.transactionId, 375, regular, bold);
+  drawData(page, 'Payment Status', 'VERIFIED', 335, regular, bold);
+  drawAuthorizedSignature(page, context, bold);
   return pdf.save();
 }
 
