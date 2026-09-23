@@ -2,28 +2,18 @@ import { NextResponse } from 'next/server';
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib';
 import { requireSubAdminPermission } from '@/lib/session';
 
-const PAGE_WIDTH = 595;
-const PAGE_HEIGHT = 842;
-const MARGIN = 38;
-const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+const W = 595;
+const H = 842;
+const M = 38;
+const CW = W - M * 2;
 const MAROON = rgb(0.35, 0.04, 0.04);
 const GOLD = rgb(0.72, 0.58, 0.30);
 const INK = rgb(0.14, 0.12, 0.11);
 const MUTED = rgb(0.42, 0.39, 0.36);
 const IVORY = rgb(0.985, 0.97, 0.93);
-
 type Row = Record<string, any>;
-
-type ReportData = {
-  societyName: string;
-  authorizedSignatory: string;
-  reportFooter: string;
-  title: string;
-  period: string;
-  income: Row[];
-  expenses: Row[];
-  events: Row[];
-};
+type ReportData = { societyName: string; signatory: string; footer: string; title: string; period: string; income: Row[]; expenses: Row[] };
+type Column = { label: string; width: number };
 
 async function rest<T>(table: string, query: Record<string, string>): Promise<T> {
   const base = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
@@ -31,178 +21,99 @@ async function rest<T>(table: string, query: Record<string, string>): Promise<T>
   if (!base || !key) throw new Error('CONFIG');
   const url = new URL(`${base}/rest/v1/${table}`);
   Object.entries(query).forEach(([name, value]) => url.searchParams.set(name, value));
-  const response = await fetch(url, {
-    headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' },
-    cache: 'no-store',
-  });
+  const response = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/json' }, cache: 'no-store' });
   const data = await response.json().catch(() => null);
   if (!response.ok) throw new Error(`REST_${response.status}`);
   return data as T;
 }
 
-function validDate(value: string | null) {
-  return !value || /^\d{4}-\d{2}-\d{2}$/.test(value);
-}
-
-function clean(value: unknown, fallback = '—') {
-  const text = String(value ?? '').trim();
+const clean = (value: unknown, fallback = '-') => {
+  const text = String(value ?? '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
   return text || fallback;
-}
+};
+const ascii = (value: unknown) => clean(value).replace(/[^\x20-\x7E]/g, '');
+const dateText = (value: unknown) => { const date = new Date(String(value || '')); return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString('en-IN'); };
+const money = (value: unknown) => `Rs. ${(Number(value || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const validDate = (value: string | null) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value);
 
-function escText(value: unknown) {
-  return clean(value).replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
-}
-
-function money(value: unknown) {
-  return `Rs. ${(Number(value || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-function dateText(value: unknown) {
-  if (!value) return '—';
-  const date = new Date(String(value));
-  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-IN');
-}
-
-function fitText(value: unknown, font: PDFFont, size: number, maxWidth: number) {
-  const text = escText(value);
-  if (font.widthOfTextAtSize(text, size) <= maxWidth) return text;
-  let output = text;
-  while (output.length > 3 && font.widthOfTextAtSize(`${output}…`, size) > maxWidth) output = output.slice(0, -1);
-  return `${output.trim()}…`;
-}
-
-function text(page: PDFPage, value: unknown, x: number, y: number, font: PDFFont, size: number, color = INK, maxWidth?: number) {
-  const rendered = maxWidth ? fitText(value, font, size, maxWidth) : escText(value);
+function draw(page: PDFPage, value: unknown, x: number, y: number, font: PDFFont, size: number, color = INK, maxWidth?: number) {
+  let rendered = ascii(value);
+  if (maxWidth) { while (rendered.length > 3 && font.widthOfTextAtSize(rendered, size) > maxWidth) rendered = rendered.slice(0, -1); }
   page.drawText(rendered, { x, y, font, size, color });
 }
-
-function line(page: PDFPage, x1: number, y1: number, x2: number, y2: number, color = GOLD, thickness = 1) {
-  page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, color, thickness });
+function rule(page: PDFPage, y: number, color = GOLD, thickness = 1) { page.drawLine({ start: { x: M, y }, end: { x: W - M, y }, color, thickness }); }
+function header(page: PDFPage, data: ReportData, regular: PDFFont, bold: PDFFont, number: number) {
+  rule(page, H - 36, MAROON, 3);
+  draw(page, 'MADHULI YUVA GROUP SOCIETY', M, H - 56, bold, 8, GOLD, CW);
+  draw(page, data.title, M, H - 82, bold, 17, MAROON, CW);
+  draw(page, `${data.societyName} | Period: ${data.period}`, M, H - 99, regular, 7.5, MUTED, CW);
+  rule(page, H - 111, GOLD, 0.8);
+  draw(page, `Page ${number}`, W - M - 35, 22, regular, 7, MUTED, 35);
+  if (data.footer) draw(page, data.footer, M, 22, regular, 7, MUTED, CW - 45);
 }
-
-function header(page: PDFPage, data: ReportData, bold: PDFFont, regular: PDFFont, pageNumber: number) {
-  line(page, MARGIN, PAGE_HEIGHT - 36, PAGE_WIDTH - MARGIN, PAGE_HEIGHT - 36, MAROON, 3);
-  text(page, 'MADHULI YUVA GROUP SOCIETY', MARGIN, PAGE_HEIGHT - 56, bold, 8, GOLD, CONTENT_WIDTH);
-  text(page, data.title, MARGIN, PAGE_HEIGHT - 82, bold, 17, MAROON, CONTENT_WIDTH);
-  text(page, `${data.societyName}  ·  Period: ${data.period}`, MARGIN, PAGE_HEIGHT - 99, regular, 7.5, MUTED, CONTENT_WIDTH);
-  line(page, MARGIN, PAGE_HEIGHT - 111, PAGE_WIDTH - MARGIN, PAGE_HEIGHT - 111, GOLD, 0.8);
-  text(page, `Page ${pageNumber}`, PAGE_WIDTH - MARGIN - 35, 22, regular, 7, MUTED, 35);
-  if (data.reportFooter) text(page, data.reportFooter, MARGIN, 22, regular, 7, MUTED, CONTENT_WIDTH - 45);
-}
-
-function summaryCard(page: PDFPage, label: string, value: string, x: number, y: number, width: number, bold: PDFFont, regular: PDFFont) {
-  page.drawRectangle({ x, y, width, height: 48, color: IVORY, borderColor: GOLD, borderWidth: 0.7 });
-  text(page, label.toUpperCase(), x + 9, y + 31, regular, 6.5, MUTED, width - 18);
-  text(page, value, x + 9, y + 13, bold, 12, MAROON, width - 18);
-}
-
-function tableHeader(page: PDFPage, columns: Array<{ label: string; width: number }>, y: number, bold: PDFFont) {
-  let x = MARGIN;
-  page.drawRectangle({ x: MARGIN, y: y - 4, width: CONTENT_WIDTH, height: 17, color: MAROON });
-  for (const column of columns) {
-    text(page, column.label, x + 4, y + 1, bold, 6.3, rgb(1, 1, 1), column.width - 8);
-    x += column.width;
-  }
+function section(page: PDFPage, title: string, y: number, bold: PDFFont) { draw(page, title, M, y, bold, 10, MAROON, CW); rule(page, y - 7, GOLD, 0.65); return y - 22; }
+function tableHead(page: PDFPage, columns: Column[], y: number, bold: PDFFont) {
+  page.drawRectangle({ x: M, y: y - 4, width: CW, height: 17, color: MAROON });
+  let x = M;
+  columns.forEach((column) => { draw(page, column.label, x + 4, y + 1, bold, 6.1, rgb(1, 1, 1), column.width - 8); x += column.width; });
   return y - 19;
 }
-
-function tableRow(page: PDFPage, values: unknown[], columns: Array<{ label: string; width: number }>, y: number, regular: PDFFont, bold: PDFFont, alternate: boolean) {
-  const rowHeight = 17;
-  if (alternate) page.drawRectangle({ x: MARGIN, y: y - 4, width: CONTENT_WIDTH, height: rowHeight, color: rgb(0.985, 0.975, 0.955) });
-  let x = MARGIN;
-  values.forEach((value, index) => {
-    const column = columns[index];
-    const isAmount = index === values.length - 1;
-    text(page, value, isAmount ? x + 3 : x + 4, y + 1, isAmount ? bold : regular, 6.2, INK, column.width - 8);
-    x += column.width;
-  });
-  line(page, MARGIN, y - 4, PAGE_WIDTH - MARGIN, y - 4, rgb(0.88, 0.84, 0.78), 0.35);
-  return y - rowHeight;
+function row(page: PDFPage, values: unknown[], columns: Column[], y: number, regular: PDFFont, bold: PDFFont, alternate: boolean) {
+  if (alternate) page.drawRectangle({ x: M, y: y - 4, width: CW, height: 17, color: rgb(0.985, 0.975, 0.955) });
+  let x = M;
+  values.forEach((value, index) => { const column = columns[index]; draw(page, value, x + 4, y + 1, index === values.length - 1 ? bold : regular, 6.1, INK, column.width - 8); x += column.width; });
+  page.drawLine({ start: { x: M, y: y - 4 }, end: { x: W - M, y: y - 4 }, color: rgb(0.88, 0.84, 0.78), thickness: 0.35 });
+  return y - 17;
 }
-
-function categoryTotals(rows: Row[]) {
-  const totals = new Map<string, number>();
-  rows.forEach((row) => {
-    const key = clean(row.category, 'Other');
-    totals.set(key, (totals.get(key) || 0) + Number(row.amountPaise || 0));
-  });
-  return [...totals.entries()].sort((a, b) => b[1] - a[1]);
-}
-
-function addSectionTitle(page: PDFPage, title: string, y: number, bold: PDFFont) {
-  text(page, title, MARGIN, y, bold, 10, MAROON, CONTENT_WIDTH);
-  line(page, MARGIN, y - 7, PAGE_WIDTH - MARGIN, y - 7, GOLD, 0.65);
-  return y - 22;
-}
-
-function newPage(pdf: PDFDocument, data: ReportData, bold: PDFFont, regular: PDFFont, pageNumber: number) {
-  const page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-  header(page, data, bold, regular, pageNumber);
-  return PAGE_HEIGHT - 135;
-}
+function totals(rows: Row[]) { const map = new Map<string, number>(); rows.forEach((item) => { const key = ascii(item.category || 'Other'); map.set(key, (map.get(key) || 0) + Number(item.amountPaise || 0)); }); return [...map.entries()].sort((a, b) => b[1] - a[1]); }
+function newPage(pdf: PDFDocument, data: ReportData, regular: PDFFont, bold: PDFFont, number: number) { const page = pdf.addPage([W, H]); header(page, data, regular, bold, number); return { page, y: H - 135 }; }
 
 async function buildPdf(data: ReportData) {
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  let pageNumber = 1;
-  let page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-  header(page, data, bold, regular, pageNumber);
-  let y = PAGE_HEIGHT - 135;
-
-  const totalIncome = data.income.reduce((sum, row) => sum + Number(row.amountPaise || 0), 0);
-  const totalExpense = data.expenses.reduce((sum, row) => sum + Number(row.amountPaise || 0), 0);
-  const cardWidth = (CONTENT_WIDTH - 16) / 3;
-  summaryCard(page, 'Total Income', money(totalIncome), MARGIN, y - 48, cardWidth, bold, regular);
-  summaryCard(page, 'Total Expense', money(totalExpense), MARGIN + cardWidth + 8, y - 48, cardWidth, bold, regular);
-  summaryCard(page, 'Balance', money(totalIncome - totalExpense), MARGIN + (cardWidth + 8) * 2, y - 48, cardWidth, bold, regular);
+  let number = 1;
+  let page = pdf.addPage([W, H]);
+  header(page, data, regular, bold, number);
+  let y = H - 135;
+  const incomeTotal = data.income.reduce((sum, item) => sum + Number(item.amountPaise || 0), 0);
+  const expenseTotal = data.expenses.reduce((sum, item) => sum + Number(item.amountPaise || 0), 0);
+  const cardWidth = (CW - 16) / 3;
+  [['Total Income', incomeTotal], ['Total Expense', expenseTotal], ['Balance', incomeTotal - expenseTotal]].forEach(([label, value], index) => {
+    const x = M + index * (cardWidth + 8);
+    page.drawRectangle({ x, y: y - 48, width: cardWidth, height: 48, color: IVORY, borderColor: GOLD, borderWidth: 0.7 });
+    draw(page, label, x + 9, y - 17, regular, 6.5, MUTED, cardWidth - 18);
+    draw(page, money(value), x + 9, y - 35, bold, 12, MAROON, cardWidth - 18);
+  });
   y -= 78;
 
-  y = addSectionTitle(page, 'Program / Category Summary', y, bold);
+  y = section(page, 'Program / Category Summary', y, bold);
   const summaryColumns = [{ label: 'Type', width: 85 }, { label: 'Category', width: 270 }, { label: 'Amount', width: 160 }];
-  y = tableHeader(page, summaryColumns, y, bold);
-  const summaries = [
-    ...categoryTotals(data.income).map(([category, amount]) => ['Income', category, money(amount)]),
-    ...categoryTotals(data.expenses).map(([category, amount]) => ['Expense', category, money(amount)]),
-  ];
-  if (!summaries.length) summaries.push(['—', 'No records found', money(0)]);
-  summaries.forEach((row, index) => {
-    if (y < 60) { pageNumber += 1; page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]); header(page, data, bold, regular, pageNumber); y = PAGE_HEIGHT - 135; y = tableHeader(page, summaryColumns, y, bold); }
-    y = tableRow(page, row, summaryColumns, y, regular, bold, index % 2 === 1);
-  });
+  y = tableHead(page, summaryColumns, y, bold);
+  const summaryRows = [...totals(data.income).map(([key, value]) => ['Income', key, money(value)]), ...totals(data.expenses).map(([key, value]) => ['Expense', key, money(value)])];
+  if (!summaryRows.length) summaryRows.push(['-', 'No records found', money(0)]);
+  summaryRows.forEach((values, index) => { if (y < 60) { number += 1; ({ page, y } = newPage(pdf, data, regular, bold, number)); y = tableHead(page, summaryColumns, y, bold); } y = row(page, values, summaryColumns, y, regular, bold, index % 2 === 1); });
 
-  const incomeColumns = [
-    { label: 'Date', width: 48 }, { label: 'Program', width: 70 }, { label: 'Category', width: 72 },
-    { label: 'Description', width: 116 }, { label: 'Received From', width: 92 }, { label: 'Method', width: 55 }, { label: 'Amount', width: 62 },
-  ];
+  const incomeColumns = [{ label: 'Date', width: 48 }, { label: 'Program', width: 70 }, { label: 'Category', width: 72 }, { label: 'Description', width: 116 }, { label: 'Received From', width: 92 }, { label: 'Method', width: 55 }, { label: 'Amount', width: 62 }];
   y -= 13;
-  y = addSectionTitle(page, 'Income Register / આવક', y, bold);
-  y = tableHeader(page, incomeColumns, y, bold);
-  if (!data.income.length) y = tableRow(page, ['—', '—', '—', 'No income records found', '—', '—', money(0)], incomeColumns, y, regular, bold, false);
-  data.income.forEach((row, index) => {
-    if (y < 60) { pageNumber += 1; page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]); header(page, data, bold, regular, pageNumber); y = PAGE_HEIGHT - 135; y = addSectionTitle(page, 'Income Register / આવક (continued)', y, bold); y = tableHeader(page, incomeColumns, y, bold); }
-    y = tableRow(page, [dateText(row.date), row.programName, row.category, row.description, row.receivedFrom, row.paymentMethod, money(row.amountPaise)], incomeColumns, y, regular, bold, index % 2 === 1);
-  });
+  y = section(page, 'Income Register', y, bold);
+  y = tableHead(page, incomeColumns, y, bold);
+  if (!data.income.length) y = row(page, ['-', '-', '-', 'No income records found', '-', '-', money(0)], incomeColumns, y, regular, bold, false);
+  data.income.forEach((item, index) => { if (y < 60) { number += 1; ({ page, y } = newPage(pdf, data, regular, bold, number)); y = section(page, 'Income Register (continued)', y, bold); y = tableHead(page, incomeColumns, y, bold); } y = row(page, [dateText(item.date), item.programName, item.category, item.description, item.receivedFrom, item.paymentMethod, money(item.amountPaise)], incomeColumns, y, regular, bold, index % 2 === 1); });
 
-  const expenseColumns = [
-    { label: 'Date', width: 48 }, { label: 'Program', width: 70 }, { label: 'Category', width: 72 },
-    { label: 'Description', width: 116 }, { label: 'Paid To', width: 92 }, { label: 'Method', width: 55 }, { label: 'Amount', width: 62 },
-  ];
+  const expenseColumns = [{ label: 'Date', width: 48 }, { label: 'Program', width: 70 }, { label: 'Category', width: 72 }, { label: 'Description', width: 116 }, { label: 'Paid To', width: 92 }, { label: 'Method', width: 55 }, { label: 'Amount', width: 62 }];
   y -= 13;
-  if (y < 125) { pageNumber += 1; page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]); header(page, data, bold, regular, pageNumber); y = PAGE_HEIGHT - 135; }
-  y = addSectionTitle(page, 'Expense Register / ખર્ચ', y, bold);
-  y = tableHeader(page, expenseColumns, y, bold);
-  if (!data.expenses.length) y = tableRow(page, ['—', '—', '—', 'No expense records found', '—', '—', money(0)], expenseColumns, y, regular, bold, false);
-  data.expenses.forEach((row, index) => {
-    if (y < 60) { pageNumber += 1; page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]); header(page, data, bold, regular, pageNumber); y = PAGE_HEIGHT - 135; y = addSectionTitle(page, 'Expense Register / ખર્ચ (continued)', y, bold); y = tableHeader(page, expenseColumns, y, bold); }
-    y = tableRow(page, [dateText(row.date), row.programName, row.category, row.description, row.paidTo, row.paymentMethod, money(row.amountPaise)], expenseColumns, y, regular, bold, index % 2 === 1);
-  });
+  if (y < 125) { number += 1; ({ page, y } = newPage(pdf, data, regular, bold, number)); }
+  y = section(page, 'Expense Register', y, bold);
+  y = tableHead(page, expenseColumns, y, bold);
+  if (!data.expenses.length) y = row(page, ['-', '-', '-', 'No expense records found', '-', '-', money(0)], expenseColumns, y, regular, bold, false);
+  data.expenses.forEach((item, index) => { if (y < 60) { number += 1; ({ page, y } = newPage(pdf, data, regular, bold, number)); y = section(page, 'Expense Register (continued)', y, bold); y = tableHead(page, expenseColumns, y, bold); } y = row(page, [dateText(item.date), item.programName, item.category, item.description, item.paidTo, item.paymentMethod, money(item.amountPaise)], expenseColumns, y, regular, bold, index % 2 === 1); });
 
   y -= 18;
-  if (y < 80) { pageNumber += 1; page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]); header(page, data, bold, regular, pageNumber); y = PAGE_HEIGHT - 135; }
-  line(page, MARGIN, y, PAGE_WIDTH - MARGIN, y, GOLD, 0.8);
-  text(page, `Authorized Signatory: ${data.authorizedSignatory || '—'}`, MARGIN, y - 18, regular, 8, MUTED, CONTENT_WIDTH);
-  text(page, 'Generated electronically from society records', MARGIN, y - 32, regular, 7, MUTED, CONTENT_WIDTH);
+  if (y < 80) { number += 1; ({ page, y } = newPage(pdf, data, regular, bold, number)); }
+  rule(page, y, GOLD, 0.8);
+  draw(page, `Authorized Signatory: ${data.signatory}`, M, y - 18, regular, 8, MUTED, CW);
+  draw(page, 'Generated electronically from society records', M, y - 32, regular, 7, MUTED, CW);
   return pdf.save();
 }
 
@@ -215,45 +126,26 @@ export async function GET(req: Request) {
     const eventId = params.get('eventId')?.trim() || '';
     if (!validDate(from) || !validDate(to)) return NextResponse.json({ error: 'Invalid report date. Use YYYY-MM-DD.' }, { status: 400 });
     if (from && to && from > to) return NextResponse.json({ error: 'Report start date cannot be after the end date.' }, { status: 400 });
-
     const start = from ? new Date(`${from}T00:00:00.000Z`).toISOString() : new Date(new Date().getFullYear(), 0, 1).toISOString();
     const end = to ? new Date(`${to}T23:59:59.999Z`).toISOString() : new Date().toISOString();
     const base = { societyId: `eq.${session.societyId}`, and: `(date.gte.${start},date.lte.${end})`, order: 'date.desc' };
     const incomeQuery = eventId ? { ...base, eventId: `eq.${eventId}` } : base;
     const expenseQuery = eventId ? { ...base, eventId: `eq.${eventId}` } : base;
-
     const [incomeRows, expenseRows, societies, events] = await Promise.all([
       rest<Row[]>('Income', { ...incomeQuery, select: 'id,date,category,description,receivedFrom,amountPaise,paymentMethod,eventId' }),
       rest<Row[]>('Expense', { ...expenseQuery, select: 'id,date,category,description,paidTo,amountPaise,paymentMethod,eventId' }),
       rest<Row[]>('Society', { select: 'name,authorizedSignatory,reportFooter', id: `eq.${session.societyId}`, limit: '1' }),
       rest<Row[]>('Event', { select: 'id,title,gujaratiTitle', societyId: `eq.${session.societyId}`, limit: '500' }),
     ]);
-
-    const eventMap = new Map(events.map((event) => [event.id, event.gujaratiTitle || event.title]));
-    const income = incomeRows.map((row) => ({ ...row, programName: eventMap.get(row.eventId) || 'General' }));
-    const expenses = expenseRows.map((row) => ({ ...row, programName: eventMap.get(row.eventId) || 'General' }));
-    const selectedEvent = eventId ? events.find((event) => event.id === eventId) : null;
+    const eventMap = new Map(events.map((event) => [event.id, ascii(event.title || event.gujaratiTitle || 'General')]));
+    const income = incomeRows.map((item) => ({ ...item, programName: eventMap.get(item.eventId) || 'General' }));
+    const expenses = expenseRows.map((item) => ({ ...item, programName: eventMap.get(item.eventId) || 'General' }));
+    const selected = eventId ? events.find((event) => event.id === eventId) : null;
     const society = societies[0] || {};
-    const title = selectedEvent ? `Program Financial Report · ${selectedEvent.gujaratiTitle || selectedEvent.title}` : 'Society Financial Report';
-    const data: ReportData = {
-      societyName: society.name || 'Society',
-      authorizedSignatory: society.authorizedSignatory || '',
-      reportFooter: society.reportFooter || '',
-      title,
-      period: `${from || 'Year start'} to ${to || 'Today'}`,
-      income,
-      expenses,
-      events,
-    };
+    const data: ReportData = { societyName: ascii(society.name || 'Society'), signatory: ascii(society.authorizedSignatory || '-'), footer: ascii(society.reportFooter || ''), title: selected ? `Program Financial Report - ${ascii(selected.title || selected.gujaratiTitle)}` : 'Society Financial Report', period: `${from || 'Year start'} to ${to || 'Today'}`, income, expenses };
     const bytes = await buildPdf(data);
-    const safeName = (selectedEvent?.title || 'society-financial-report').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'society-financial-report';
-    return new NextResponse(bytes, {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${safeName}-${from || 'start'}-to-${to || 'today'}.pdf"`,
-        'Cache-Control': 'no-store',
-      },
-    });
+    const filename = `society-financial-report-${from || 'start'}-to-${to || 'today'}.pdf`;
+    return new NextResponse(bytes as unknown as BodyInit, { headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${filename}"`, 'Cache-Control': 'no-store' } });
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
     const status = message === 'UNAUTHORIZED' ? 401 : message === 'FORBIDDEN' ? 403 : 500;
