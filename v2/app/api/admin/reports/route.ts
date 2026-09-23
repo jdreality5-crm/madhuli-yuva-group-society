@@ -40,7 +40,7 @@ export async function GET(req: Request) {
       societyId: 'eq.' + s.societyId,
       and: `(date.gte.${start.toISOString()},date.lte.${end.toISOString()})`,
       order: 'date.desc',
-      select: 'amountPaise,category,date,eventId',
+      select: 'id,amountPaise,category,date,description,receivedFrom,paidTo,paymentMethod,referenceNumber,billNumber,eventId',
     };
     const incomeQuery = eventId ? { ...base, eventId: 'eq.' + eventId } : base;
     const expenseQuery = eventId ? { ...base, eventId: 'eq.' + eventId } : base;
