@@ -36,7 +36,12 @@ export async function GET(req: Request) {
     end.setUTCHours(23, 59, 59, 999);
     if (start > end) return NextResponse.json({ error: 'Invalid report date range.' }, { status: 400 });
 
-    const base = { societyId: 'eq.' + s.societyId, date: `gte.${start.toISOString()},lte.${end.toISOString()}`, order: 'date.desc', select: 'amountPaise,category,date,eventId' };
+    const base = {
+      societyId: 'eq.' + s.societyId,
+      and: `(date.gte.${start.toISOString()},date.lte.${end.toISOString()})`,
+      order: 'date.desc',
+      select: 'amountPaise,category,date,eventId',
+    };
     const incomeQuery = eventId ? { ...base, eventId: 'eq.' + eventId } : base;
     const expenseQuery = eventId ? { ...base, eventId: 'eq.' + eventId } : base;
     const [income, expenses] = await Promise.all([
